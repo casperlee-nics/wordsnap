@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wordsnap.app.data.Word
 import com.wordsnap.app.ui.theme.pixelTopBarButtonColors
 import com.wordsnap.app.ui.theme.pixelTopBarColors
@@ -49,6 +50,8 @@ import com.wordsnap.app.translate.ModelStatus
 @Composable
 fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) {
     val words by vm.words.collectAsState()
+    val books by vm.books.collectAsState()
+    val selectedBookId by vm.selectedBookId.collectAsState()
     val profile by vm.currentProfile.collectAsState()
     val profiles by vm.profiles.collectAsState()
     var showProfiles by remember { mutableStateOf(false) }
@@ -64,10 +67,14 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) 
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "${profile?.name ?: ""} 的單字本（${words.size}）▼",
+                    // 點人物和暱稱可以切換冒險者
+                    Row(
                         Modifier.clickable { showProfiles = true },
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        PixelAvatar(Avatar.from(profile?.avatar), size = 32.dp)
+                        Text("${profile?.name ?: ""} ▼", Modifier.padding(start = 8.dp))
+                    }
                 },
                 actions = {
                     TextButton(onClick = onReview, enabled = dueCount > 0, colors = pixelTopBarButtonColors()) {
@@ -88,19 +95,41 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) 
             }
         },
     ) { padding ->
-        if (words.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("還沒有單字，按右下角「拍照」或 + 新增第一個")
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BookPicker(
+                    books = books,
+                    selectedId = selectedBookId,
+                    onSelect = vm::selectBook,
+                    onCreate = { name -> vm.createBook(name) { id -> vm.selectBook(id) } },
+                    label = "單字簿：",
+                    allowAll = true,
+                    modifier = Modifier.weight(1f),
+                )
+                Text("${words.size} 個字", style = MaterialTheme.typography.bodyLarge)
             }
-        } else {
-            Column(Modifier.fillMaxSize().padding(padding)) {
-                if (hasBlank) TranslatorBanner(translatorStatus, onRetry = vm::retryTranslation)
+            if (hasBlank) TranslatorBanner(translatorStatus, onRetry = vm::retryTranslation)
+            if (words.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("還沒有單字，按右下角「拍照」或 + 新增第一個")
+                }
+            } else {
                 LazyColumn(Modifier.fillMaxSize()) {
                     items(words, key = { it.id }) { word ->
                         ListItem(
                             modifier = Modifier.clickable { editing = word },
-                            headlineContent = { Text(word.text) },
-                            supportingContent = { Text(word.meaning.ifBlank { blankMeaningHint(translatorStatus) }) },
+                            headlineContent = {
+                                Text(word.text, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp))
+                            },
+                            supportingContent = {
+                                Text(
+                                    word.meaning.ifBlank { blankMeaningHint(translatorStatus) },
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            },
                             trailingContent = {
                                 Row {
                                     IconButton(onClick = { speaker.speak(word.text) }) {
@@ -127,8 +156,8 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) 
                 vm.selectProfile(id)
                 showProfiles = false
             },
-            onCreate = { name ->
-                vm.createProfile(name)
+            onCreate = { name, avatar ->
+                vm.createProfile(name, avatar)
                 showProfiles = false
             },
             onDismiss = { showProfiles = false },

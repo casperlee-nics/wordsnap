@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.wordsnap.app.data.Book
 import com.wordsnap.app.ocr.TextScanner
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 import java.io.File
@@ -48,13 +49,22 @@ import java.io.File
 // 拍照或選圖 → 辨識單字 → 點選要加入的字
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun ScanScreen(existing: Set<String>, onAdd: (Collection<String>) -> Unit, onBack: () -> Unit) {
+fun ScanScreen(
+    existing: Set<String>,
+    books: List<Book>,
+    defaultBookId: Long?,
+    onCreateBook: (String, (Long) -> Unit) -> Unit,
+    onAdd: (Collection<String>, Long?) -> Unit,
+    onBack: () -> Unit,
+) {
     val context = LocalContext.current
     var scanning by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var found by remember { mutableStateOf<List<String>?>(null) }
     val selected = remember { mutableStateListOf<String>() }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
+    // 要存進哪一本單字簿，預設是單字本畫面目前選的那本
+    var targetBookId by remember { mutableStateOf(defaultBookId ?: books.firstOrNull()?.id) }
 
     fun startScan(uri: Uri) {
         scanning = true
@@ -147,8 +157,16 @@ fun ScanScreen(existing: Set<String>, onAdd: (Collection<String>) -> Unit, onBac
                             )
                         }
                     }
+                    BookPicker(
+                        books = books,
+                        selectedId = targetBookId,
+                        onSelect = { targetBookId = it },
+                        onCreate = { name -> onCreateBook(name) { id -> targetBookId = id } },
+                        label = "存到：",
+                        allowAll = false,
+                    )
                     Button(
-                        onClick = { onAdd(selected.toList()) },
+                        onClick = { onAdd(selected.toList(), targetBookId) },
                         enabled = selected.isNotEmpty(),
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text("加入單字本（${selected.size}）") }

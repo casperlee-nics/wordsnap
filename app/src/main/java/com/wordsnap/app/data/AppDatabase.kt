@@ -7,10 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Word::class, Profile::class], version = 3)
+@Database(entities = [Word::class, Profile::class, Book::class], version = 4)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun wordDao(): WordDao
     abstract fun profileDao(): ProfileDao
+    abstract fun bookDao(): BookDao
 
     companion object {
         @Volatile
@@ -22,7 +23,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "wordsnap.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { instance = it }
             }
 
         // v0.3 加入複習欄位，保留舊的單字
@@ -47,5 +48,26 @@ abstract class AppDatabase : RoomDatabase() {
                 )
             }
         }
+
+        // v0.5 加入單字簿和像素人物：每個暱稱建立一本「我的單字簿」，舊單字都放進去
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `books` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`profileId` INTEGER NOT NULL, `name` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)"
+                )
+                db.execSQL("ALTER TABLE words ADD COLUMN bookId INTEGER")
+                db.execSQL("ALTER TABLE profiles ADD COLUMN avatar TEXT")
+                db.execSQL(
+                    "INSERT INTO books (profileId, name, createdAt) " +
+                        "SELECT id, '$DEFAULT_BOOK', ${System.currentTimeMillis()} FROM profiles"
+                )
+                db.execSQL(
+                    "UPDATE words SET bookId = (SELECT b.id FROM books b WHERE b.profileId = words.profileId)"
+                )
+            }
+        }
+
+        const val DEFAULT_BOOK = "我的單字簿"
     }
 }

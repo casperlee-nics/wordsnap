@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
@@ -28,23 +30,25 @@ fun ProfileDialog(
     profiles: List<Profile>,
     currentId: Long?,
     onSelect: (Long) -> Unit,
-    onCreate: (String) -> Unit,
+    onCreate: (String, Avatar) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var newName by remember { mutableStateOf("") }
+    var newAvatar by remember { mutableStateOf(Avatar.Man) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("切換冒險者") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 profiles.forEach { profile ->
                     Row(
                         Modifier.fillMaxWidth().clickable { onSelect(profile.id) }.padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(selected = profile.id == currentId, onClick = { onSelect(profile.id) })
-                        Text(profile.name)
+                        PixelAvatar(Avatar.from(profile.avatar), size = 32.dp)
+                        Text(profile.name, Modifier.padding(start = 8.dp))
                     }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
@@ -54,10 +58,11 @@ fun ProfileDialog(
                     label = { Text("新增暱稱") },
                     singleLine = true,
                 )
+                if (newName.isNotBlank()) AvatarPicker(selected = newAvatar, onSelect = { newAvatar = it }, showLabels = false)
             }
         },
         confirmButton = {
-            TextButton(onClick = { onCreate(newName) }, enabled = newName.isNotBlank()) { Text("新增") }
+            TextButton(onClick = { onCreate(newName, newAvatar) }, enabled = newName.isNotBlank()) { Text("新增") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("關閉") } },
     )
