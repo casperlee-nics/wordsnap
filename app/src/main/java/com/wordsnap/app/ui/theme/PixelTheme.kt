@@ -2,10 +2,10 @@ package com.wordsnap.app.ui.theme
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.TextButtonDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
@@ -96,7 +96,7 @@ fun pixelTopBarColors() = TopAppBarDefaults.topAppBarColors(
 
 // 標題列上的文字按鈕
 @Composable
-fun pixelTopBarButtonColors() = TextButtonDefaults.textButtonColors(
+fun pixelTopBarButtonColors() = ButtonDefaults.textButtonColors(
     contentColor = Color.White,
     disabledContentColor = Color.White.copy(alpha = 0.5f),
 )
