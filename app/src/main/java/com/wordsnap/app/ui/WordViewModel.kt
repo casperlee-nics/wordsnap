@@ -23,6 +23,22 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // 把拍照選到的單字一次加入，已經在單字本裡的會略過
+    fun addAll(texts: Collection<String>) {
+        viewModelScope.launch {
+            val existing = dao.getAllTexts().map { it.lowercase() }.toSet()
+            val newWords = texts.filter { it.lowercase() !in existing }
+                .map { Word(text = it, meaning = "") }
+            dao.insertAll(newWords)
+        }
+    }
+
+    fun update(word: Word, text: String, meaning: String) {
+        viewModelScope.launch {
+            dao.update(word.copy(text = text.trim(), meaning = meaning.trim()))
+        }
+    }
+
     fun delete(word: Word) {
         viewModelScope.launch { dao.delete(word) }
     }

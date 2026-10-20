@@ -1,0 +1,152 @@
+package com.wordsnap.app.ui
+
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import com.wordsnap.app.ocr.TextScanner
+import java.io.File
+
+// 拍照或選圖 → 辨識單字 → 點選要加入的字
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun ScanScreen(onAdd: (Collection<String>) -> Unit, onBack: () -> Unit) {
+    val context = LocalContext.current
+    var scanning by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var found by remember { mutableStateOf<List<String>?>(null) }
+    val selected = remember { mutableStateListOf<String>() }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+
+    fun startScan(uri: Uri) {
+        scanning = true
+        error = null
+        selected.clear()
+        TextScanner.scan(
+            context, uri,
+            onResult = { words ->
+                found = words
+                scanning = false
+            },
+            onError = { e ->
+                error = "辨識失敗：${e.message}"
+                scanning = false
+            },
+        )
+    }
+
+    val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val uri = photoUri
+        if (ok && uri != null) startScan(uri)
+    }
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) startScan(uri)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("拍照找單字") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                },
+            )
+        },
+    ) { padding ->
+        Column(
+            Modifier.fillMaxSize().padding(padding).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(onClick = {
+                    val uri = newPhotoUri(context)
+                    photoUri = uri
+                    takePicture.launch(uri)
+                }) { Text("拍照") }
+                OutlinedButton(onClick = {
+                    pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }) { Text("從相簿選") }
+            }
+
+            when {
+                scanning -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+                error != null -> Text(error!!)
+                found == null -> Text("拍一張課本或文章的照片，App 會找出裡面的英文單字。")
+                found!!.isEmpty() -> Text("沒有找到英文單字，換一張清楚一點的照片試試。")
+                else -> {
+                    val words = found!!
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("找到 ${words.size} 個字，點選要背的：", Modifier.weight(1f))
+                        TextButton(onClick = {
+                            if (selected.size == words.size) selected.clear()
+                            else { selected.clear(); selected.addAll(words) }
+                        }) { Text(if (selected.size == words.size) "全不選" else "全選") }
+                    }
+                    FlowRow(
+                        Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        words.forEach { word ->
+                            FilterChip(
+                                selected = word in selected,
+                                onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
+                                label = { Text(word) },
+                            )
+                        }
+                    }
+                    Button(
+                        onClick = { onAdd(selected.toList()) },
+                        enabled = selected.isNotEmpty(),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("加入單字本（${selected.size}）") }
+                }
+            }
+        }
+    }
+}
+
+private fun newPhotoUri(context: Context): Uri {
+    val dir = File(context.cacheDir, "photos").apply { mkdirs() }
+    val file = File(dir, "scan.jpg")
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+}
