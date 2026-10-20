@@ -1,5 +1,6 @@
 package com.wordsnap.app.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -10,4 +11,7 @@ data class Word(
     val text: String,
     val meaning: String,
     val createdAt: Long = System.currentTimeMillis(),
+    // 複習用：box 越高代表越熟，dueAt 是下次該複習的時間
+    @ColumnInfo(defaultValue = "0") val box: Int = 0,
+    @ColumnInfo(defaultValue = "0") val dueAt: Long = 0,
 )

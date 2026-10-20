@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -35,17 +36,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.speech.rememberSpeaker
 
 // 單字本主畫面：列出所有單字，右下角可拍照或手動新增，點單字可編輯
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WordListScreen(vm: WordViewModel, onScan: () -> Unit) {
+fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) {
     val words by vm.words.collectAsState()
+    val speaker = rememberSpeaker()
+    val now = System.currentTimeMillis()
+    val dueCount = words.count { it.dueAt <= now }
     var showAdd by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Word?>(null) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("我的單字本（${words.size}）") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("我的單字本（${words.size}）") },
+                actions = {
+                    TextButton(onClick = onReview, enabled = dueCount > 0) { Text("複習（$dueCount）") }
+                },
+            )
+        },
         floatingActionButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SmallFloatingActionButton(onClick = { showAdd = true }) {
@@ -67,10 +79,15 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit) {
                     ListItem(
                         modifier = Modifier.clickable { editing = word },
                         headlineContent = { Text(word.text) },
-                        supportingContent = { Text(word.meaning.ifBlank { "（點一下填寫中文意思）" }) },
+                        supportingContent = { Text(word.meaning.ifBlank { "（翻譯中，或點一下自己填寫）" }) },
                         trailingContent = {
-                            IconButton(onClick = { vm.delete(word) }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "刪除")
+                            Row {
+                                IconButton(onClick = { speaker.speak(word.text) }) {
+                                    Icon(Icons.Filled.PlayArrow, contentDescription = "發音")
+                                }
+                                IconButton(onClick = { vm.delete(word) }) {
+                                    Icon(Icons.Filled.Delete, contentDescription = "刪除")
+                                }
                             }
                         },
                     )
@@ -121,7 +138,7 @@ private fun WordDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = text, onValueChange = { text = it }, label = { Text("英文單字") }, singleLine = true)
-                OutlinedTextField(value = meaning, onValueChange = { meaning = it }, label = { Text("中文意思") }, singleLine = true)
+                OutlinedTextField(value = meaning, onValueChange = { meaning = it }, label = { Text("中文意思（空白會自動翻譯）") }, singleLine = true)
             }
         },
         confirmButton = {
