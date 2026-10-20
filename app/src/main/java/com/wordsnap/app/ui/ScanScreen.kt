@@ -24,6 +24,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -41,12 +42,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.wordsnap.app.ocr.TextScanner
+import com.wordsnap.app.ui.theme.pixelTopBarColors
 import java.io.File
 
 // 拍照或選圖 → 辨識單字 → 點選要加入的字
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun ScanScreen(onAdd: (Collection<String>) -> Unit, onBack: () -> Unit) {
+fun ScanScreen(existing: Set<String>, onAdd: (Collection<String>) -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
     var scanning by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -88,6 +90,7 @@ fun ScanScreen(onAdd: (Collection<String>) -> Unit, onBack: () -> Unit) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
+                colors = pixelTopBarColors(),
             )
         },
     ) { padding ->
@@ -112,25 +115,35 @@ fun ScanScreen(onAdd: (Collection<String>) -> Unit, onBack: () -> Unit) {
                 }
                 error != null -> Text(error!!)
                 found == null -> Text("拍一張課本或文章的照片，App 會找出裡面的英文單字。")
-                found!!.isEmpty() -> Text("沒有找到英文單字，換一張清楚一點的照片試試。")
+                found!!.none { !TextScanner.isCommon(it) } -> Text("沒有找到英文單字，換一張清楚一點的照片試試。")
                 else -> {
-                    val words = found!!
+                    // 濾掉 the、and 這類常見字；已經收錄的字照樣列出但不能選
+                    val all = found!!
+                    val words = all.filterNot(TextScanner::isCommon)
+                    val skipped = all.size - words.size
+                    val selectable = words.filter { it !in existing }
+                    val allSelected = selectable.isNotEmpty() && selected.size == selectable.size
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("找到 ${words.size} 個字，點選要背的：", Modifier.weight(1f))
                         TextButton(onClick = {
-                            if (selected.size == words.size) selected.clear()
-                            else { selected.clear(); selected.addAll(words) }
-                        }) { Text(if (selected.size == words.size) "全不選" else "全選") }
+                            selected.clear()
+                            if (!allSelected) selected.addAll(selectable)
+                        }, enabled = selectable.isNotEmpty()) { Text(if (allSelected) "全不選" else "全選") }
+                    }
+                    if (skipped > 0) {
+                        Text("已略過 $skipped 個常見字（如 the、and、is）", style = MaterialTheme.typography.bodySmall)
                     }
                     FlowRow(
                         Modifier.weight(1f).verticalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         words.forEach { word ->
+                            val owned = word in existing
                             FilterChip(
                                 selected = word in selected,
                                 onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
-                                label = { Text(word) },
+                                label = { Text(if (owned) "$word（已有）" else word) },
+                                enabled = !owned,
                             )
                         }
                     }

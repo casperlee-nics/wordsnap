@@ -14,4 +14,6 @@ data class Word(
     // 複習用：box 越高代表越熟，dueAt 是下次該複習的時間
     @ColumnInfo(defaultValue = "0") val box: Int = 0,
     @ColumnInfo(defaultValue = "0") val dueAt: Long = 0,
+    // 屬於哪個暱稱
+    @ColumnInfo(defaultValue = "1") val profileId: Long = 1,
 )

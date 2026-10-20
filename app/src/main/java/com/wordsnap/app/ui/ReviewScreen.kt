@@ -1,6 +1,7 @@
 package com.wordsnap.app.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +17,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -28,6 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.speech.rememberSpeaker
+import com.wordsnap.app.ui.theme.PixelBorder
+import com.wordsnap.app.ui.theme.PixelShape
+import com.wordsnap.app.ui.theme.pixelTopBarColors
 
 // 翻卡複習：先看英文，按「看答案」翻面，再選記得或忘了
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,6 +50,7 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
+                colors = pixelTopBarColors(),
             )
         },
     ) { padding ->
@@ -61,10 +67,20 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
             } else {
                 var revealed by remember(vm.reviewStep) { mutableStateOf(false) }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(word.text, style = MaterialTheme.typography.displayMedium)
-                    IconButton(onClick = { speaker.speak(word.text) }) {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = "發音")
+                // 像遊戲對話框的卡片
+                Surface(
+                    shape = PixelShape,
+                    border = PixelBorder,
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Box(Modifier.padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(word.text, style = MaterialTheme.typography.displaySmall)
+                            IconButton(onClick = { speaker.speak(word.text) }) {
+                                Icon(Icons.Filled.PlayArrow, contentDescription = "發音")
+                            }
+                        }
                     }
                 }
 

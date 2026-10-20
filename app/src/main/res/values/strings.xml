@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">拍照背單字</string>
+    <!-- 暫定名稱，上架前再決定 -->
+    <string name="app_name">像素單字</string>
 </resources>

@@ -39,6 +39,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.ui.theme.pixelTopBarButtonColors
+import com.wordsnap.app.ui.theme.pixelTopBarColors
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.translate.ModelStatus
 
@@ -47,6 +49,9 @@ import com.wordsnap.app.translate.ModelStatus
 @Composable
 fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) {
     val words by vm.words.collectAsState()
+    val profile by vm.currentProfile.collectAsState()
+    val profiles by vm.profiles.collectAsState()
+    var showProfiles by remember { mutableStateOf(false) }
     val speaker = rememberSpeaker()
     val translatorStatus by vm.translatorStatus.collectAsState()
     val hasBlank = words.any { it.meaning.isBlank() }
@@ -58,10 +63,18 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("我的單字本（${words.size}）") },
-                actions = {
-                    TextButton(onClick = onReview, enabled = dueCount > 0) { Text("複習（$dueCount）") }
+                title = {
+                    Text(
+                        "${profile?.name ?: ""} 的單字本（${words.size}）▼",
+                        Modifier.clickable { showProfiles = true },
+                    )
                 },
+                actions = {
+                    TextButton(onClick = onReview, enabled = dueCount > 0, colors = pixelTopBarButtonColors()) {
+                        Text("複習（$dueCount）")
+                    }
+                },
+                colors = pixelTopBarColors(),
             )
         },
         floatingActionButton = {
@@ -106,6 +119,21 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) 
         }
     }
 
+    if (showProfiles) {
+        ProfileDialog(
+            profiles = profiles.orEmpty(),
+            currentId = profile?.id,
+            onSelect = { id ->
+                vm.selectProfile(id)
+                showProfiles = false
+            },
+            onCreate = { name ->
+                vm.createProfile(name)
+                showProfiles = false
+            },
+            onDismiss = { showProfiles = false },
+        )
+    }
     if (showAdd) {
         WordDialog(
             title = "新增單字",

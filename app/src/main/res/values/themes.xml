@@ -1,3 +1,7 @@
 <resources>
-    <style name="Theme.WordSnap" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.WordSnap" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/pixel_blue</item>
+        <item name="android:navigationBarColor">@color/pixel_blue</item>
+        <item name="android:windowBackground">@color/pixel_paper</item>
+    </style>
 </resources>

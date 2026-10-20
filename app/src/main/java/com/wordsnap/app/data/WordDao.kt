@@ -10,17 +10,21 @@ import kotlinx.coroutines.flow.Flow
 // 讀寫單字的方法
 @Dao
 interface WordDao {
-    @Query("SELECT * FROM words ORDER BY createdAt DESC")
-    fun getAll(): Flow<List<Word>>
+    @Query("SELECT * FROM words WHERE profileId = :profileId ORDER BY createdAt DESC")
+    fun getAll(profileId: Long): Flow<List<Word>>
 
-    @Query("SELECT text FROM words")
-    suspend fun getAllTexts(): List<String>
+    @Query("SELECT text FROM words WHERE profileId = :profileId")
+    suspend fun getAllTexts(profileId: Long): List<String>
 
     @Query("SELECT * FROM words WHERE meaning = ''")
     suspend fun getWithoutMeaning(): List<Word>
 
-    @Query("SELECT * FROM words WHERE dueAt <= :now ORDER BY dueAt")
-    suspend fun getDue(now: Long): List<Word>
+    @Query("SELECT * FROM words WHERE profileId = :profileId AND dueAt <= :now ORDER BY dueAt")
+    suspend fun getDue(profileId: Long, now: Long): List<Word>
+
+    // 每日提醒用：所有暱稱加起來今天要複習幾個字
+    @Query("SELECT COUNT(*) FROM words WHERE dueAt <= :now")
+    suspend fun countDue(now: Long): Int
 
     @Insert
     suspend fun insert(word: Word)
