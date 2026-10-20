@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -19,8 +21,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,17 +39,44 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.ui.theme.pixelTopBarButtonColors
+import com.wordsnap.app.ui.theme.pixelTopBarColors
+import com.wordsnap.app.speech.rememberSpeaker
+import com.wordsnap.app.translate.ModelStatus
 
 // 單字本主畫面：列出所有單字，右下角可拍照或手動新增，點單字可編輯
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WordListScreen(vm: WordViewModel, onScan: () -> Unit) {
+fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) {
     val words by vm.words.collectAsState()
+    val profile by vm.currentProfile.collectAsState()
+    val profiles by vm.profiles.collectAsState()
+    var showProfiles by remember { mutableStateOf(false) }
+    val speaker = rememberSpeaker()
+    val translatorStatus by vm.translatorStatus.collectAsState()
+    val hasBlank = words.any { it.meaning.isBlank() }
+    val now = System.currentTimeMillis()
+    val dueCount = words.count { it.dueAt <= now }
     var showAdd by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Word?>(null) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("我的單字本（${words.size}）") }) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "${profile?.name ?: ""} 的單字本（${words.size}）▼",
+                        Modifier.clickable { showProfiles = true },
+                    )
+                },
+                actions = {
+                    TextButton(onClick = onReview, enabled = dueCount > 0, colors = pixelTopBarButtonColors()) {
+                        Text("複習（$dueCount）")
+                    }
+                },
+                colors = pixelTopBarColors(),
+            )
+        },
         floatingActionButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SmallFloatingActionButton(onClick = { showAdd = true }) {
@@ -62,24 +93,47 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit) {
                 Text("還沒有單字，按右下角「拍照」或 + 新增第一個")
             }
         } else {
-            LazyColumn(Modifier.fillMaxSize().padding(padding)) {
-                items(words, key = { it.id }) { word ->
-                    ListItem(
-                        modifier = Modifier.clickable { editing = word },
-                        headlineContent = { Text(word.text) },
-                        supportingContent = { Text(word.meaning.ifBlank { "（點一下填寫中文意思）" }) },
-                        trailingContent = {
-                            IconButton(onClick = { vm.delete(word) }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "刪除")
-                            }
-                        },
-                    )
-                    HorizontalDivider()
+            Column(Modifier.fillMaxSize().padding(padding)) {
+                if (hasBlank) TranslatorBanner(translatorStatus, onRetry = vm::retryTranslation)
+                LazyColumn(Modifier.fillMaxSize()) {
+                    items(words, key = { it.id }) { word ->
+                        ListItem(
+                            modifier = Modifier.clickable { editing = word },
+                            headlineContent = { Text(word.text) },
+                            supportingContent = { Text(word.meaning.ifBlank { blankMeaningHint(translatorStatus) }) },
+                            trailingContent = {
+                                Row {
+                                    IconButton(onClick = { speaker.speak(word.text) }) {
+                                        Icon(Icons.Filled.PlayArrow, contentDescription = "發音")
+                                    }
+                                    IconButton(onClick = { vm.delete(word) }) {
+                                        Icon(Icons.Filled.Delete, contentDescription = "刪除")
+                                    }
+                                }
+                            },
+                        )
+                        HorizontalDivider()
+                    }
                 }
             }
         }
     }
 
+    if (showProfiles) {
+        ProfileDialog(
+            profiles = profiles.orEmpty(),
+            currentId = profile?.id,
+            onSelect = { id ->
+                vm.selectProfile(id)
+                showProfiles = false
+            },
+            onCreate = { name ->
+                vm.createProfile(name)
+                showProfiles = false
+            },
+            onDismiss = { showProfiles = false },
+        )
+    }
     if (showAdd) {
         WordDialog(
             title = "新增單字",
@@ -121,7 +175,7 @@ private fun WordDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = text, onValueChange = { text = it }, label = { Text("英文單字") }, singleLine = true)
-                OutlinedTextField(value = meaning, onValueChange = { meaning = it }, label = { Text("中文意思") }, singleLine = true)
+                OutlinedTextField(value = meaning, onValueChange = { meaning = it }, label = { Text("中文意思（空白會自動翻譯）") }, singleLine = true)
             }
         },
         confirmButton = {
@@ -129,4 +183,26 @@ private fun WordDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     )
+}
+
+// 中文意思還空著時，依翻譯檔狀態顯示不同提示
+private fun blankMeaningHint(status: ModelStatus): String = when (status) {
+    ModelStatus.Downloading -> "（等待翻譯檔下載…）"
+    ModelStatus.Failed -> "（無法自動翻譯，點一下自己填寫）"
+    else -> "（翻譯中，或點一下自己填寫）"
+}
+
+@Composable
+private fun TranslatorBanner(status: ModelStatus, onRetry: () -> Unit) {
+    val message = when (status) {
+        ModelStatus.Downloading -> "第一次使用，正在下載翻譯檔（約 30 MB），完成後會自動翻譯"
+        ModelStatus.Failed -> "翻譯檔下載失敗，請確認網路後重試"
+        else -> return
+    }
+    Surface(color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(message, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            if (status == ModelStatus.Failed) TextButton(onClick = onRetry) { Text("重試") }
+        }
+    }
 }
