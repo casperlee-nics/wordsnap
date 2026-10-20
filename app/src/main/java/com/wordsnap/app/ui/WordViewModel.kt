@@ -9,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.wordsnap.app.data.AppDatabase
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.translate.ModelStatus
 import com.wordsnap.app.translate.WordTranslator
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,9 +28,14 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     val words: StateFlow<List<Word>> = dao.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    val translatorStatus: StateFlow<ModelStatus> = WordTranslator.status
+
     init {
         fillMissingMeanings()
     }
+
+    // 下載失敗後讓使用者按「重試」
+    fun retryTranslation() = fillMissingMeanings()
 
     fun add(text: String, meaning: String) {
         viewModelScope.launch {
