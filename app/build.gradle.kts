@@ -13,8 +13,8 @@ android {
         applicationId = "com.wordsnap.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2"
+        versionCode = 4
+        versionName = "0.3.1"
     }
 
     buildTypes {
@@ -54,4 +54,8 @@ dependencies {
 
     // 拍照辨識文字：ML Kit（模型內建在 App 裡，離線可用）
     implementation("com.google.mlkit:text-recognition:16.0.1")
+
+    // 英翻中：ML Kit 離線翻譯（第一次使用時下載約 30 MB 的翻譯檔）
+    implementation("com.google.mlkit:translate:17.0.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
 }

@@ -10,9 +10,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.wordsnap.app.ui.ReviewScreen
 import com.wordsnap.app.ui.ScanScreen
 import com.wordsnap.app.ui.WordListScreen
 import com.wordsnap.app.ui.WordViewModel
+
+// App 的三個畫面
+private enum class Screen { List, Scan, Review }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,19 +24,25 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 val vm: WordViewModel = viewModel()
-                var scanning by rememberSaveable { mutableStateOf(false) }
+                var screen by rememberSaveable { mutableStateOf(Screen.List) }
+                val backToList = { screen = Screen.List }
 
-                if (scanning) {
-                    BackHandler { scanning = false }
-                    ScanScreen(
+                if (screen != Screen.List) BackHandler(onBack = backToList)
+
+                when (screen) {
+                    Screen.List -> WordListScreen(
+                        vm,
+                        onScan = { screen = Screen.Scan },
+                        onReview = { screen = Screen.Review },
+                    )
+                    Screen.Scan -> ScanScreen(
                         onAdd = { words ->
                             vm.addAll(words)
-                            scanning = false
+                            screen = Screen.List
                         },
-                        onBack = { scanning = false },
+                        onBack = backToList,
                     )
-                } else {
-                    WordListScreen(vm, onScan = { scanning = true })
+                    Screen.Review -> ReviewScreen(vm, onBack = backToList)
                 }
             }
         }
