@@ -9,4 +9,6 @@ data class Profile(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val createdAt: Long = System.currentTimeMillis(),
+    // 像素人物的名稱，見 ui/Avatar.kt
+    val avatar: String? = null,
 )

@@ -62,7 +62,9 @@ class MainActivity : ComponentActivity() {
 private fun MainScreens(vm: WordViewModel) {
     var screen by rememberSaveable { mutableStateOf(Screen.List) }
     val backToList = { screen = Screen.List }
-    val words by vm.words.collectAsState()
+    val allWords by vm.allWords.collectAsState()
+    val books by vm.books.collectAsState()
+    val selectedBookId by vm.selectedBookId.collectAsState()
 
     if (screen != Screen.List) BackHandler(onBack = backToList)
 
@@ -73,9 +75,12 @@ private fun MainScreens(vm: WordViewModel) {
             onReview = { screen = Screen.Review },
         )
         Screen.Scan -> ScanScreen(
-            existing = words.map { it.text.lowercase() }.toSet(),
-            onAdd = { picked ->
-                vm.addAll(picked)
+            existing = allWords.map { it.text.lowercase() }.toSet(),
+            books = books,
+            defaultBookId = selectedBookId,
+            onCreateBook = vm::createBook,
+            onAdd = { picked, bookId ->
+                vm.addAll(picked, bookId)
                 screen = Screen.List
             },
             onBack = backToList,

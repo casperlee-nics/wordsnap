@@ -16,4 +16,6 @@ data class Word(
     @ColumnInfo(defaultValue = "0") val dueAt: Long = 0,
     // 屬於哪個暱稱
     @ColumnInfo(defaultValue = "1") val profileId: Long = 1,
+    // 放在哪一本單字簿
+    val bookId: Long? = null,
 )
