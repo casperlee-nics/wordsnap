@@ -29,7 +29,7 @@ fun BookPicker(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var creating by remember { mutableStateOf(false) }
-    val current = books.firstOrNull { it.id == selectedId }?.name ?: if (allowAll) "全部" else "選擇單字簿"
+    val current = books.firstOrNull { it.id == selectedId }?.let(::bookLabel) ?: if (allowAll) "全部" else "選擇單字簿"
 
     Box(modifier) {
         OutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }
@@ -38,7 +38,7 @@ fun BookPicker(
                 DropdownMenuItem(text = { Text("全部") }, onClick = { onSelect(null); expanded = false })
             }
             books.forEach { book ->
-                DropdownMenuItem(text = { Text(book.name) }, onClick = { onSelect(book.id); expanded = false })
+                DropdownMenuItem(text = { Text(bookLabel(book)) }, onClick = { onSelect(book.id); expanded = false })
             }
             DropdownMenuItem(text = { Text("+ 新增單字簿") }, onClick = { creating = true; expanded = false })
         }
@@ -73,3 +73,6 @@ private fun NewBookDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit) {
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     )
 }
+
+// 通過戰鬥考試的單字簿前面加一顆星
+private fun bookLabel(book: Book) = if (book.clearedAt != null) "★${book.name}" else book.name

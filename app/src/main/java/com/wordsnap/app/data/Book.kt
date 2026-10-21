@@ -10,4 +10,6 @@ data class Book(
     val profileId: Long,
     val name: String,
     val createdAt: Long = System.currentTimeMillis(),
+    // 第一次通過這本的戰鬥考試的時間，null 代表還沒通過
+    val clearedAt: Long? = null,
 )

@@ -1,7 +1,5 @@
 package com.wordsnap.app.ui
 
-import android.content.Context
-import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +15,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,15 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.wordsnap.app.R
 import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelShape
-
-private const val PREFS = "wordsnap"
-private const val KEY_MUSIC = "music_on"
 
 // 主畫面：上方是像素世界，中間是選單，下方是草地
 @Composable
@@ -45,9 +36,8 @@ fun TitleScreen(
     onDeleteSave: () -> Unit,
 ) {
     val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
-    var musicOn by remember { mutableStateOf(prefs.getBoolean(KEY_MUSIC, true)) }
-    TitleMusic(enabled = musicOn)
+    var musicOn by remember { mutableStateOf(isMusicOn(context)) }
+    LoopingMusic(R.raw.title_bgm, enabled = musicOn, volume = 0.6f)
 
     Box(Modifier.fillMaxSize().background(SceneGrass)) {
         Column(Modifier.fillMaxSize()) {
@@ -83,36 +73,10 @@ fun TitleScreen(
                     }
                     TextButton(onClick = {
                         musicOn = !musicOn
-                        prefs.edit().putBoolean(KEY_MUSIC, musicOn).apply()
+                        setMusicOn(context, musicOn)
                     }) { Text(if (musicOn) "♪ 音樂：開" else "♪ 音樂：關") }
                 }
             }
-        }
-    }
-}
-
-// 主畫面的 8-bit 背景音樂，約 30 秒循環；App 切到背景時暫停
-@Composable
-private fun TitleMusic(enabled: Boolean) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(enabled, lifecycleOwner) {
-        if (!enabled) return@DisposableEffect onDispose { }
-        val player = MediaPlayer.create(context, R.raw.title_bgm)?.apply {
-            isLooping = true
-            setVolume(0.6f, 0.6f)
-        }
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> player?.start()
-                Lifecycle.Event.ON_PAUSE -> player?.pause()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            player?.release()
         }
     }
 }

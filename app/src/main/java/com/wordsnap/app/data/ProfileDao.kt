@@ -16,6 +16,9 @@ interface ProfileDao {
     @Insert
     suspend fun insert(profile: Profile): Long
 
+    @Query("UPDATE profiles SET exp = exp + :amount WHERE id = :id")
+    suspend fun addExp(id: Long, amount: Int)
+
     @Query("DELETE FROM profiles WHERE id = :id")
     suspend fun delete(id: Long)
 }

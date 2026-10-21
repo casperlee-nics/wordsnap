@@ -33,6 +33,24 @@ private val INTERVALS = longArrayOf(0, 1 * DAY, 3 * DAY, 7 * DAY, 14 * DAY, 30 *
 private const val PREFS = "wordsnap"
 private const val KEY_PROFILE = "current_profile_id"
 
+const val BATTLE_SIZE = 20
+private const val EXP_PER_WORD = 10
+private const val EXP_PASS_BONUS = 50
+
+// 答對七成算通過
+fun passScore(total: Int): Int = (total * 7 + 9) / 10
+
+data class BattleUnlock(val unlocked: Boolean, val remembered: Int, val total: Int)
+
+data class BattleReward(
+    val passed: Boolean,
+    val correct: Int,
+    val total: Int,
+    val exp: Int,
+    val levelBefore: Int,
+    val levelAfter: Int,
+)
+
 // 畫面和資料庫之間的橋樑
 @OptIn(ExperimentalCoroutinesApi::class)
 class WordViewModel(application: Application) : AndroidViewModel(application) {
@@ -173,6 +191,43 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         for (word in dao.getWithoutMeaning()) {
             val meaning = WordTranslator.translate(word.text) ?: return
             dao.fillMeaning(word.id, meaning)
+        }
+    }
+
+    // ---- 戰鬥模式 ----
+
+    // 這本單字簿的戰鬥模式是否解鎖：記住 20 個字，或整本都記住過
+    fun battleUnlock(bookId: Long?): BattleUnlock {
+        if (bookId == null) return BattleUnlock(false, 0, 0)
+        val inBook = allWords.value.filter { it.bookId == bookId }
+        val remembered = inBook.count { it.box >= 1 }
+        val unlocked = remembered >= BATTLE_SIZE || (inBook.isNotEmpty() && remembered == inBook.size)
+        val pool = inBook.count { it.box >= 1 && it.text.trim().length >= 3 }
+        return BattleUnlock(unlocked && pool > 0, remembered, inBook.size)
+    }
+
+    // 出題：從記住的字裡挑 20 個，先挑沒考過的，不夠再用考過比較久的補
+    fun pickBattleWords(bookId: Long): List<Word> {
+        val pool = allWords.value.filter { it.bookId == bookId && it.box >= 1 && it.text.trim().length >= 3 }
+        val fresh = pool.filter { it.testedAt == null }.shuffled()
+        val tested = pool.filter { it.testedAt != null }.sortedBy { it.testedAt }
+        val picked = fresh.take(BATTLE_SIZE)
+        return (picked + tested.take(BATTLE_SIZE - picked.size)).shuffled()
+    }
+
+    // 戰鬥結束：記下考過的字、加經驗值、通過就標記這本單字簿已通關
+    fun finishBattle(bookId: Long, asked: List<Word>, correct: Int, onDone: (BattleReward) -> Unit) {
+        val profile = currentProfile.value ?: return
+        val passed = correct >= passScore(asked.size)
+        val gained = correct * EXP_PER_WORD + if (passed) EXP_PASS_BONUS else 0
+        val before = levelInfo(profile.exp).level
+        val after = levelInfo(profile.exp + gained).level
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            dao.markTested(asked.map { it.id }, now)
+            profileDao.addExp(profile.id, gained)
+            if (passed) bookDao.markCleared(bookId, now)
+            onDone(BattleReward(passed, correct, asked.size, gained, before, after))
         }
     }
 
