@@ -48,13 +48,11 @@ import com.wordsnap.app.translate.ModelStatus
 // 單字本主畫面：列出所有單字，右下角可拍照或手動新增，點單字可編輯
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) {
+fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit, onHome: () -> Unit) {
     val words by vm.words.collectAsState()
     val books by vm.books.collectAsState()
     val selectedBookId by vm.selectedBookId.collectAsState()
     val profile by vm.currentProfile.collectAsState()
-    val profiles by vm.profiles.collectAsState()
-    var showProfiles by remember { mutableStateOf(false) }
     val speaker = rememberSpeaker()
     val translatorStatus by vm.translatorStatus.collectAsState()
     val hasBlank = words.any { it.meaning.isBlank() }
@@ -67,13 +65,13 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) 
         topBar = {
             TopAppBar(
                 title = {
-                    // 點人物和暱稱可以切換冒險者
+                    // 點人物和暱稱回到主畫面，可以換存檔
                     Row(
-                        Modifier.clickable { showProfiles = true },
+                        Modifier.clickable(onClick = onHome),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         PixelAvatar(Avatar.from(profile?.avatar), size = 32.dp)
-                        Text("${profile?.name ?: ""} ▼", Modifier.padding(start = 8.dp))
+                        Text(profile?.name ?: "", Modifier.padding(start = 8.dp))
                     }
                 },
                 actions = {
@@ -148,21 +146,6 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit) 
         }
     }
 
-    if (showProfiles) {
-        ProfileDialog(
-            profiles = profiles.orEmpty(),
-            currentId = profile?.id,
-            onSelect = { id ->
-                vm.selectProfile(id)
-                showProfiles = false
-            },
-            onCreate = { name, avatar ->
-                vm.createProfile(name, avatar)
-                showProfiles = false
-            },
-            onDismiss = { showProfiles = false },
-        )
-    }
     if (showAdd) {
         WordDialog(
             title = "新增單字",

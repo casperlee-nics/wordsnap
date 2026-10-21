@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,10 +15,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.wordsnap.app.data.Book
 import com.wordsnap.app.ocr.TextScanner
+import com.wordsnap.app.ui.theme.PixelBorder
+import com.wordsnap.app.ui.theme.PixelShape
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 import java.io.File
 
@@ -63,6 +68,7 @@ fun ScanScreen(
     var found by remember { mutableStateOf<List<String>?>(null) }
     val selected = remember { mutableStateListOf<String>() }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var showAimHint by remember { mutableStateOf(false) }
     // 要存進哪一本單字簿，預設是單字本畫面目前選的那本
     var targetBookId by remember { mutableStateOf(defaultBookId ?: books.firstOrNull()?.id) }
 
@@ -94,7 +100,7 @@ fun ScanScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("拍照找單字") },
+                title = { Text("捕捉怪物") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -109,11 +115,7 @@ fun ScanScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = {
-                    val uri = newPhotoUri(context)
-                    photoUri = uri
-                    takePicture.launch(uri)
-                }) { Text("拍照") }
+                Button(onClick = { showAimHint = true }) { Text("拍照") }
                 OutlinedButton(onClick = {
                     pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }) { Text("從相簿選") }
@@ -124,7 +126,7 @@ fun ScanScreen(
                     CircularProgressIndicator()
                 }
                 error != null -> Text(error!!)
-                found == null -> Text("拍一張課本或文章的照片，App 會找出裡面的英文單字。")
+                found == null -> Text("拍一張課本或文章的照片，App 會找出裡面的英文單字怪物。")
                 found!!.none { !TextScanner.isCommon(it) } -> Text("沒有找到英文單字，換一張清楚一點的照片試試。")
                 else -> {
                     // 濾掉 the、and 這類常見字；已經收錄的字照樣列出但不能選
@@ -134,7 +136,7 @@ fun ScanScreen(
                     val selectable = words.filter { it !in existing }
                     val allSelected = selectable.isNotEmpty() && selected.size == selectable.size
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("找到 ${words.size} 個字，點選要背的：", Modifier.weight(1f))
+                        Text("哪些是新的怪物？（找到 ${words.size} 隻）", Modifier.weight(1f))
                         TextButton(onClick = {
                             selected.clear()
                             if (!allSelected) selected.addAll(selectable)
@@ -143,18 +145,34 @@ fun ScanScreen(
                     if (skipped > 0) {
                         Text("已略過 $skipped 個常見字（如 the、and、is）", style = MaterialTheme.typography.bodySmall)
                     }
-                    FlowRow(
-                        Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        words.forEach { word ->
-                            val owned = word in existing
-                            FilterChip(
-                                selected = word in selected,
-                                onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
-                                label = { Text(if (owned) "$word（已有）" else word) },
-                                enabled = !owned,
-                            )
+                    // 選字的外框，上緣站著幾隻像素怪物
+                    Box(Modifier.weight(1f).fillMaxWidth()) {
+                        FlowRow(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(top = 28.dp)
+                                .border(PixelBorder, PixelShape)
+                                .padding(start = 10.dp, end = 10.dp, top = 24.dp, bottom = 8.dp)
+                                .verticalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            words.forEach { word ->
+                                val owned = word in existing
+                                FilterChip(
+                                    selected = word in selected,
+                                    onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
+                                    label = { Text(if (owned) "$word（已有）" else word) },
+                                    enabled = !owned,
+                                )
+                            }
+                        }
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            Monsters.forEach { art ->
+                                PixelArt(art, ScenePalette, Modifier.size(48.dp))
+                            }
                         }
                     }
                     BookPicker(
@@ -173,6 +191,26 @@ fun ScanScreen(
                 }
             }
         }
+    }
+
+    // 按下拍照先提示，按「準備好了」才打開相機
+    if (showAimHint) {
+        AlertDialog(
+            onDismissRequest = { showAimHint = false },
+            title = { Text("怪物出現了！") },
+            text = { Text("請將鏡頭對準怪物") },
+            confirmButton = {
+                Button(onClick = {
+                    showAimHint = false
+                    val uri = newPhotoUri(context)
+                    photoUri = uri
+                    takePicture.launch(uri)
+                }) { Text("準備好了") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAimHint = false }) { Text("取消") }
+            },
+        )
     }
 }
 

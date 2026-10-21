@@ -15,4 +15,7 @@ interface ProfileDao {
 
     @Insert
     suspend fun insert(profile: Profile): Long
+
+    @Query("DELETE FROM profiles WHERE id = :id")
+    suspend fun delete(id: Long)
 }
