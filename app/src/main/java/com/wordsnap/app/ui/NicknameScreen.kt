@@ -6,11 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -41,7 +45,8 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
-            Modifier.fillMaxSize().padding(32.dp),
+            // 可以上下捲動，鍵盤跳出來時輸入框會自動捲到看得見的位置
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
         ) {
@@ -81,25 +86,27 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
     }
 }
 
-// 8 個像素人物，排成 4 x 2，選中的有粗框
+// 像素人物，一排放不下就往下排，選中的有粗框
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AvatarPicker(selected: Avatar, onSelect: (Avatar) -> Unit, showLabels: Boolean = true) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Avatar.entries.chunked(4).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                row.forEach { item ->
-                    val isSelected = item == selected
-                    Column(
-                        Modifier
-                            .border(if (isSelected) 3.dp else 1.dp, if (isSelected) PixelInk else PixelGray, PixelShape)
-                            .clickable { onSelect(item) }
-                            .padding(6.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        PixelAvatar(item, size = 48.dp)
-                        if (showLabels) Text(item.label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-                    }
-                }
+    FlowRow(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Avatar.entries.forEach { item ->
+            val isSelected = item == selected
+            Column(
+                Modifier
+                    .width(72.dp)
+                    .border(if (isSelected) 3.dp else 1.dp, if (isSelected) PixelInk else PixelGray, PixelShape)
+                    .clickable { onSelect(item) }
+                    .padding(6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                PixelAvatar(item, size = 48.dp)
+                if (showLabels) Text(item.label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
         }
     }

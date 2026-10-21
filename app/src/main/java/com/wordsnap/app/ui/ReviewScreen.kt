@@ -40,6 +40,8 @@ import com.wordsnap.app.ui.theme.pixelTopBarColors
 fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
     val speaker = rememberSpeaker()
     LaunchedEffect(Unit) { vm.startReview() }
+    // 每次進來隨機一個場景，複習途中不換
+    val scene = remember { ReviewScene.entries.random() }
 
     Scaffold(
         topBar = {
@@ -54,49 +56,52 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
             )
         },
     ) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding).padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
-        ) {
-            val word = vm.reviewQueue.firstOrNull()
-            if (word == null) {
-                Text("今天的單字都複習完了！", style = MaterialTheme.typography.headlineSmall)
-                if (vm.reviewedCount > 0) Text("這次記住了 ${vm.reviewedCount} 個字")
-                Button(onClick = onBack) { Text("回單字本") }
-            } else {
-                var revealed by remember(vm.reviewStep) { mutableStateOf(false) }
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            PixelArt(scene.art, ScenePalette, Modifier.fillMaxWidth())
+            Column(
+                Modifier.fillMaxWidth().weight(1f).padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+            ) {
+                val word = vm.reviewQueue.firstOrNull()
+                if (word == null) {
+                    Text("今天的單字都複習完了！", style = MaterialTheme.typography.headlineSmall)
+                    if (vm.reviewedCount > 0) Text("這次記住了 ${vm.reviewedCount} 個字")
+                    Button(onClick = onBack) { Text("回單字本") }
+                } else {
+                    var revealed by remember(vm.reviewStep) { mutableStateOf(false) }
 
-                // 像遊戲對話框的卡片
-                Surface(
-                    shape = PixelShape,
-                    border = PixelBorder,
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Box(Modifier.padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(word.text, style = MaterialTheme.typography.displaySmall)
-                            IconButton(onClick = { speaker.speak(word.text) }) {
-                                Icon(Icons.Filled.PlayArrow, contentDescription = "發音")
+                    // 像遊戲對話框的卡片
+                    Surface(
+                        shape = PixelShape,
+                        border = PixelBorder,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Box(Modifier.padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(word.text, style = MaterialTheme.typography.displaySmall)
+                                IconButton(onClick = { speaker.speak(word.text) }) {
+                                    Icon(Icons.Filled.PlayArrow, contentDescription = "發音")
+                                }
                             }
                         }
                     }
-                }
 
-                if (!revealed) {
-                    Button(onClick = { revealed = true }, Modifier.fillMaxWidth()) { Text("看答案") }
-                } else {
-                    Text(
-                        word.meaning.ifBlank { "（還沒有中文意思）" },
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        OutlinedButton(onClick = { vm.answer(word, remembered = false) }, Modifier.weight(1f)) {
-                            Text("忘了")
-                        }
-                        Button(onClick = { vm.answer(word, remembered = true) }, Modifier.weight(1f)) {
-                            Text("記得")
+                    if (!revealed) {
+                        Button(onClick = { revealed = true }, Modifier.fillMaxWidth()) { Text("看答案") }
+                    } else {
+                        Text(
+                            word.meaning.ifBlank { "（還沒有中文意思）" },
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            OutlinedButton(onClick = { vm.answer(word, remembered = false) }, Modifier.weight(1f)) {
+                                Text("忘了")
+                            }
+                            Button(onClick = { vm.answer(word, remembered = true) }, Modifier.weight(1f)) {
+                                Text("記得")
+                            }
                         }
                     }
                 }
