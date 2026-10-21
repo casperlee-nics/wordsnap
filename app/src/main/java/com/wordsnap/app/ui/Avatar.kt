@@ -68,37 +68,71 @@ enum class Avatar(val label: String, val art: List<String>) {
             ".KKKKKKKKKK.",
         ),
     ),
-    GlassesMan(
-        "戴眼鏡男子",
+    ElfMan(
+        "男精靈",
         listOf(
             "....KKKK....",
-            "...KHHHHK...",
-            "..KHHHHHHK..",
-            "..KHSSSSHK..",
-            ".KKLKLLKLKK.",
-            "..KSSSSSSK..",
+            "...KYYYYK...",
+            "..KYYYYYYK..",
+            "K.KYSSSSYK.K",
+            "KSKSKSSKSKSK",
+            ".KKSSSSSSKK.",
             "...KSPPSK...",
             "....KSSK....",
-            "..KKBBBBKK..",
-            ".KBBBBBBBBK.",
-            ".KBBBBBBBBK.",
+            "..KKGGGGKK..",
+            ".KGGGYYGGGK.",
+            ".KGGGGGGGGK.",
             ".KKKKKKKKKK.",
         ),
     ),
-    GlassesWoman(
-        "戴眼鏡女子",
+    ElfWoman(
+        "女精靈",
         listOf(
             "....KKKK....",
-            "...KhhhhK...",
-            "..KhhhhhhK..",
-            ".KhhSSSShhK.",
-            ".KKLKLLKLKK.",
-            ".KhSSSSSShK.",
-            ".KhhSPPShhK.",
-            ".KhhKSSKhhK.",
-            "..KKRRRRKK..",
-            ".KRRRRRRRRK.",
-            ".KRRRRRRRRK.",
+            "...KYYYYK...",
+            "..KYYYYYYK..",
+            "K.KYSSSSYK.K",
+            "KSKYKSSKYKSK",
+            ".KKYSSSSYKK.",
+            "..KYSPPSYK..",
+            "..KYKSSKYK..",
+            "..KKggggKK..",
+            ".KggggggggK.",
+            ".KgGgggggGK.",
+            ".KKKKKKKKKK.",
+        ),
+    ),
+    Goblin(
+        "哥布林",
+        listOf(
+            "............",
+            "...KKKKKK...",
+            "..KggggggK..",
+            "K.KggggggK.K",
+            "KgKgRggRgKgK",
+            ".KKggggggKK.",
+            "..KgKWWKgK..",
+            "...KggggK...",
+            "..KKDDDDKK..",
+            ".KgDDDDDDgK.",
+            ".KgDDDDDDgK.",
+            ".KKKKKKKKKK.",
+        ),
+    ),
+    Dwarf(
+        "矮人",
+        listOf(
+            "............",
+            "....KKKK....",
+            "...KMMMMK...",
+            "..KMMMMMMK..",
+            "..KKKKKKKK..",
+            "..KSKSSKSK..",
+            "..KSSPPSSK..",
+            ".KOOOOOOOOK.",
+            ".KOOOOOOOOK.",
+            "KDKOOOOOOKDK",
+            "KDDKOOOOKDDK",
             ".KKKKKKKKKK.",
         ),
     ),
@@ -172,8 +206,12 @@ enum class Avatar(val label: String, val art: List<String>) {
     );
 
     companion object {
-        // 資料庫存的是名稱，找不到就用男子
-        fun from(key: String?): Avatar = entries.firstOrNull { it.name == key } ?: Man
+        // 資料庫存的是名稱，找不到就用男子；v0.5 的戴眼鏡人物改成精靈
+        fun from(key: String?): Avatar = when (key) {
+            "GlassesMan" -> ElfMan
+            "GlassesWoman" -> ElfWoman
+            else -> entries.firstOrNull { it.name == key } ?: Man
+        }
     }
 }
 

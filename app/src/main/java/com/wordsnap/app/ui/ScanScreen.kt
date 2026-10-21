@@ -136,7 +136,7 @@ fun ScanScreen(
                     val selectable = words.filter { it !in existing }
                     val allSelected = selectable.isNotEmpty() && selected.size == selectable.size
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("哪些是新的怪物？（找到 ${words.size} 隻）", Modifier.weight(1f))
+                        Text("要新增的怪物（找到 ${words.size} 隻）", Modifier.weight(1f))
                         TextButton(onClick = {
                             selected.clear()
                             if (!allSelected) selected.addAll(selectable)
@@ -150,9 +150,9 @@ fun ScanScreen(
                         FlowRow(
                             Modifier
                                 .fillMaxSize()
-                                .padding(top = 28.dp)
+                                .padding(top = 18.dp)
                                 .border(PixelBorder, PixelShape)
-                                .padding(start = 10.dp, end = 10.dp, top = 24.dp, bottom = 8.dp)
+                                .padding(start = 10.dp, end = 10.dp, top = 16.dp, bottom = 8.dp)
                                 .verticalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
@@ -171,7 +171,7 @@ fun ScanScreen(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                         ) {
                             Monsters.forEach { art ->
-                                PixelArt(art, ScenePalette, Modifier.size(48.dp))
+                                PixelArt(art, ScenePalette, Modifier.size(30.dp))
                             }
                         }
                     }
