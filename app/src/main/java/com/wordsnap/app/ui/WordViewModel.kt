@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.wordsnap.app.data.AppDatabase
 import com.wordsnap.app.data.Book
 import com.wordsnap.app.data.Profile
@@ -54,7 +55,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     // 新暱稱會順便建立第一本單字簿；已有同名的暱稱就直接切換過去
-    fun createProfile(name: String, avatar: Avatar) {
+    fun createProfile(name: String, avatar: Avatar, onReady: () -> Unit = {}) {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return
         viewModelScope.launch {
@@ -63,6 +64,18 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                     bookDao.insert(Book(profileId = newId, name = AppDatabase.DEFAULT_BOOK))
                 }
             selectProfile(id)
+            onReady()
+        }
+    }
+
+    // 刪除進度：這個冒險者的單字、單字簿和暱稱一起刪掉
+    fun deleteProfile(profile: Profile) {
+        viewModelScope.launch {
+            db.withTransaction {
+                dao.deleteForProfile(profile.id)
+                bookDao.deleteForProfile(profile.id)
+                profileDao.delete(profile.id)
+            }
         }
     }
 

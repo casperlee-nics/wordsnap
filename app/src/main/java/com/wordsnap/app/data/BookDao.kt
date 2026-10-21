@@ -12,4 +12,7 @@ interface BookDao {
 
     @Insert
     suspend fun insert(book: Book): Long
+
+    @Query("DELETE FROM books WHERE profileId = :profileId")
+    suspend fun deleteForProfile(profileId: Long)
 }

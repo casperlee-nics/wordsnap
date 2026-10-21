@@ -5,9 +5,11 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -23,34 +25,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.wordsnap.app.data.Profile
 import com.wordsnap.app.reminder.ReviewReminder
+import com.wordsnap.app.ui.GameFrame
 import com.wordsnap.app.ui.NicknameScreen
 import com.wordsnap.app.ui.ReviewScreen
+import com.wordsnap.app.ui.SaveSlotScreen
 import com.wordsnap.app.ui.ScanScreen
+import com.wordsnap.app.ui.TitleScreen
 import com.wordsnap.app.ui.WordListScreen
 import com.wordsnap.app.ui.WordViewModel
 import com.wordsnap.app.ui.theme.PixelTheme
 
-// App 的三個畫面
-private enum class Screen { List, Scan, Review }
+// App 的畫面：主畫面、新遊戲、讀取、刪除，以及進入遊戲後的單字本、拍照、複習
+private enum class Screen { Title, NewGame, Load, Delete, List, Scan, Review }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 讓遊戲機外框鋪到狀態列和導覽列後面
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         ReviewReminder.schedule(this)
 
         setContent {
             PixelTheme {
-                val vm: WordViewModel = viewModel()
-                val profiles by vm.profiles.collectAsState()
-
-                when {
-                    // 還在讀資料：只畫背景，避免閃一下暱稱畫面
-                    profiles == null -> Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {}
-                    profiles!!.isEmpty() -> NicknameScreen(onStart = vm::createProfile)
-                    else -> {
-                        AskNotificationPermission()
-                        MainScreens(vm)
+                GameFrame {
+                    val vm: WordViewModel = viewModel()
+                    val profiles by vm.profiles.collectAsState()
+                    // 還在讀資料：只畫背景，避免閃一下
+                    if (profiles == null) {
+                        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {}
+                    } else {
+                        MainScreens(vm, profiles!!)
                     }
                 }
             }
@@ -59,20 +68,53 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainScreens(vm: WordViewModel) {
-    var screen by rememberSaveable { mutableStateOf(Screen.List) }
+private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
+    var screen by rememberSaveable { mutableStateOf(Screen.Title) }
     val backToList = { screen = Screen.List }
+    val backToTitle = { screen = Screen.Title }
     val allWords by vm.allWords.collectAsState()
     val books by vm.books.collectAsState()
     val selectedBookId by vm.selectedBookId.collectAsState()
 
-    if (screen != Screen.List) BackHandler(onBack = backToList)
+    val inGame = screen == Screen.List || screen == Screen.Scan || screen == Screen.Review
 
     when (screen) {
+        Screen.Title -> Unit
+        Screen.NewGame, Screen.Load, Screen.Delete, Screen.List -> BackHandler(onBack = backToTitle)
+        Screen.Scan, Screen.Review -> BackHandler(onBack = backToList)
+    }
+    if (inGame) AskNotificationPermission()
+
+    when (screen) {
+        Screen.Title -> TitleScreen(
+            hasSaves = profiles.isNotEmpty(),
+            onNewGame = { screen = Screen.NewGame },
+            onLoadGame = { screen = Screen.Load },
+            onDeleteSave = { screen = Screen.Delete },
+        )
+        Screen.NewGame -> NicknameScreen(onStart = { name, avatar ->
+            vm.createProfile(name, avatar) { screen = Screen.List }
+        })
+        Screen.Load -> SaveSlotScreen(
+            deleting = false,
+            profiles = profiles,
+            onPick = { profile ->
+                vm.selectProfile(profile.id)
+                screen = Screen.List
+            },
+            onBack = backToTitle,
+        )
+        Screen.Delete -> SaveSlotScreen(
+            deleting = true,
+            profiles = profiles,
+            onPick = vm::deleteProfile,
+            onBack = backToTitle,
+        )
         Screen.List -> WordListScreen(
             vm,
             onScan = { screen = Screen.Scan },
             onReview = { screen = Screen.Review },
+            onHome = backToTitle,
         )
         Screen.Scan -> ScanScreen(
             existing = allWords.map { it.text.lowercase() }.toSet(),

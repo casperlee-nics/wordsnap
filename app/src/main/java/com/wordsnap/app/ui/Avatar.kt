@@ -1,6 +1,7 @@
 package com.wordsnap.app.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -178,11 +179,18 @@ enum class Avatar(val label: String, val art: List<String>) {
 
 @Composable
 fun PixelAvatar(avatar: Avatar, size: Dp = 48.dp, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(size)) {
-        val cell = this.size.width / avatar.art.size
-        avatar.art.forEachIndexed { y, row ->
+    PixelArt(avatar.art, palette, modifier.size(size))
+}
+
+// 把字元陣列畫成像素圖，寬度跟著版面，高度依比例
+@Composable
+fun PixelArt(art: List<String>, colors: Map<Char, Color>, modifier: Modifier = Modifier) {
+    val columns = art.first().length
+    Canvas(modifier.aspectRatio(columns.toFloat() / art.size)) {
+        val cell = this.size.width / columns
+        art.forEachIndexed { y, row ->
             row.forEachIndexed { x, ch ->
-                val color = palette[ch] ?: return@forEachIndexed
+                val color = colors[ch] ?: return@forEachIndexed
                 // 每格多畫 0.5 像素，避免格子之間出現細縫
                 drawRect(color, Offset(x * cell, y * cell), Size(cell + 0.5f, cell + 0.5f))
             }
