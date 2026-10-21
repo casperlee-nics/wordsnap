@@ -1,5 +1,6 @@
 package com.wordsnap.app.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -11,4 +12,6 @@ data class Profile(
     val createdAt: Long = System.currentTimeMillis(),
     // 像素人物的名稱，見 ui/Avatar.kt
     val avatar: String? = null,
+    // 戰鬥得到的經驗值，等級由它算出來，見 ui/Hero.kt
+    @ColumnInfo(defaultValue = "0") val exp: Int = 0,
 )

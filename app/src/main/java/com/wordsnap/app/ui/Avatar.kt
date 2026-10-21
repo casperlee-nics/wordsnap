@@ -153,23 +153,6 @@ enum class Avatar(val label: String, val art: List<String>) {
             "..KK....KK..",
         ),
     ),
-    Dog(
-        "狗",
-        listOf(
-            "..KKKKKKKK..",
-            ".KDDDDDDDDK.",
-            "KdKDDDDDDKdK",
-            "KdKDKDDKDKdK",
-            "KdKDDDDDDKdK",
-            "KdKDdKKdDKdK",
-            ".KKDddddDKK.",
-            "...KDPPDK...",
-            "...KDDDDK...",
-            "..KDDDDDDK..",
-            "..KDKDDKDK..",
-            "..KK.KK.KK..",
-        ),
-    ),
     Dragon(
         "龍",
         listOf(
@@ -206,10 +189,11 @@ enum class Avatar(val label: String, val art: List<String>) {
     );
 
     companion object {
-        // 資料庫存的是名稱，找不到就用男子；v0.5 的戴眼鏡人物改成精靈
+        // 資料庫存的是名稱，找不到就用男子；已移除的人物換成相近的
         fun from(key: String?): Avatar = when (key) {
             "GlassesMan" -> ElfMan
             "GlassesWoman" -> ElfWoman
+            "Dog" -> Cat
             else -> entries.firstOrNull { it.name == key } ?: Man
         }
     }

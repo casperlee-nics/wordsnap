@@ -18,4 +18,6 @@ data class Word(
     @ColumnInfo(defaultValue = "1") val profileId: Long = 1,
     // 放在哪一本單字簿
     val bookId: Long? = null,
+    // 上次在戰鬥模式考過的時間，null 代表還沒考過
+    val testedAt: Long? = null,
 )

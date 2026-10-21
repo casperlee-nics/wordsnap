@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -27,7 +28,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wordsnap.app.data.Profile
 import com.wordsnap.app.reminder.ReviewReminder
+import com.wordsnap.app.ui.BattleScreen
 import com.wordsnap.app.ui.GameFrame
+import com.wordsnap.app.ui.ListenScreen
 import com.wordsnap.app.ui.NicknameScreen
 import com.wordsnap.app.ui.ReviewScreen
 import com.wordsnap.app.ui.SaveSlotScreen
@@ -37,8 +40,8 @@ import com.wordsnap.app.ui.WordListScreen
 import com.wordsnap.app.ui.WordViewModel
 import com.wordsnap.app.ui.theme.PixelTheme
 
-// App 的畫面：主畫面、新遊戲、讀取、刪除，以及進入遊戲後的單字本、拍照、複習
-private enum class Screen { Title, NewGame, Load, Delete, List, Scan, Review }
+// App 的畫面：主畫面、新遊戲、讀取、刪除，以及進入遊戲後的單字本、拍照、複習、朗讀、戰鬥
+private enum class Screen { Title, NewGame, Load, Delete, List, Scan, Review, Listen, Battle }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,18 +73,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
     var screen by rememberSaveable { mutableStateOf(Screen.Title) }
+    var battleBookId by rememberSaveable { mutableLongStateOf(-1L) }
     val backToList = { screen = Screen.List }
     val backToTitle = { screen = Screen.Title }
     val allWords by vm.allWords.collectAsState()
     val books by vm.books.collectAsState()
     val selectedBookId by vm.selectedBookId.collectAsState()
 
-    val inGame = screen == Screen.List || screen == Screen.Scan || screen == Screen.Review
+    val inGame = screen >= Screen.List
 
     when (screen) {
         Screen.Title -> Unit
         Screen.NewGame, Screen.Load, Screen.Delete, Screen.List -> BackHandler(onBack = backToTitle)
-        Screen.Scan, Screen.Review -> BackHandler(onBack = backToList)
+        Screen.Scan, Screen.Review, Screen.Listen, Screen.Battle -> BackHandler(onBack = backToList)
     }
     if (inGame) AskNotificationPermission()
 
@@ -114,6 +118,11 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
             vm,
             onScan = { screen = Screen.Scan },
             onReview = { screen = Screen.Review },
+            onListen = { screen = Screen.Listen },
+            onBattle = { bookId ->
+                battleBookId = bookId
+                screen = Screen.Battle
+            },
             onHome = backToTitle,
         )
         Screen.Scan -> ScanScreen(
@@ -127,7 +136,9 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
             },
             onBack = backToList,
         )
-        Screen.Review -> ReviewScreen(vm, onBack = backToList)
+        Screen.Review -> ReviewScreen(vm, onListen = { screen = Screen.Listen }, onBack = backToList)
+        Screen.Listen -> ListenScreen(vm, onBack = backToList)
+        Screen.Battle -> BattleScreen(vm, battleBookId, onBack = backToList)
     }
 }
 

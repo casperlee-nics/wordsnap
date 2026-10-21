@@ -13,6 +13,9 @@ interface BookDao {
     @Insert
     suspend fun insert(book: Book): Long
 
+    @Query("UPDATE books SET clearedAt = :time WHERE id = :id AND clearedAt IS NULL")
+    suspend fun markCleared(id: Long, time: Long)
+
     @Query("DELETE FROM books WHERE profileId = :profileId")
     suspend fun deleteForProfile(profileId: Long)
 }

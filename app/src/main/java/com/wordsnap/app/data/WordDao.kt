@@ -42,6 +42,10 @@ interface WordDao {
     @Delete
     suspend fun delete(word: Word)
 
+    // 戰鬥模式考過的單字記下時間，下次優先出沒考過的
+    @Query("UPDATE words SET testedAt = :time WHERE id IN (:ids)")
+    suspend fun markTested(ids: List<Long>, time: Long)
+
     @Query("DELETE FROM words WHERE profileId = :profileId")
     suspend fun deleteForProfile(profileId: Long)
 }

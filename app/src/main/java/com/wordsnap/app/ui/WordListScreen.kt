@@ -15,6 +15,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -40,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.ui.theme.PixelBorder
+import com.wordsnap.app.ui.theme.PixelShape
 import com.wordsnap.app.ui.theme.pixelTopBarButtonColors
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 import com.wordsnap.app.speech.rememberSpeaker
@@ -48,11 +53,22 @@ import com.wordsnap.app.translate.ModelStatus
 // 單字本主畫面：列出所有單字，右下角可拍照或手動新增，點單字可編輯
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit, onHome: () -> Unit) {
+fun WordListScreen(
+    vm: WordViewModel,
+    onScan: () -> Unit,
+    onReview: () -> Unit,
+    onListen: () -> Unit,
+    onBattle: (Long) -> Unit,
+    onHome: () -> Unit,
+) {
     val words by vm.words.collectAsState()
     val books by vm.books.collectAsState()
     val selectedBookId by vm.selectedBookId.collectAsState()
     val profile by vm.currentProfile.collectAsState()
+    val allWords by vm.allWords.collectAsState()
+    val unlock = remember(allWords, selectedBookId) { vm.battleUnlock(selectedBookId) }
+    var showMenu by remember { mutableStateOf(false) }
+    var showHero by remember { mutableStateOf(false) }
     val speaker = rememberSpeaker()
     val translatorStatus by vm.translatorStatus.collectAsState()
     val hasBlank = words.any { it.meaning.isBlank() }
@@ -65,13 +81,22 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit, 
         topBar = {
             TopAppBar(
                 title = {
-                    // 點人物和暱稱回到主畫面，可以換存檔
-                    Row(
-                        Modifier.clickable(onClick = onHome),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        PixelAvatar(Avatar.from(profile?.avatar), size = 32.dp)
-                        Text(profile?.name ?: "", Modifier.padding(start = 8.dp))
+                    // 點人物打開選單：人物能力、離開遊戲
+                    Box {
+                        Row(
+                            Modifier.clickable { showMenu = true },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            PixelAvatar(Avatar.from(profile?.avatar), size = 32.dp)
+                            Column(Modifier.padding(start = 8.dp)) {
+                                Text(profile?.name ?: "", maxLines = 1)
+                                Text("Lv ${levelInfo(profile?.exp ?: 0).level}", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                            DropdownMenuItem(text = { Text("人物能力") }, onClick = { showMenu = false; showHero = true })
+                            DropdownMenuItem(text = { Text("離開遊戲") }, onClick = { showMenu = false; onHome() })
+                        }
                     }
                 },
                 actions = {
@@ -83,7 +108,10 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit, 
             )
         },
         floatingActionButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                SmallFloatingActionButton(onClick = onListen) {
+                    Text("朗讀", Modifier.padding(horizontal = 10.dp))
+                }
                 SmallFloatingActionButton(onClick = { showAdd = true }) {
                     Icon(Icons.Filled.Add, contentDescription = "手動新增單字")
                 }
@@ -109,6 +137,7 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit, 
                 )
                 Text("${words.size} 個字", style = MaterialTheme.typography.bodyLarge)
             }
+            BattleBanner(selectedBookId, unlock, onBattle)
             if (hasBlank) TranslatorBanner(translatorStatus, onRetry = vm::retryTranslation)
             if (words.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -146,6 +175,9 @@ fun WordListScreen(vm: WordViewModel, onScan: () -> Unit, onReview: () -> Unit, 
         }
     }
 
+    if (showHero) {
+        profile?.let { HeroDialog(it, onDismiss = { showHero = false }) }
+    }
     if (showAdd) {
         WordDialog(
             title = "新增單字",
@@ -215,6 +247,29 @@ private fun TranslatorBanner(status: ModelStatus, onRetry: () -> Unit) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(message, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
             if (status == ModelStatus.Failed) TextButton(onClick = onRetry) { Text("重試") }
+        }
+    }
+}
+
+// 戰鬥模式的入口：解鎖了就能出戰，還沒解鎖就顯示還差多少
+@Composable
+private fun BattleBanner(bookId: Long?, unlock: BattleUnlock, onBattle: (Long) -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        border = PixelBorder,
+        shape = PixelShape,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            val text = when {
+                bookId == null -> "選一本單字簿，就能挑戰戰鬥模式"
+                unlock.unlocked -> "戰鬥模式已解鎖！"
+                else -> "戰鬥模式：再記住 ${(BATTLE_SIZE - unlock.remembered).coerceAtMost(unlock.total - unlock.remembered).coerceAtLeast(1)} 個字解鎖"
+            }
+            Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            if (bookId != null && unlock.unlocked) {
+                Button(onClick = { onBattle(bookId) }) { Text("出戰") }
+            }
         }
     }
 }
