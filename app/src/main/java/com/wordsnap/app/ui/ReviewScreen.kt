@@ -131,7 +131,6 @@ fun ReviewScreen(vm: WordViewModel, onListen: () -> Unit, onBack: () -> Unit) {
                             palette = ColorIconPalette,
                         )
                     }
-                    }
                 }
             }
         }
