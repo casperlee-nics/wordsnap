@@ -96,9 +96,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val speaker = rememberSpeaker()
     val context = LocalContext.current
     val musicOn = remember { isMusicOn(context) }
-    // 念單字時音樂調到很小聲，避免蓋過發音
-    LoopingMusic(R.raw.battle_bgm, enabled = musicOn, volume = if (speaker.speaking) 0.05f else 0.3f)
-
     var index by remember { mutableIntStateOf(0) }
     var correct by remember { mutableIntStateOf(0) }
     val wrong = remember { mutableStateListOf<Word>() }
@@ -110,6 +107,19 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     // 結束動畫（打飛怪物或拖棺材）播完了，可以顯示結果
     var endShown by remember { mutableStateOf(false) }
     var reward by remember { mutableStateOf<BattleReward?>(null) }
+    // 升級動畫看完了，才顯示戰鬥結果
+    var levelUpDone by remember { mutableStateOf(false) }
+    val leveledUp = reward?.let { it.levelAfter > it.levelBefore } == true
+    val showingLevelUp = endShown && leveledUp && !levelUpDone
+
+    // 念單字時音樂調到很小聲，避免蓋過發音；被打倒或升級時換成專屬音樂
+    LoopingMusic(
+        R.raw.battle_bgm,
+        enabled = musicOn && !died && !showingLevelUp,
+        volume = if (speaker.speaking) 0.05f else 0.3f,
+    )
+    OneShotSound(R.raw.death_jingle, play = died)
+    OneShotSound(R.raw.levelup_jingle, play = showingLevelUp)
 
     val total = questions.size
     val word = questions.getOrNull(index)
@@ -120,10 +130,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val perfect = finished && !died && wrong.isEmpty()
 
     fun submit() {
-        if (result != null || input.isBlank() || answer.length < 3 || word == null) return
-        val typed = input.trim()
-        val ok = typed.equals(answer.substring(1, answer.length - 1), ignoreCase = true) ||
-            typed.equals(answer, ignoreCase = true)
+        if (result != null || input.isBlank() || word == null) return
+        // 要拼出整個單字
+        val ok = input.trim().equals(answer, ignoreCase = true)
         result = ok
         if (ok) correct++ else wrong.add(word)
     }
@@ -146,16 +155,16 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             speaker.say(answer, rate = 0.85f)
         }
     }
-    // 答對後稍等一下自動下一題；被打倒時等怪物攻擊完再倒下
+    // 答對或答錯都停 1.5 秒（看攻擊動畫和正確答案）再自動下一題；錯太多就倒下
     LaunchedEffect(result) {
-        if (result == true) {
-            delay(900)
-            next()
-        } else if (result == false && dying) {
-            delay(1800)
+        if (result == null) return@LaunchedEffect
+        delay(1500)
+        if (result == false && dying) {
             died = true
             finished = true
             vm.finishBattle(bookId, questions.take(index + 1), wrong.toList(), total, died = true) { reward = it }
+        } else {
+            next()
         }
     }
     // 沒有全對：怪物留在原地，稍等一下就顯示結果
@@ -192,12 +201,14 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     finisher = race.finisher,
                     hits = correct,
                     attacks = wrong.size,
+                    monsterHp = total - correct,
+                    monsterMax = total,
+                    heroHp = (heroMax - wrong.size).coerceAtLeast(0),
+                    heroMax = heroMax,
                     knockout = perfect,
                     onKnockoutEnd = { endShown = true },
                 )
             }
-            HpBar(monster.name, hp = total - correct, max = total)
-            HpBar(profile?.name ?: "", hp = (heroMax - wrong.size).coerceAtLeast(0), max = heroMax)
 
             Column(
                 Modifier.fillMaxWidth().padding(16.dp),
@@ -212,6 +223,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     died -> {
                         Text("${profile?.name ?: ""} 被打倒了…", style = MaterialTheme.typography.headlineSmall)
                         Text("同伴把你拖回了教堂")
+                        reward?.let { Text("這是你第 ${it.deaths} 次倒下", color = PixelRed) }
                     }
                     perfect -> {
                         Text("${race.finisher.label}！", style = MaterialTheme.typography.headlineSmall)
@@ -230,10 +242,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                         input = input,
                         onInput = { if (result == null) input = it.filterNot { c -> c == '\n' } },
                         result = result,
-                        dying = dying,
                         onListen = { speaker.speak(answer) },
                         onSubmit = ::submit,
-                        onNext = ::next,
                     )
                 }
             }
@@ -242,7 +252,11 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
 
     val done = reward
     if (endShown && done != null) {
-        ResultDialog(done, monster.name, race, onClose = onBack)
+        if (showingLevelUp) {
+            LevelUpDialog(avatar, race, done.levelBefore, done.levelAfter, onClose = { levelUpDone = true })
+        } else {
+            ResultDialog(done, monster.name, race, onClose = onBack)
+        }
     }
 }
 
@@ -256,81 +270,50 @@ private fun Question(
     input: String,
     onInput: (String) -> Unit,
     result: Boolean?,
-    dying: Boolean,
     onListen: () -> Unit,
     onSubmit: () -> Unit,
-    onNext: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text("第 $number / $total 題　命中 $correct", Modifier.weight(1f))
         OutlinedButton(onClick = onListen) { Text("♪ 再聽一次") }
     }
-    // 中間輸入的字和左右兩邊的字母一樣大
-    val big = MaterialTheme.typography.displaySmall
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(answer.first().toString(), style = big)
-        OutlinedTextField(
-            value = input,
-            onValueChange = onInput,
-            singleLine = true,
-            textStyle = big.copy(textAlign = TextAlign.Center),
-            placeholder = {
-                Text(
-                    "_".repeat((answer.length - 2).coerceAtMost(8)),
-                    style = big,
-                    maxLines = 1,
-                    softWrap = false,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.None,
-                autoCorrectEnabled = false,
-                keyboardType = KeyboardType.Ascii,
-                imeAction = ImeAction.Done,
-            ),
-            keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-            modifier = Modifier.weight(1f),
-        )
-        Text(answer.last().toString(), style = big)
-    }
-    Text("共 ${answer.length} 個字母，填中間的 ${answer.length - 2} 個", style = MaterialTheme.typography.bodySmall)
+    // 空白的輸入框，聽發音拼出整個單字
+    OutlinedTextField(
+        value = input,
+        onValueChange = onInput,
+        singleLine = true,
+        textStyle = MaterialTheme.typography.displaySmall.copy(textAlign = TextAlign.Center),
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.None,
+            autoCorrectEnabled = false,
+            keyboardType = KeyboardType.Ascii,
+            imeAction = ImeAction.Done,
+        ),
+        keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+        modifier = Modifier.fillMaxWidth(),
+    )
     when (result) {
         null -> Button(onClick = onSubmit, enabled = input.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
             Text("攻擊！")
         }
         true -> Text("命中！", style = MaterialTheme.typography.headlineSmall, color = PixelRed)
         false -> {
-            Text("沒打中，被怪物攻擊了！答案是 $answer", style = MaterialTheme.typography.titleMedium, color = PixelRed)
+            Text("沒打中，被怪物攻擊了！", style = MaterialTheme.typography.titleMedium, color = PixelRed)
+            Text("正確答案：$answer", style = MaterialTheme.typography.headlineSmall)
             if (meaning.isNotBlank()) Text(meaning)
-            if (dying) {
-                Text("受到致命一擊…", style = MaterialTheme.typography.titleMedium)
-            } else {
-                Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("下一題 →") }
-            }
         }
     }
 }
 
+// 頭上的小血條，血少了會變黃、變紅
 @Composable
-private fun HpBar(name: String, hp: Int, max: Int) {
+private fun MiniHpBar(hp: Int, max: Int, modifier: Modifier = Modifier) {
     val fraction by animateFloatAsState(if (max == 0) 0f else hp.toFloat() / max, tween(500), label = "hp")
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(name)
+    Box(modifier.height(8.dp).background(Color.White).border(2.dp, PixelInk).padding(2.dp)) {
         Box(
-            Modifier.weight(1f).height(12.dp).border(2.dp, PixelInk).padding(2.dp),
-        ) {
-            Box(
-                Modifier.fillMaxHeight().fillMaxWidth(fraction)
-                    .background(if (fraction > 0.5f) Color(0xFF40A048) else if (fraction > 0.2f) PixelGold else PixelRed),
-            )
-        }
-        Text("HP $hp/$max")
+            Modifier.fillMaxHeight().fillMaxWidth(fraction)
+                .background(if (fraction > 0.5f) Color(0xFF40A048) else if (fraction > 0.2f) PixelGold else PixelRed),
+        )
     }
 }
 
@@ -343,6 +326,10 @@ private fun BattleField(
     finisher: Finisher,
     hits: Int,
     attacks: Int,
+    monsterHp: Int,
+    monsterMax: Int,
+    heroHp: Int,
+    heroMax: Int,
     knockout: Boolean,
     onKnockoutEnd: () -> Unit,
 ) {
@@ -424,6 +411,19 @@ private fun BattleField(
                     alpha = if (heroFlash.value > 0f && (heroFlash.value * 10).toInt() % 2 == 0) 0.25f else 1f
                 },
         )
+        // 血條放在人物和怪物頭上，下方留給輸入框和鍵盤
+        MiniHpBar(
+            heroHp,
+            heroMax,
+            Modifier.align(Alignment.BottomStart).padding(start = 8.dp, bottom = 6.dp + 36.dp + 4.dp).size(44.dp, 8.dp),
+        )
+        if (!knockout) {
+            MiniHpBar(
+                monsterHp,
+                monsterMax,
+                Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp + height + 4.dp).size(maxOf(width, 48.dp), 8.dp),
+            )
+        }
         // 打在人物身上的爪痕
         if (heroFlash.value > 0.4f) {
             Canvas(Modifier.matchParentSize()) {
@@ -590,7 +590,7 @@ private fun ResultDialog(reward: BattleReward, monsterName: String, race: Race, 
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 when {
-                    reward.died -> Text("被 $monsterName 打倒了，在教堂休息一下再來吧")
+                    reward.died -> Text("被 $monsterName 打倒了，在教堂休息一下再來吧（第 ${reward.deaths} 次倒下）")
                     perfect -> Text("把 $monsterName 打飛了！")
                     else -> Text("$monsterName 還站著，全部答對才能把牠打飛")
                 }
@@ -608,5 +608,75 @@ private fun ResultDialog(reward: BattleReward, monsterName: String, race: Race, 
             }
         },
         confirmButton = { Button(onClick = onClose) { Text("回單字本") } },
+    )
+}
+
+// 升級小動畫：人物跳一跳、LEVEL UP 閃爍，能力一項一項顯示提升了多少
+@Composable
+private fun LevelUpDialog(hero: Avatar, race: Race, before: Int, after: Int, onClose: () -> Unit) {
+    val old = race.stats(before)
+    val newStats = race.stats(after)
+    val rows = listOf(
+        Triple("力量", old.str, newStats.str),
+        Triple("體力", old.vit, newStats.vit),
+        Triple("智慧", old.intel, newStats.intel),
+        Triple("運氣", old.luk, newStats.luk),
+    )
+    val oldTitle = race.title(before)
+    val newTitle = race.title(after)
+    var shown by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        delay(600)
+        while (shown < rows.size + 1) {
+            shown++
+            delay(350)
+        }
+    }
+    val anim = rememberInfiniteTransition(label = "levelup")
+    val hop by anim.animateFloat(
+        0f, 1f, infiniteRepeatable(tween(500, easing = LinearEasing), RepeatMode.Reverse), label = "hop",
+    )
+    val blink by anim.animateFloat(
+        0f, 1f, infiniteRepeatable(tween(400, easing = LinearEasing), RepeatMode.Restart), label = "blink",
+    )
+
+    AlertDialog(
+        onDismissRequest = { },
+        title = {
+            Text(
+                "LEVEL UP!",
+                color = if (blink < 0.5f) PixelRed else PixelGold,
+                style = MaterialTheme.typography.headlineMedium,
+            )
+        },
+        text = {
+            Column(
+                Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                PixelAvatar(
+                    hero,
+                    size = 64.dp,
+                    modifier = Modifier.graphicsLayer { translationY = -(hop * 3).toInt() * 4.dp.toPx() },
+                )
+                Text("Lv $before → Lv $after", style = MaterialTheme.typography.titleLarge)
+                rows.forEachIndexed { i, (label, from, to) ->
+                    if (i < shown) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(label, Modifier.weight(1f))
+                            Text("$from → $to", Modifier.weight(1f))
+                            Text("+${to - from}", color = PixelRed)
+                        }
+                    }
+                }
+                if (shown > rows.size && newTitle != oldTitle) {
+                    Text("獲得新稱號「$newTitle」！", color = PixelRed)
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onClose, enabled = shown > rows.size) { Text("太好了！") }
+        },
     )
 }

@@ -53,6 +53,8 @@ data class BattleReward(
     val died: Boolean = false,
     // 這次錯滿兩次、變回沒記住的字
     val forgotten: List<String> = emptyList(),
+    // 到目前為止總共被打倒幾次（含這次）
+    val deaths: Int = 0,
 )
 
 // 答錯超過一半就被打倒，所以人物的 HP 是題數的一半再多 1
@@ -267,9 +269,11 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                     dao.forgetOftenWrong(ids, now)
                 }
                 profileDao.addExp(profile.id, gained)
+                if (died) profileDao.addDeath(profile.id)
                 if (passed) bookDao.markCleared(bookId, now)
             }
-            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten))
+            val deaths = profile.deaths + if (died) 1 else 0
+            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths))
         }
     }
 

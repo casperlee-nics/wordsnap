@@ -57,3 +57,17 @@ fun LoopingMusic(@RawRes resId: Int, enabled: Boolean, volume: Float) {
         player?.setVolume(volume, volume)
     }
 }
+
+// 播放一次的短音效（升級、被打倒），play 變成 true 時開始，離開畫面時停止
+@Composable
+fun OneShotSound(@RawRes resId: Int, play: Boolean, volume: Float = 0.6f) {
+    val context = LocalContext.current
+    DisposableEffect(resId, play) {
+        if (!play || !isMusicOn(context)) return@DisposableEffect onDispose { }
+        val player = MediaPlayer.create(context, resId)?.apply {
+            setVolume(volume, volume)
+            start()
+        }
+        onDispose { player?.release() }
+    }
+}

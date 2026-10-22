@@ -2,7 +2,14 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.67（暫定名稱：像素單字）
+## 目前版本 0.68（暫定名稱：像素單字）
+
+v0.68 的改變（戰鬥畫面）：
+- 不再給第一個和最後一個字母，聽發音在空白輸入框拼出整個單字
+- 血條移到人物和怪物頭上，下方空間留給輸入框和鍵盤
+- 答對或答錯都停 1.5 秒（答錯會顯示正確單字）後自動下一題
+- 升級時播放升級音效（`levelup_jingle.ogg`），並有升級動畫逐項顯示能力提升
+- 被打倒時播放死亡音樂（`death_jingle.ogg`），並顯示總共倒下幾次（資料庫 v7 新增 profiles.deaths）
 
 v0.67 的改變：
 - 複習改成快速單字卡：卡片出現就念英文、同時顯示中文；下方兩個像素按鈕「不記得」（人物＋問號）、「記得」（人物＋燈泡），按了直接換下一張
@@ -55,7 +62,7 @@ v0.65 的改變：
 
 ## 授權
 
-- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 
 ## 用 Android Studio 執行

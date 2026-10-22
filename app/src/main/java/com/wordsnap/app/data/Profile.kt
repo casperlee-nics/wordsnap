@@ -14,4 +14,6 @@ data class Profile(
     val avatar: String? = null,
     // 戰鬥得到的經驗值，等級由它算出來，見 ui/Hero.kt
     @ColumnInfo(defaultValue = "0") val exp: Int = 0,
+    // 戰鬥中被打倒的次數
+    @ColumnInfo(defaultValue = "0") val deaths: Int = 0,
 )
