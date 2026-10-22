@@ -14,6 +14,7 @@ import com.wordsnap.app.data.Book
 import com.wordsnap.app.data.Profile
 import com.wordsnap.app.data.Word
 import com.wordsnap.app.translate.ModelStatus
+import com.wordsnap.app.translate.WordDictionary
 import com.wordsnap.app.translate.WordTranslator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -222,10 +223,17 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { fillMissingMeaningsNow() }
     }
 
-    // 沒有中文意思的單字自動翻譯
+    // 沒有中文意思的單字自動填上：先查離線字典，查不到才用 ML Kit 翻譯
     private suspend fun fillMissingMeaningsNow() {
+        var canTranslate = true
         for (word in dao.getWithoutMeaning()) {
-            val meaning = WordTranslator.translate(word.text) ?: return
+            val meaning = WordDictionary.lookup(getApplication(), word.text)
+                ?: if (canTranslate) WordTranslator.translate(word.text) else null
+            if (meaning == null) {
+                // 翻譯檔還沒下載好，剩下的字只查字典，下次開 App 再試
+                canTranslate = false
+                continue
+            }
             dao.fillMeaning(word.id, meaning)
         }
     }
@@ -251,6 +259,17 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         return (picked + tested.take(BATTLE_SIZE - picked.size)).shuffled()
     }
 
+    // 這次要打的怪物：每記住 100 個字出現一隻大魔王、每 50 個字一隻中魔王，其他時候隨機一般怪物
+    fun pickBattleMonster(): Monster {
+        val profile = currentProfile.value ?: return NormalMonsters.random()
+        val remembered = allWords.value.count { it.box >= 1 }
+        return when {
+            remembered / 100 > profile.bigBossSeen -> BigBosses[profile.bigBossSeen % BigBosses.size]
+            remembered / 50 > profile.midBossSeen -> MidBosses[profile.midBossSeen % MidBosses.size]
+            else -> NormalMonsters.random()
+        }
+    }
+
     // 戰鬥結束：記下考過的字、答錯的字加一次錯誤（錯滿兩次變回沒記住）、加經驗值、通過就標記這本單字簿已通關
     // asked 是這次真的考過的字（被打倒時只算已經作答的），wrong 是其中答錯的
     fun finishBattle(
@@ -259,6 +278,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         wrong: List<Word>,
         total: Int,
         died: Boolean,
+        monster: Monster,
         onDone: (BattleReward) -> Unit,
     ) {
         val profile = currentProfile.value ?: return
@@ -280,6 +300,16 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 profileDao.addExp(profile.id, gained)
                 if (died) profileDao.addDeath(profile.id)
                 if (passed) bookDao.markCleared(bookId, now)
+                // 魔王要通過這場戰鬥才算打倒，不然下次還會再出現
+                if (passed && monster.rank != MonsterRank.Normal) {
+                    val remembered = allWords.value.count { it.box >= 1 }
+                    if (monster.rank == MonsterRank.Big) {
+                        // 打倒大魔王時，同一段的中魔王也一起跳過
+                        profileDao.setBossSeen(profile.id, maxOf(profile.midBossSeen, remembered / 50), profile.bigBossSeen + 1)
+                    } else {
+                        profileDao.setBossSeen(profile.id, profile.midBossSeen + 1, profile.bigBossSeen)
+                    }
+                }
             }
             val deaths = profile.deaths + if (died) 1 else 0
             onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths))

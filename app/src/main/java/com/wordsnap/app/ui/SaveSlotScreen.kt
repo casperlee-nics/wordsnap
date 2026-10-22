@@ -29,7 +29,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.wordsnap.app.R
 import com.wordsnap.app.data.Profile
 import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelRed
@@ -46,6 +48,10 @@ fun SaveSlotScreen(
     onBack: () -> Unit,
 ) {
     var confirm by remember { mutableStateOf<Profile?>(null) }
+    val context = LocalContext.current
+    val musicOn = remember { isMusicOn(context) }
+    // 讀取遊戲時播放專屬音樂
+    LoopingMusic(R.raw.load_bgm, enabled = musicOn && !deleting, volume = 0.5f)
 
     Scaffold(
         topBar = {
@@ -79,7 +85,7 @@ fun SaveSlotScreen(
                         },
                     ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            PixelAvatar(Avatar.from(profile.avatar), size = 56.dp)
+                            PixelAvatar(Avatar.from(profile.avatar), size = 56.dp, tier = avatarTier(levelInfo(profile.exp).level))
                             Column(Modifier.weight(1f).padding(start = 16.dp)) {
                                 Text(profile.name, style = MaterialTheme.typography.titleLarge)
                                 Text(Avatar.from(profile.avatar).label, style = MaterialTheme.typography.bodyMedium)

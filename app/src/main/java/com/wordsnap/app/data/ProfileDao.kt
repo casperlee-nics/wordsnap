@@ -22,6 +22,9 @@ interface ProfileDao {
     @Query("UPDATE profiles SET deaths = deaths + 1 WHERE id = :id")
     suspend fun addDeath(id: Long)
 
+    @Query("UPDATE profiles SET midBossSeen = :mid, bigBossSeen = :big WHERE id = :id")
+    suspend fun setBossSeen(id: Long, mid: Int, big: Int)
+
     @Query("DELETE FROM profiles WHERE id = :id")
     suspend fun delete(id: Long)
 }

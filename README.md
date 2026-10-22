@@ -2,7 +2,21 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.69（暫定名稱：像素單字）
+## 目前版本 0.70（暫定名稱：像素單字）
+
+v0.70 的改變：
+- 中文解釋改用離線字典 ECDICT（5 萬個常用字，含詞性，例如「n. 蘋果」），字典查不到才用 ML Kit 翻譯；過去式、複數等變化形會查原形
+- 職業調整：男子→男勇者、女子→女魔法師、男精靈與女精靈合併為女精靈弓箭手；舊存檔自動換成相近的新職業（狗→貓）
+- 新稱號：男勇者（見習勇者～救世勇者）、女魔法師（魔法學徒～星辰魔女）、女精靈弓箭手（森林見習弓手～精靈王）、貓族（幼仔貓～萌萌貓娘）
+- 每個職業 6 個頭像，每 10 級換一次：衣服換色、Lv 20 披風、Lv 40 皇冠、Lv 50 金色光環
+- 招式跟著稱號升級（每職業 6 招），特效越來越大：Lv 20 起多一道、Lv 30 起金色光環、Lv 50 全畫面閃光
+- 戰鬥答對時，自己的人物會衝上去出招攻擊怪物
+- 怪物增加到 50 種：35 種一般怪物隨機出現、10 隻中魔王（每記住 50 個字出現一隻）、5 隻大魔王（每記住 100 個字出現一隻）；魔王要通過那場戰鬥才算打倒（資料庫 v9 新增 profiles.midBossSeen、bigBossSeen）
+- 大魔王：魔王城背景＋會流動的熔岩、骷髏，熱血 BGM（`bigboss_bgm.ogg`）；中魔王：石造大廳背景，緊張的 BGM（`midboss_bgm.ogg`）
+- 人物選單「離開遊戲」改成「回到主畫面」
+- 升級畫面改成全螢幕像素風景（城堡、閃爍星星），稱號升階時顯示新頭像和新招式
+- 朗讀模式最右邊多一個 1x / 2x 速度切換
+- 讀取遊戲畫面播放懷舊的音樂盒 BGM（`load_bgm.ogg`）
 
 v0.69 的改變：
 - 戰鬥：每場最多 15 題，隨機出題，沒考過的字優先；記住 15 個字（或整本都記住）就解鎖
@@ -70,7 +84,8 @@ v0.65 的改變：
 
 ## 授權
 
-- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 字典 `app/src/main/assets/ecdict.db`：取自 [ECDICT](https://github.com/skywind3000/ECDICT)（MIT License，Copyright (c) 2017 Linwei），挑出常用的 5 萬字，用 [OpenCC](https://github.com/BYVoid/OpenCC)（Apache License 2.0）轉成台灣繁體用語。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 
 ## 用 Android Studio 執行

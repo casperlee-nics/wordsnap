@@ -86,13 +86,13 @@ fun WordListScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    // 點人物打開選單：人物能力、離開遊戲
+                    // 點人物打開選單：人物能力、回到主畫面
                     Box {
                         Row(
                             Modifier.clickable { showMenu = true },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            PixelAvatar(Avatar.from(profile?.avatar), size = 32.dp)
+                            PixelAvatar(Avatar.from(profile?.avatar), size = 32.dp, tier = avatarTier(levelInfo(profile?.exp ?: 0).level))
                             Column(Modifier.padding(start = 8.dp)) {
                                 Text(profile?.name ?: "", maxLines = 1)
                                 Text("Lv ${levelInfo(profile?.exp ?: 0).level}", style = MaterialTheme.typography.labelSmall)
@@ -100,7 +100,7 @@ fun WordListScreen(
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             DropdownMenuItem(text = { Text("人物能力") }, onClick = { showMenu = false; showHero = true })
-                            DropdownMenuItem(text = { Text("離開遊戲") }, onClick = { showMenu = false; onHome() })
+                            DropdownMenuItem(text = { Text("回到主畫面") }, onClick = { showMenu = false; onHome() })
                         }
                     }
                 },

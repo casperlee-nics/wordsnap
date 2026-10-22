@@ -32,13 +32,14 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit) {
     val info = levelInfo(profile.exp)
     val stats = race.stats(info.level)
     val nextTitleAt = race.nextTitleLevel(info.level)
+    val tier = avatarTier(info.level)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = { TextButton(onClick = onDismiss) { Text("關閉") } },
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                PixelAvatar(avatar, size = 56.dp)
+                PixelAvatar(avatar, size = 56.dp, tier = tier)
                 Column(Modifier.padding(start = 12.dp)) {
                     Text(profile.name)
                     Text("「${race.title(info.level)}」", style = MaterialTheme.typography.bodyMedium)
@@ -47,7 +48,7 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit) {
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("種族：${race.label}　Lv ${info.level}")
+                Text("職業：${race.label}　Lv ${info.level}")
                 Text("已記住的單字：$remembered 個")
                 if (info.level < MAX_LEVEL) {
                     Text("經驗值 ${info.current} / ${info.needed}", style = MaterialTheme.typography.bodySmall)
@@ -57,7 +58,7 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit) {
                 StatRow("體力", stats.vit)
                 StatRow("智慧", stats.intel)
                 StatRow("運氣", stats.luk)
-                Text("必殺技：${race.finisher.label}", style = MaterialTheme.typography.bodySmall)
+                Text("必殺技：${race.finisher.label(tier)}", style = MaterialTheme.typography.bodySmall)
                 if (nextTitleAt != null) {
                     Text(
                         "Lv $nextTitleAt 可獲得稱號「${race.title(nextTitleAt)}」",

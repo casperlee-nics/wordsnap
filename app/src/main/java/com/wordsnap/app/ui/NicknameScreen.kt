@@ -42,7 +42,7 @@ import com.wordsnap.app.ui.theme.PixelShape
 fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
     var name by remember { mutableStateOf("") }
     var pickingAvatar by remember { mutableStateOf(false) }
-    var avatar by remember { mutableStateOf(Avatar.Man) }
+    var avatar by remember { mutableStateOf(Avatar.Hero) }
     // 輸入暱稱和選角色時播放有希望感的音樂
     val context = LocalContext.current
     val musicOn = remember { isMusicOn(context) }

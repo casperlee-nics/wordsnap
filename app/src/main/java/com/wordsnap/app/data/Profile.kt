@@ -16,4 +16,7 @@ data class Profile(
     @ColumnInfo(defaultValue = "0") val exp: Int = 0,
     // 戰鬥中被打倒的次數
     @ColumnInfo(defaultValue = "0") val deaths: Int = 0,
+    // 已經打倒幾隻中魔王（每記住 50 個字一隻）、大魔王（每記住 100 個字一隻）
+    @ColumnInfo(defaultValue = "0") val midBossSeen: Int = 0,
+    @ColumnInfo(defaultValue = "0") val bigBossSeen: Int = 0,
 )

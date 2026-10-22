@@ -107,6 +107,8 @@ private val PartyColumns = listOf(14, 23, 33, 42)
 @Composable
 private fun TitleParty(modifier: Modifier = Modifier) {
     val cast = remember { Avatar.entries.shuffled().take(4).zip(Idle.entries.shuffled()) }
+    // 每個人物隨機一種稱號階級的樣子
+    val tiers = remember { List(cast.size) { (0 until Avatar.TIER_COUNT).random() } }
     val time by rememberInfiniteTransition(label = "party").animateFloat(
         0f, 1f, infiniteRepeatable(tween(1600, easing = LinearEasing)), label = "time",
     )
@@ -118,6 +120,7 @@ private fun TitleParty(modifier: Modifier = Modifier) {
             PixelAvatar(
                 avatar,
                 size = cell * 8,
+                tier = tiers[i],
                 modifier = Modifier
                     .offset(x = cell * PartyColumns[i], y = cell * 26)
                     .graphicsLayer {
