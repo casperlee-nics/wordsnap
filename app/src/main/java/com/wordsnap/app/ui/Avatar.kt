@@ -200,16 +200,16 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "mBBRRY",
     );
 
-    private val tierArts = arrayOfNulls<List<String>>(TIER_COUNT)
+    private val tierArts = arrayOfNulls<List<String>>(AVATAR_TIERS)
 
     // 第 tier 階（0 到 5）的頭像，算過一次就記起來
     fun artFor(tier: Int): List<String> {
-        val t = tier.coerceIn(0, TIER_COUNT - 1)
+        val t = tier.coerceIn(0, AVATAR_TIERS - 1)
         return tierArts[t] ?: buildTierArt(art, cloth, clothTiers[t], t).also { tierArts[t] = it }
     }
 
     companion object {
-        const val TIER_COUNT = 6
+        const val TIER_COUNT = AVATAR_TIERS
 
         // 資料庫存的是名稱，找不到就用男勇者；舊版的人物換成相近的新職業
         fun from(key: String?): Avatar = when (key) {
@@ -221,6 +221,9 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         }
     }
 }
+
+// 頭像有幾個階段；放在 enum 外面，enum 常數建立時才讀得到
+private const val AVATAR_TIERS = 6
 
 // 等級換成頭像階段：每 10 級升一階，最多到第 5 階（跟稱號一樣）
 fun avatarTier(level: Int): Int = (level / 10).coerceIn(0, Avatar.TIER_COUNT - 1)
