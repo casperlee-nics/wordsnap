@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wordsnap.app.R
@@ -141,8 +142,8 @@ fun WordListScreen(
             )
             if (hasBlank) TranslatorBanner(translatorStatus, onRetry = vm::retryTranslation)
             if (words.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("還沒有單字，按下方「加單字」新增第一個")
+                Box(Modifier.fillMaxSize().padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
+                    Text("還沒有單字，按下方「加單字」新增第一個", textAlign = TextAlign.Center)
                 }
             } else {
                 LazyColumn(Modifier.fillMaxSize()) {

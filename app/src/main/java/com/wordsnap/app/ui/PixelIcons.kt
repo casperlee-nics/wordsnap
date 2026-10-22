@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -163,6 +164,66 @@ val IconCamera = listOf(
     "................",
 )
 
+// 戰鬥：再聽一次（大聲公）
+val IconMegaphone = listOf(
+    "................",
+    "................",
+    "...........K....",
+    "..........KK..K.",
+    "........KKMK.K..",
+    "......KKMMMK....",
+    "..KKKKMMMMMK.KK.",
+    "..KRRKMMMMMK....",
+    "..KRRKMMMMMK.KK.",
+    "..KKKKMMMMMK....",
+    "....KKKKMMMK.K..",
+    "....KMK.KKMK..K.",
+    "....KMK...KK....",
+    "....KKK....K....",
+    "................",
+    "................",
+)
+
+// 戰鬥：攻擊（劍）
+val IconSword = listOf(
+    "................",
+    "..............KK",
+    ".............KWK",
+    "............KWMK",
+    "...........KWMK.",
+    "..........KWMK..",
+    ".........KWMK...",
+    "........KWMK....",
+    "...KK..KWMK.....",
+    "...KYKKWMK......",
+    "....KYKMK.......",
+    ".....KYK........",
+    "....KHKYK.......",
+    "...KHK.KYK......",
+    "..KHK...KK......",
+    "..KK............",
+)
+
+// 戰鬥：下一回（向右的箭頭）
+val IconArrowRight = listOf(
+    "................",
+    "................",
+    "........K.......",
+    "........KK......",
+    "........KYK.....",
+    "..KKKKKKKYYK....",
+    "..KYYYYYYYYYK...",
+    "..KYYYYYYYYYYK..",
+    "..KYYYYYYYYYK...",
+    "..KKKKKKKYYK....",
+    "........KYK.....",
+    "........KK......",
+    "........K.......",
+    "................",
+    "................",
+    "................",
+)
+
 // 方形的像素按鈕，只有圖示沒有文字
 @Composable
 fun PixelIconButton(
@@ -172,6 +233,7 @@ fun PixelIconButton(
     size: Dp = 56.dp,
     color: Color = MaterialTheme.colorScheme.surfaceContainer,
     palette: Map<Char, Color> = IconPalette,
+    enabled: Boolean = true,
 ) {
     Surface(
         shape = PixelShape,
@@ -179,8 +241,10 @@ fun PixelIconButton(
         color = color,
         modifier = Modifier
             .size(size)
+            // 不能按的時候變淡
+            .alpha(if (enabled) 1f else 0.4f)
             .semantics { this.contentDescription = contentDescription }
-            .clickable(role = Role.Button, onClick = onClick),
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
     ) {
         Box(contentAlignment = Alignment.Center) {
             PixelArt(icon, palette, Modifier.padding(size / 5))

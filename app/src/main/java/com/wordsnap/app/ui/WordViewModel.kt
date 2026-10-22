@@ -32,8 +32,9 @@ private val INTERVALS = longArrayOf(0, 1 * DAY, 3 * DAY, 7 * DAY, 14 * DAY, 30 *
 
 private const val PREFS = "wordsnap"
 private const val KEY_PROFILE = "current_profile_id"
+private const val KEY_BOOK = "last_book_"
 
-const val BATTLE_SIZE = 20
+const val BATTLE_SIZE = 15
 private const val EXP_PER_WORD = 10
 private const val EXP_PASS_BONUS = 50
 
@@ -130,16 +131,24 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     fun selectBook(id: Long?) {
         showAllBooks = id == null
         selectedBookId.value = id
+        // 記住最後讀的那本，下次打開還停在這裡（0 代表「全部」）
+        profileId?.let { pid -> prefs.edit().putLong(KEY_BOOK + pid, id ?: 0L).apply() }
     }
 
     init {
-        // 單字簿讀進來（或換暱稱、刪掉目前那本）時，預設選第一本，而不是「全部」
+        // 單字簿讀進來（或換暱稱、刪掉目前那本）時，回到上次讀的那本；第一次就選第一本（我的冒險日誌）
         viewModelScope.launch {
             books.collect { list ->
+                if (list.isEmpty()) return@collect
                 val id = selectedBookId.value
                 val missing = id != null && list.none { it.id == id }
                 if ((id == null && !showAllBooks) || missing) {
-                    selectedBookId.value = list.firstOrNull()?.id
+                    val saved = profileId?.let { pid -> prefs.getLong(KEY_BOOK + pid, -1L) } ?: -1L
+                    when {
+                        saved == 0L && !missing -> showAllBooks = true
+                        list.any { it.id == saved } -> selectedBookId.value = saved
+                        else -> selectedBookId.value = list.first().id
+                    }
                 }
             }
         }
@@ -223,7 +232,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     // ---- 戰鬥模式 ----
 
-    // 這本單字簿的戰鬥模式是否解鎖：記住 20 個字，或整本都記住過
+    // 這本單字簿的戰鬥模式是否解鎖：記住 15 個字，或整本都記住過
     fun battleUnlock(bookId: Long?): BattleUnlock {
         if (bookId == null) return BattleUnlock(false, 0, 0)
         val inBook = allWords.value.filter { it.bookId == bookId }
@@ -233,11 +242,11 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         return BattleUnlock(unlocked && pool > 0, remembered, inBook.size)
     }
 
-    // 出題：從記住的字裡挑 20 個，先挑沒考過的，不夠再用考過比較久的補
+    // 出題：從記住的字裡隨機挑最多 15 個，先挑沒考過的，不夠再隨機用考過的補
     fun pickBattleWords(bookId: Long): List<Word> {
         val pool = allWords.value.filter { it.bookId == bookId && it.box >= 1 && it.text.trim().length >= 3 }
         val fresh = pool.filter { it.testedAt == null }.shuffled()
-        val tested = pool.filter { it.testedAt != null }.sortedBy { it.testedAt }
+        val tested = pool.filter { it.testedAt != null }.shuffled()
         val picked = fresh.take(BATTLE_SIZE)
         return (picked + tested.take(BATTLE_SIZE - picked.size)).shuffled()
     }

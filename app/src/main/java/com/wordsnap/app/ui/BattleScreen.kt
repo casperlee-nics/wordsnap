@@ -34,7 +34,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -155,11 +154,17 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             speaker.say(answer, rate = 0.85f)
         }
     }
-    // 答對或答錯都停 1.5 秒（看攻擊動畫和正確答案）再自動下一題；錯太多就倒下
+    // 答對：停 1.5 秒看攻擊動畫，再自動下一題
     LaunchedEffect(result) {
-        if (result == null) return@LaunchedEffect
-        delay(1500)
-        if (result == false && dying) {
+        if (result == true) {
+            delay(1500)
+            next()
+        }
+    }
+    // 答錯：看完正確答案，按向右箭頭才進下一回；錯太多就倒下
+    fun nextRound() {
+        if (result != false) return
+        if (dying) {
             died = true
             finished = true
             vm.finishBattle(bookId, questions.take(index + 1), wrong.toList(), total, died = true) { reward = it }
@@ -234,9 +239,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                         Text("全部答對才能把牠打飛，下次再來")
                     }
                     word != null -> Question(
-                        number = index + 1,
-                        total = total,
-                        correct = correct,
                         answer = answer,
                         meaning = word.meaning,
                         input = input,
@@ -244,6 +246,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                         result = result,
                         onListen = { speaker.speak(answer) },
                         onSubmit = ::submit,
+                        onNext = ::nextRound,
                     )
                 }
             }
@@ -262,9 +265,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
 
 @Composable
 private fun Question(
-    number: Int,
-    total: Int,
-    correct: Int,
     answer: String,
     meaning: String,
     input: String,
@@ -272,37 +272,53 @@ private fun Question(
     result: Boolean?,
     onListen: () -> Unit,
     onSubmit: () -> Unit,
+    onNext: () -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text("第 $number / $total 題　命中 $correct", Modifier.weight(1f))
-        OutlinedButton(onClick = onListen) { Text("♪ 再聽一次") }
-    }
-    // 空白的輸入框，聽發音拼出整個單字
+    // 空白的輸入框，聽發音拼出整個單字；答錯時框裡直接換成正確答案（紅字），不會被鍵盤擋住
+    val wrong = result == false
     OutlinedTextField(
-        value = input,
+        value = if (wrong) answer else input,
         onValueChange = onInput,
+        readOnly = result != null,
         singleLine = true,
-        textStyle = MaterialTheme.typography.displaySmall.copy(textAlign = TextAlign.Center),
+        textStyle = MaterialTheme.typography.displaySmall.copy(
+            textAlign = TextAlign.Center,
+            color = if (wrong) PixelRed else MaterialTheme.colorScheme.onSurface,
+        ),
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.None,
             autoCorrectEnabled = false,
             keyboardType = KeyboardType.Ascii,
             imeAction = ImeAction.Done,
         ),
-        keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+        keyboardActions = KeyboardActions(onDone = { if (wrong) onNext() else onSubmit() }),
         modifier = Modifier.fillMaxWidth(),
     )
-    when (result) {
-        null -> Button(onClick = onSubmit, enabled = input.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
-            Text("攻擊！")
+    // 左下：大聲公再聽一次；右下：劍攻擊，答錯後換成向右箭頭「下一回」
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        PixelIconButton(IconMegaphone, "再聽一次", onClick = onListen, size = 64.dp, palette = ColorIconPalette)
+        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            when (result) {
+                true -> Text("命中！", style = MaterialTheme.typography.headlineSmall, color = PixelRed)
+                false -> Text("被怪物攻擊了！", style = MaterialTheme.typography.titleMedium, color = PixelRed)
+                null -> Unit
+            }
         }
-        true -> Text("命中！", style = MaterialTheme.typography.headlineSmall, color = PixelRed)
-        false -> {
-            Text("沒打中，被怪物攻擊了！", style = MaterialTheme.typography.titleMedium, color = PixelRed)
-            Text("正確答案：$answer", style = MaterialTheme.typography.headlineSmall)
-            if (meaning.isNotBlank()) Text(meaning)
+        if (wrong) {
+            PixelIconButton(IconArrowRight, "下一回", onClick = onNext, size = 64.dp, color = PixelGold, palette = ColorIconPalette)
+        } else {
+            PixelIconButton(
+                IconSword,
+                "攻擊",
+                onClick = onSubmit,
+                size = 64.dp,
+                color = PixelGold,
+                palette = ColorIconPalette,
+                enabled = result == null && input.isNotBlank(),
+            )
         }
     }
+    if (wrong && meaning.isNotBlank()) Text(meaning, style = MaterialTheme.typography.titleMedium)
 }
 
 // 頭上的小血條，血少了會變黃、變紅

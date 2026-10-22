@@ -57,7 +57,7 @@ fun BookPicker(
             books.forEach { book ->
                 DropdownMenuItem(text = { Text(bookLabel(book)) }, onClick = { onSelect(book.id); expanded = false })
             }
-            DropdownMenuItem(text = { Text("+ 新增單字簿") }, onClick = { creating = true; expanded = false })
+            DropdownMenuItem(text = { Text("+ 新增冒險日誌") }, onClick = { creating = true; expanded = false })
         }
     }
 
@@ -77,7 +77,7 @@ private fun NewBookDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit) {
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("新增單字簿") },
+        title = { Text("新增冒險日誌") },
         text = {
             OutlinedTextField(
                 value = name,
