@@ -1,6 +1,7 @@
 package com.wordsnap.app.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -14,7 +15,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.wordsnap.app.data.Book
+import com.wordsnap.app.ui.theme.pixelTopBarButtonColors
 
 // 選單字簿的下拉選單；selectedId 為 null 代表「全部」
 @Composable
@@ -26,13 +30,26 @@ fun BookPicker(
     label: String,
     allowAll: Boolean,
     modifier: Modifier = Modifier,
+    // 放在深藍色標題列上時用白字的文字按鈕
+    onTopBar: Boolean = false,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var creating by remember { mutableStateOf(false) }
     val current = books.firstOrNull { it.id == selectedId }?.let(::bookLabel) ?: if (allowAll) "全部" else "選擇單字簿"
 
     Box(modifier) {
-        OutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }
+        if (onTopBar) {
+            TextButton(onClick = { expanded = true }, colors = pixelTopBarButtonColors()) {
+                Text(
+                    "$label$current ▼",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 150.dp),
+                )
+            }
+        } else {
+            OutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }
+        }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             if (allowAll) {
                 DropdownMenuItem(text = { Text("全部") }, onClick = { onSelect(null); expanded = false })

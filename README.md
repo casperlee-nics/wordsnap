@@ -2,7 +2,15 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.66（暫定名稱：像素單字）
+## 目前版本 0.67（暫定名稱：像素單字）
+
+v0.67 的改變：
+- 複習改成快速單字卡：卡片出現就念英文、同時顯示中文；下方兩個像素按鈕「不記得」（人物＋問號）、「記得」（人物＋燈泡），按了直接換下一張
+- 新遊戲輸入暱稱、選角色時播放有希望感的背景音樂（`hope_bgm.ogg`）
+- 單字簿頁面播放清淡優雅的背景音樂（`book_bgm.ogg`），念單字時自動變小聲
+- 下方工具列：朗讀、複習、加單字、戰鬥
+- 「加單字」可選手動輸入（筆和筆記本）或拍照（相機）；按相機直接打開相機
+- 單字簿選單移到右上角
 
 v0.66 的改變：
 - 朗讀模式按鈕：上一個是向左三角形、暫停是兩條細長方形、下一個／播放是向右三角形
@@ -47,7 +55,7 @@ v0.65 的改變：
 
 ## 授權
 
-- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 
 ## 用 Android Studio 執行

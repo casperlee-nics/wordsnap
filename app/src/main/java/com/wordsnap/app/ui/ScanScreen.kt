@@ -34,6 +34,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,6 +63,8 @@ fun ScanScreen(
     onCreateBook: (String, (Long) -> Unit) -> Unit,
     onAdd: (Collection<String>, Long?) -> Unit,
     onBack: () -> Unit,
+    // 從「加單字」按相機進來時，直接打開相機
+    openCamera: Boolean = false,
 ) {
     val context = LocalContext.current
     var scanning by remember { mutableStateOf(false) }
@@ -92,6 +96,15 @@ fun ScanScreen(
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
         val uri = photoUri
         if (ok && uri != null) startScan(uri)
+    }
+    var cameraOpened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (openCamera && !cameraOpened) {
+            cameraOpened = true
+            val uri = newPhotoUri(context)
+            photoUri = uri
+            takePicture.launch(uri)
+        }
     }
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) startScan(uri)

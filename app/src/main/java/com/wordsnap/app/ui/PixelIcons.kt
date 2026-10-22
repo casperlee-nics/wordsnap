@@ -69,6 +69,100 @@ val IconPause = listOf(
     "...........",
 )
 
+// 彩色的大圖示（16 x 16）用的顏色
+val ColorIconPalette = mapOf(
+    'K' to PixelInk,
+    'H' to Color(0xFF704020),
+    'S' to Color(0xFFF8C898),
+    'B' to Color(0xFF3A58C8),
+    'R' to Color(0xFFE04030),
+    'Y' to Color(0xFFF8D030),
+    'W' to Color(0xFFFFFFFF),
+    'L' to Color(0xFF90D0F8),
+    'M' to Color(0xFFB0B8C8),
+    'm' to Color(0xFF687080),
+)
+
+// 複習：不記得（人物頭上一個問號）
+val IconForgot = listOf(
+    "...........RRRR.",
+    "..........RR..RR",
+    "..............RR",
+    ".............RR.",
+    "............RR..",
+    "............RR..",
+    "..KKKKK.........",
+    ".KHHHHHK....RR..",
+    ".KSSSSSK....RR..",
+    ".KSKSKSK........",
+    ".KSSSSSK........",
+    "..KSSSK.........",
+    ".KKBBBKK........",
+    "KBBBBBBBK.......",
+    "KBBBBBBBK.......",
+    "KKKKKKKKK.......",
+)
+
+// 複習：記得（人物頭上一顆燈泡）
+val IconRemember = listOf(
+    "...........KKK..",
+    "..........KYYYK.",
+    ".........KYYWYYK",
+    ".........KYWYYYK",
+    ".........KYYYYYK",
+    "..........KYYYK.",
+    "..KKKKK....KMK..",
+    ".KHHHHHK...KmK..",
+    ".KSSSSSK...KKK..",
+    ".KSKSKSK........",
+    ".KSSSSSK........",
+    "..KSSSK.........",
+    ".KKBBBKK........",
+    "KBBBBBBBK.......",
+    "KBBBBBBBK.......",
+    "KKKKKKKKK.......",
+)
+
+// 加單字：手動輸入（筆和筆記本）
+val IconNotebook = listOf(
+    "................",
+    "..........KK....",
+    ".........KYYK...",
+    "..KKKKKKKYYK....",
+    ".KWWWWWWYYKK....",
+    ".KWLLLLYYKBK....",
+    ".KWWWWYYKWBK....",
+    ".KWLLLKKLLBK....",
+    ".KWWWWKWWWBK....",
+    ".KWLLLLLLLBK....",
+    ".KWWWWWWWWBK....",
+    ".KWLLLLLLLBK....",
+    ".KWWWWWWWWBK....",
+    ".KBBBBBBBBBK....",
+    "..KKKKKKKKK.....",
+    "................",
+)
+
+// 加單字：拍照（相機）
+val IconCamera = listOf(
+    "................",
+    "................",
+    "....KKKK........",
+    "...KmmmmK..KK...",
+    ".KKKKKKKKKKYYKK.",
+    "KMMMMMMMMMMMMMMK",
+    "KMMMMKKKKKMMMMMK",
+    "KMMMKLLLLLKMMMMK",
+    "KmmKLLWLLLLKmmmK",
+    "KmmKLWLLLLLKmmmK",
+    "KmmKLLLLLLLKmmmK",
+    "KMMKLLLLLLLKMMMK",
+    "KMMMKLLLLLKMMMMK",
+    "KMMMMKKKKKMMMMMK",
+    ".KKKKKKKKKKKKKK.",
+    "................",
+)
+
 // 方形的像素按鈕，只有圖示沒有文字
 @Composable
 fun PixelIconButton(
@@ -77,6 +171,7 @@ fun PixelIconButton(
     onClick: () -> Unit,
     size: Dp = 56.dp,
     color: Color = MaterialTheme.colorScheme.surfaceContainer,
+    palette: Map<Char, Color> = IconPalette,
 ) {
     Surface(
         shape = PixelShape,
@@ -88,7 +183,7 @@ fun PixelIconButton(
             .clickable(role = Role.Button, onClick = onClick),
     ) {
         Box(contentAlignment = Alignment.Center) {
-            PixelArt(icon, IconPalette, Modifier.padding(size / 5))
+            PixelArt(icon, palette, Modifier.padding(size / 5))
         }
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,10 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
     var name by remember { mutableStateOf("") }
     var pickingAvatar by remember { mutableStateOf(false) }
     var avatar by remember { mutableStateOf(Avatar.Man) }
+    // 輸入暱稱和選角色時播放有希望感的音樂
+    val context = LocalContext.current
+    val musicOn = remember { isMusicOn(context) }
+    LoopingMusic(R.raw.hope_bgm, enabled = musicOn, volume = 0.5f)
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(

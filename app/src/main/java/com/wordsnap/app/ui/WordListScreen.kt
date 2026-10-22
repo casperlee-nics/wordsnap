@@ -39,10 +39,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wordsnap.app.R
 import com.wordsnap.app.data.Word
-import com.wordsnap.app.ui.theme.pixelTopBarButtonColors
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.translate.ModelStatus
@@ -72,6 +73,12 @@ fun WordListScreen(
     val now = System.currentTimeMillis()
     val dueCount = words.count { it.dueAt <= now }
     var showAdd by remember { mutableStateOf(false) }
+    // 按「加單字」先選手動輸入或拍照
+    var choosingAdd by remember { mutableStateOf(false) }
+    // 單字簿頁面播放清淡的背景音樂，念單字時調小聲
+    val context = LocalContext.current
+    val musicOn = remember { isMusicOn(context) }
+    LoopingMusic(R.raw.book_bgm, enabled = musicOn, volume = if (speaker.speaking) 0.05f else 0.35f)
     var editing by remember { mutableStateOf<Word?>(null) }
 
     Scaffold(
@@ -96,47 +103,46 @@ fun WordListScreen(
                         }
                     }
                 },
+                // 右上角切換單字簿
                 actions = {
-                    // 全部都記住了也能按，進去會隨機複習整本
-                    TextButton(onClick = onReview, enabled = words.isNotEmpty(), colors = pixelTopBarButtonColors()) {
-                        Text(if (dueCount > 0) "複習（$dueCount）" else "複習")
-                    }
+                    BookPicker(
+                        books = books,
+                        selectedId = selectedBookId,
+                        onSelect = vm::selectBook,
+                        onCreate = { name -> vm.createBook(name) { id -> vm.selectBook(id) } },
+                        label = "",
+                        allowAll = true,
+                        onTopBar = true,
+                    )
                 },
                 colors = pixelTopBarColors(),
             )
         },
-        // 下方一排按鈕：朗讀、加單字、戰鬥、拍照；放在底部不會蓋住最後一個單字
+        // 下方一排按鈕：朗讀、複習、加單字、戰鬥；放在底部不會蓋住最後一個單字
         bottomBar = {
             val battleBook = selectedBookId
             BottomActions(
                 onListen = onListen,
-                onAdd = { showAdd = true },
+                // 全部都記住了也能按，進去會隨機複習整本
+                reviewLabel = if (dueCount > 0) "複習 $dueCount" else "複習",
+                reviewEnabled = words.isNotEmpty(),
+                onReview = onReview,
+                onAdd = { choosingAdd = true },
                 battleEnabled = battleBook != null && unlock.unlocked,
                 onBattle = { if (battleBook != null) onBattle(battleBook) },
-                onScan = onScan,
             )
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                BookPicker(
-                    books = books,
-                    selectedId = selectedBookId,
-                    onSelect = vm::selectBook,
-                    onCreate = { name -> vm.createBook(name) { id -> vm.selectBook(id) } },
-                    label = "單字簿：",
-                    allowAll = true,
-                    modifier = Modifier.weight(1f),
-                )
-                Text("${words.size} 個字", style = MaterialTheme.typography.bodyLarge)
-            }
+            Text(
+                "共 ${words.size} 個字",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            )
             if (hasBlank) TranslatorBanner(translatorStatus, onRetry = vm::retryTranslation)
             if (words.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("還沒有單字，按下方「拍照」或「加單字」新增第一個")
+                    Text("還沒有單字，按下方「加單字」新增第一個")
                 }
             } else {
                 LazyColumn(Modifier.fillMaxSize()) {
@@ -170,6 +176,13 @@ fun WordListScreen(
         }
     }
 
+    if (choosingAdd) {
+        AddChoiceDialog(
+            onDismiss = { choosingAdd = false },
+            onManual = { choosingAdd = false; showAdd = true },
+            onCamera = { choosingAdd = false; onScan() },
+        )
+    }
     if (showHero) {
         profile?.let { HeroDialog(it, remembered = allWords.count { w -> w.box >= 1 }, onDismiss = { showHero = false }) }
     }
@@ -250,10 +263,12 @@ private fun TranslatorBanner(status: ModelStatus, onRetry: () -> Unit) {
 @Composable
 private fun BottomActions(
     onListen: () -> Unit,
+    reviewLabel: String,
+    reviewEnabled: Boolean,
+    onReview: () -> Unit,
     onAdd: () -> Unit,
     battleEnabled: Boolean,
     onBattle: () -> Unit,
-    onScan: () -> Unit,
 ) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
         Row(
@@ -262,9 +277,39 @@ private fun BottomActions(
         ) {
             val small = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
             OutlinedButton(onClick = onListen, Modifier.weight(1f), contentPadding = small) { Text("朗讀") }
-            OutlinedButton(onClick = onAdd, Modifier.weight(1f), contentPadding = small) { Text("加單字") }
+            Button(onClick = onReview, Modifier.weight(1f), enabled = reviewEnabled, contentPadding = small) {
+                Text(reviewLabel, maxLines = 1)
+            }
+            Button(onClick = onAdd, Modifier.weight(1f), contentPadding = small) { Text("加單字") }
             Button(onClick = onBattle, Modifier.weight(1f), enabled = battleEnabled, contentPadding = small) { Text("戰鬥") }
-            Button(onClick = onScan, Modifier.weight(1f), contentPadding = small) { Text("拍照") }
         }
+    }
+}
+
+// 加單字：上面是手動輸入（筆和筆記本），下面是拍照（相機），按相機直接打開相機
+@Composable
+private fun AddChoiceDialog(onDismiss: () -> Unit, onManual: () -> Unit, onCamera: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("加單字") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                AddChoice(IconNotebook, "手動輸入單字怪物", onManual)
+                AddChoice(IconCamera, "用相機找出隱藏的單字怪物", onCamera)
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+    )
+}
+
+@Composable
+private fun AddChoice(icon: List<String>, text: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        PixelIconButton(icon, text, onClick = onClick, size = 72.dp, palette = ColorIconPalette)
+        Text(text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
     }
 }
