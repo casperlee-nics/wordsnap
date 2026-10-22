@@ -49,7 +49,14 @@ data class BattleReward(
     val exp: Int,
     val levelBefore: Int,
     val levelAfter: Int,
+    // 被怪物打倒
+    val died: Boolean = false,
+    // 這次錯滿兩次、變回沒記住的字
+    val forgotten: List<String> = emptyList(),
 )
+
+// 答錯超過一半就被打倒，所以人物的 HP 是題數的一半再多 1
+fun heroMaxHp(total: Int): Int = total / 2 + 1
 
 // 畫面和資料庫之間的橋樑
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -215,19 +222,36 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         return (picked + tested.take(BATTLE_SIZE - picked.size)).shuffled()
     }
 
-    // 戰鬥結束：記下考過的字、加經驗值、通過就標記這本單字簿已通關
-    fun finishBattle(bookId: Long, asked: List<Word>, correct: Int, onDone: (BattleReward) -> Unit) {
+    // 戰鬥結束：記下考過的字、答錯的字加一次錯誤（錯滿兩次變回沒記住）、加經驗值、通過就標記這本單字簿已通關
+    // asked 是這次真的考過的字（被打倒時只算已經作答的），wrong 是其中答錯的
+    fun finishBattle(
+        bookId: Long,
+        asked: List<Word>,
+        wrong: List<Word>,
+        total: Int,
+        died: Boolean,
+        onDone: (BattleReward) -> Unit,
+    ) {
         val profile = currentProfile.value ?: return
-        val passed = correct >= passScore(asked.size)
+        val correct = asked.size - wrong.size
+        val passed = !died && correct >= passScore(total)
         val gained = correct * EXP_PER_WORD + if (passed) EXP_PASS_BONUS else 0
         val before = levelInfo(profile.exp).level
         val after = levelInfo(profile.exp + gained).level
+        val forgotten = wrong.filter { it.wrongCount + 1 >= 2 && it.box >= 1 }.map { it.text }
         viewModelScope.launch {
             val now = System.currentTimeMillis()
-            dao.markTested(asked.map { it.id }, now)
-            profileDao.addExp(profile.id, gained)
-            if (passed) bookDao.markCleared(bookId, now)
-            onDone(BattleReward(passed, correct, asked.size, gained, before, after))
+            db.withTransaction {
+                dao.markTested(asked.map { it.id }, now)
+                if (wrong.isNotEmpty()) {
+                    val ids = wrong.map { it.id }
+                    dao.addWrong(ids)
+                    dao.forgetOftenWrong(ids, now)
+                }
+                profileDao.addExp(profile.id, gained)
+                if (passed) bookDao.markCleared(bookId, now)
+            }
+            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten))
         }
     }
 
@@ -241,20 +265,41 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     var reviewStep by mutableIntStateOf(0)
         private set
 
+    // true：今天沒有該複習的字，改成隨機練習整本已記住的字
+    var practiceMode by mutableStateOf(false)
+        private set
+
+    // 有該複習（沒記住）的字就只考那些；全部都記住了，就把整本隨機考一遍
     fun startReview() {
         val pid = profileId ?: return
         reviewedCount = 0
         viewModelScope.launch {
             val bookId = selectedBookId.value
-            reviewQueue = dao.getDue(pid, System.currentTimeMillis())
+            val due = dao.getDue(pid, System.currentTimeMillis())
                 .filter { bookId == null || it.bookId == bookId }
+            practiceMode = due.isEmpty()
+            reviewQueue = if (due.isNotEmpty()) {
+                due
+            } else {
+                allWords.value.filter { bookId == null || it.bookId == bookId }.shuffled()
+            }
         }
     }
 
     fun answer(word: Word, remembered: Boolean) {
-        val box = if (remembered) (word.box + 1).coerceAtMost(INTERVALS.size - 1) else 0
-        val updated = word.copy(box = box, dueAt = System.currentTimeMillis() + INTERVALS[box])
-        viewModelScope.launch { dao.update(updated) }
+        // 練習模式按「記得」不改進度，避免沒到期的字被越排越遠
+        val updated = when {
+            practiceMode && remembered && word.box >= 1 -> word
+            else -> {
+                val box = if (remembered) (word.box + 1).coerceAtMost(INTERVALS.size - 1) else 0
+                word.copy(
+                    box = box,
+                    dueAt = System.currentTimeMillis() + INTERVALS[box],
+                    wrongCount = if (remembered) word.wrongCount else 0,
+                )
+            }
+        }
+        if (updated != word) viewModelScope.launch { dao.update(updated) }
 
         // 忘了的字放到最後，這次複習再考一次
         reviewQueue = reviewQueue.drop(1) + if (remembered) emptyList() else listOf(updated)

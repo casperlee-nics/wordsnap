@@ -24,9 +24,9 @@ import com.wordsnap.app.data.Profile
 import com.wordsnap.app.ui.theme.PixelBlue
 import com.wordsnap.app.ui.theme.PixelInk
 
-// 人物能力：等級、稱號、經驗值和四項能力
+// 人物能力：等級、稱號、經驗值、已記住的單字數和四項能力
 @Composable
-fun HeroDialog(profile: Profile, onDismiss: () -> Unit) {
+fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit) {
     val avatar = Avatar.from(profile.avatar)
     val race = avatar.race
     val info = levelInfo(profile.exp)
@@ -48,6 +48,7 @@ fun HeroDialog(profile: Profile, onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("種族：${race.label}　Lv ${info.level}")
+                Text("已記住的單字：$remembered 個")
                 if (info.level < MAX_LEVEL) {
                     Text("經驗值 ${info.current} / ${info.needed}", style = MaterialTheme.typography.bodySmall)
                     Meter(info.current.toFloat() / info.needed, PixelBlue)

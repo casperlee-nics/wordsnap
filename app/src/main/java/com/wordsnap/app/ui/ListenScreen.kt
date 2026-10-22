@@ -13,7 +13,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelBorder
+import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelShape
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 import kotlinx.coroutines.delay
@@ -130,10 +130,15 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                     }
                 }
                 Text(if (playing) "♪ 正在念：$step" else "已暫停", style = MaterialTheme.typography.bodyMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedButton(onClick = { index = (index - 1 + words.size) % words.size }) { Text("← 上一個") }
-                    Button(onClick = { playing = !playing }) { Text(if (playing) "暫停" else "繼續") }
-                    OutlinedButton(onClick = { index = (index + 1) % words.size }) { Text("下一個 →") }
+                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                    PixelIconButton(IconPrev, "上一個", onClick = { index = (index - 1 + words.size) % words.size })
+                    PixelIconButton(
+                        if (playing) IconPause else IconPlay,
+                        if (playing) "暫停" else "繼續",
+                        onClick = { playing = !playing },
+                        color = PixelGold,
+                    )
+                    PixelIconButton(IconNext, "下一個", onClick = { index = (index + 1) % words.size })
                 }
                 Text(
                     "關掉螢幕也會繼續念；若太久沒操作，手機可能會自動暫停",

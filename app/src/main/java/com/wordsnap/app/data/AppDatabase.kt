@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Word::class, Profile::class, Book::class], version = 5)
+@Database(entities = [Word::class, Profile::class, Book::class], version = 6)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun wordDao(): WordDao
     abstract fun profileDao(): ProfileDao
@@ -23,7 +23,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "wordsnap.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build().also { instance = it }
             }
 
         // v0.3 加入複習欄位，保留舊的單字
@@ -74,6 +74,13 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE words ADD COLUMN testedAt INTEGER")
                 db.execSQL("ALTER TABLE profiles ADD COLUMN exp INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE books ADD COLUMN clearedAt INTEGER")
+            }
+        }
+
+        // v0.65 記錄戰鬥模式答錯次數
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE words ADD COLUMN wrongCount INTEGER NOT NULL DEFAULT 0")
             }
         }
 

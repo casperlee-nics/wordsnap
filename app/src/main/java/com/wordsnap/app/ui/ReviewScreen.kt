@@ -48,7 +48,7 @@ fun ReviewScreen(vm: WordViewModel, onListen: () -> Unit, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("複習（剩 ${vm.reviewQueue.size} 張）") },
+                title = { Text("${if (vm.practiceMode) "練習" else "複習"}（剩 ${vm.reviewQueue.size} 張）") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -70,11 +70,17 @@ fun ReviewScreen(vm: WordViewModel, onListen: () -> Unit, onBack: () -> Unit) {
             ) {
                 val word = vm.reviewQueue.firstOrNull()
                 if (word == null) {
-                    Text("今天的單字都複習完了！", style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        if (vm.practiceMode) "整本都練習完了！" else "今天的單字都複習完了！",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
                     if (vm.reviewedCount > 0) Text("這次記住了 ${vm.reviewedCount} 個字")
                     Button(onClick = onBack) { Text("回單字本") }
                 } else {
                     var revealed by remember(vm.reviewStep) { mutableStateOf(false) }
+                    if (vm.practiceMode) {
+                        Text("今天的字都記住了，隨機再練一次", style = MaterialTheme.typography.bodySmall)
+                    }
 
                     // 像遊戲對話框的卡片
                     Surface(

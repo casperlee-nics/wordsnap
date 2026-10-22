@@ -100,8 +100,9 @@ fun WordListScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = onReview, enabled = dueCount > 0, colors = pixelTopBarButtonColors()) {
-                        Text("複習（$dueCount）")
+                    // 全部都記住了也能按，進去會隨機複習整本
+                    TextButton(onClick = onReview, enabled = words.isNotEmpty(), colors = pixelTopBarButtonColors()) {
+                        Text(if (dueCount > 0) "複習（$dueCount）" else "複習")
                     }
                 },
                 colors = pixelTopBarColors(),
@@ -176,7 +177,7 @@ fun WordListScreen(
     }
 
     if (showHero) {
-        profile?.let { HeroDialog(it, onDismiss = { showHero = false }) }
+        profile?.let { HeroDialog(it, remembered = allWords.count { w -> w.box >= 1 }, onDismiss = { showHero = false }) }
     }
     if (showAdd) {
         WordDialog(
