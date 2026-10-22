@@ -126,7 +126,7 @@ fun ScanScreen(
                     CircularProgressIndicator()
                 }
                 error != null -> Text(error!!)
-                found == null -> Text("拍一張課本或文章的照片，App 會找出裡面的英文單字怪物。")
+                found == null -> Text("拍一張課本或文章的照片，我會幫你找出隱藏的單字怪物。")
                 found!!.none { !TextScanner.isCommon(it) } -> Text("沒有找到英文單字，換一張清楚一點的照片試試。")
                 else -> {
                     // 濾掉 the、and 這類常見字；已經收錄的字照樣列出但不能選

@@ -29,6 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelBorder
@@ -90,8 +92,17 @@ fun ReviewScreen(vm: WordViewModel, onListen: () -> Unit, onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Box(Modifier.padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(word.text, style = MaterialTheme.typography.displaySmall)
+                            Row(
+                                Modifier.padding(horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                // 長的單字自動縮小、必要時換行，不會超出外框
+                                Text(
+                                    word.text,
+                                    style = wordStyle(word.text),
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.weight(1f, fill = false),
+                                )
                                 IconButton(onClick = { speaker.speak(word.text) }) {
                                     Icon(Icons.Filled.PlayArrow, contentDescription = "發音")
                                 }
@@ -119,4 +130,12 @@ fun ReviewScreen(vm: WordViewModel, onListen: () -> Unit, onBack: () -> Unit) {
             }
         }
     }
+}
+
+// 依單字長度選字體大小：短的用大字，長的縮小，避免超出卡片
+@Composable
+fun wordStyle(text: String): TextStyle = when {
+    text.length <= 8 -> MaterialTheme.typography.displaySmall
+    text.length <= 12 -> MaterialTheme.typography.headlineLarge
+    else -> MaterialTheme.typography.headlineSmall
 }

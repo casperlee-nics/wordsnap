@@ -116,7 +116,7 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text(word.text, style = MaterialTheme.typography.displaySmall, textAlign = TextAlign.Center)
+                        Text(word.text, style = wordStyle(word.text), textAlign = TextAlign.Center)
                         Text(
                             word.text.filter { it.isLetter() }.uppercase().toList().joinToString(" "),
                             style = MaterialTheme.typography.titleMedium,

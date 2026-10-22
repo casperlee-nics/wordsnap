@@ -46,11 +46,27 @@ object TextScanner {
 
     fun isCommon(word: String): Boolean = word in commonWords
 
-    // 只留下兩個字母以上的英文字，轉小寫並去掉重複
+    // 音標：放在 /.../ 或 [...] 裡、中間沒有空白的一小段，例如 /ˈæp.əl/、[ˋæpḷ]
+    private val phoneticPattern = Regex("[/\\[][^/\\[\\]\\s]{1,30}[/\\]]")
+
+    // 音標才會用到的符號（æ、ð、θ、ʃ、ə、重音 ˈ、長音 ː 等）
+    private fun isPhoneticSymbol(c: Char): Boolean =
+        c == 'æ' || c == 'ð' || c == 'θ' || c in '\u0250'..'\u02FF' || c in '\u0300'..'\u036F'
+
+    // 字典裡標詞性的縮寫（n. 和 vt. 這種本來就會被略過）
+    private val partOfSpeech = setOf("adj", "adv", "prep", "conj", "pron", "interj", "aux")
+
+    // 沒有母音的不是單字（拆散的音標常變成 pl、str 這種）
+    private fun hasVowel(word: String): Boolean = word.any { it in "aeiouy" }
+
+    // 只留下兩個字母以上的英文字，轉小寫並去掉重複；音標和一看就不是單字的字母組合會略過
     fun extractWords(text: String): List<String> =
-        wordPattern.findAll(text)
-            .map { it.value.lowercase() }
-            .filter { it.length >= 2 }
+        text.replace(phoneticPattern, " ")
+            .split(Regex("\\s+"))
+            // 一整段裡有音標符號就整段跳過，不拆出零碎的字母
+            .filterNot { chunk -> chunk.any(::isPhoneticSymbol) }
+            .flatMap { chunk -> wordPattern.findAll(chunk).map { it.value.lowercase() } }
+            .filter { it.length >= 2 && hasVowel(it) && it !in partOfSpeech }
             .distinct()
             .toList()
 }

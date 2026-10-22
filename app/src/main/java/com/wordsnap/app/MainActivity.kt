@@ -45,10 +45,10 @@ private enum class Screen { Title, NewGame, Load, Delete, List, Scan, Review, Li
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 讓遊戲機外框鋪到狀態列和導覽列後面；機身是米白色，所以狀態列圖示用深色
+        // 讓遊戲機外框鋪到狀態列和導覽列後面
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
         ReviewReminder.schedule(this)

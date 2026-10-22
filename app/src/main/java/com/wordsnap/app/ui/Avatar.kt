@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-// 像素人物：每個字元是一格像素，"." 是透明
+// 像素人物：每個字元是一格像素，"." 是透明；大多是 12 x 12 格，都是正方形
 private val palette = mapOf(
     'K' to Color(0xFF202030),
     'S' to Color(0xFFF8C898),
@@ -136,21 +136,26 @@ enum class Avatar(val label: String, val art: List<String>) {
             ".KKKKKKKKKK.",
         ),
     ),
+    // 貓咪用 16 x 16 格，左右各兩根鬍鬚伸出臉外
     Cat(
         "貓咪",
         listOf(
-            ".K........K.",
-            "KOK......KOK",
-            "KPOK....KOPK",
-            "KPPOKKKKOPPK",
-            "KOOODOODOOOK",
-            "KOOOODDOOOOK",
-            "KOWKOOOOWKOK",
-            "KOKKOOOOKKOK",
-            "KPOOOPPOOOPK",
-            "KoooKooKoooK",
-            ".KKooooooKK.",
-            "...KKKKKK...",
+            "................",
+            "................",
+            "...K........K...",
+            "..KOK......KOK..",
+            "..KPOK....KOPK..",
+            "..KPPOKKKKOPPK..",
+            "..KOOODOODOOOK..",
+            "..KOOOODDOOOOK..",
+            "..KOWKOOOOWKOK..",
+            "..KOKKOOOOKKOK..",
+            "..KPOOOPPOOOPK..",
+            "KKKoooKooKoooKKK",
+            "..KooooooooooK..",
+            "KKKKKooooooKKKKK",
+            ".....KKKKKK.....",
+            "................",
         ),
     ),
     Dragon(

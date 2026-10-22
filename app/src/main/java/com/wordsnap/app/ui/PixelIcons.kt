@@ -19,45 +19,54 @@ import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelShape
 
-// 像素按鈕上的小圖示（9 x 9），"K" 是深色，"." 是透明
+// 像素按鈕上的小圖示（11 x 11），"K" 是深色，"." 是透明
 private val IconPalette = mapOf('K' to PixelInk)
 
+// 上一個：向左的三角形
 val IconPrev = listOf(
-    ".........",
-    ".K.....K.",
-    ".K....KK.",
-    ".K...KKK.",
-    ".K..KKKK.",
-    ".K...KKK.",
-    ".K....KK.",
-    ".K.....K.",
-    ".........",
+    "...........",
+    ".......K...",
+    "......KK...",
+    ".....KKK...",
+    "....KKKK...",
+    "...KKKKK...",
+    "....KKKK...",
+    ".....KKK...",
+    "......KK...",
+    ".......K...",
+    "...........",
 )
 
-val IconNext = IconPrev.map { it.reversed() }
-
-val IconPlay = listOf(
-    "..K......",
-    "..KK.....",
-    "..KKK....",
-    "..KKKK...",
-    "..KKKKK..",
-    "..KKKK...",
-    "..KKK....",
-    "..KK.....",
-    "..K......",
+// 下一個和播放：向右的三角形
+val IconNext = listOf(
+    "...........",
+    "...K.......",
+    "...KK......",
+    "...KKK.....",
+    "...KKKK....",
+    "...KKKKK...",
+    "...KKKK....",
+    "...KKK.....",
+    "...KK......",
+    "...K.......",
+    "...........",
 )
 
+val IconPlay = IconNext
+
+// 暫停：兩個並排的細長長方形
 val IconPause = listOf(
-    ".........",
-    ".KKK.KKK.",
-    ".KKK.KKK.",
-    ".KKK.KKK.",
-    ".KKK.KKK.",
-    ".KKK.KKK.",
-    ".KKK.KKK.",
-    ".KKK.KKK.",
-    ".........",
+    "...........",
+    "..KK...KK..",
+    "..KK...KK..",
+    "..KK...KK..",
+    "..KK...KK..",
+    "..KK...KK..",
+    "..KK...KK..",
+    "..KK...KK..",
+    "..KK...KK..",
+    "..KK...KK..",
+    "...........",
 )
 
 // 方形的像素按鈕，只有圖示沒有文字

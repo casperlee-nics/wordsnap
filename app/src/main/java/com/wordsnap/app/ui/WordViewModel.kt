@@ -107,6 +107,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     fun selectProfile(id: Long) {
         prefs.edit().putLong(KEY_PROFILE, id).apply()
         selectedProfileId.value = id
+        showAllBooks = false
         selectedBookId.value = null
     }
 
@@ -121,8 +122,25 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     // null 代表「全部」
     val selectedBookId = MutableStateFlow<Long?>(null)
 
+    // 使用者自己選了「全部」；沒選的話預設顯示第一本（我的單字簿）
+    private var showAllBooks = false
+
     fun selectBook(id: Long?) {
+        showAllBooks = id == null
         selectedBookId.value = id
+    }
+
+    init {
+        // 單字簿讀進來（或換暱稱、刪掉目前那本）時，預設選第一本，而不是「全部」
+        viewModelScope.launch {
+            books.collect { list ->
+                val id = selectedBookId.value
+                val missing = id != null && list.none { it.id == id }
+                if ((id == null && !showAllBooks) || missing) {
+                    selectedBookId.value = list.firstOrNull()?.id
+                }
+            }
+        }
     }
 
     fun createBook(name: String, onCreated: (Long) -> Unit = {}) {
