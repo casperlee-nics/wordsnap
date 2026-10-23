@@ -38,7 +38,7 @@ import com.wordsnap.app.ui.theme.PixelRed
 import com.wordsnap.app.ui.theme.PixelShape
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 
-// 讀取遊戲（點存檔進入）或刪除進度（點存檔刪除）共用的存檔清單
+// 讀取遊戲（點存檔進入）或刪除冒險者（點存檔刪除）共用的存檔清單
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaveSlotScreen(
@@ -56,7 +56,7 @@ fun SaveSlotScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (deleting) "刪除進度" else "讀取遊戲") },
+                title = { Text(if (deleting) "刪除冒險者" else "讀取遊戲") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -101,8 +101,8 @@ fun SaveSlotScreen(
     confirm?.let { profile ->
         AlertDialog(
             onDismissRequest = { confirm = null },
-            title = { Text("刪除 ${profile.name}？") },
-            text = { Text("${profile.name} 的所有單字簿、單字和複習進度都會刪除，無法復原。") },
+            title = { Text("刪除冒險者 ${profile.name}？") },
+            text = { Text("${profile.name} 的所有單字簿、單字、道具和複習進度都會刪除，無法復原。") },
             confirmButton = {
                 TextButton(onClick = {
                     onPick(profile)

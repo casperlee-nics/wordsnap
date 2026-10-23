@@ -14,6 +14,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.alpha
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -85,15 +89,24 @@ import kotlin.math.sin
 
 // 怪物每一格像素的大小
 private val Cell = 4.dp
+// 戰鬥畫面上玩家人物的大小
+private val HeroSize = 56.dp
+// 人物和怪物離畫面底部的距離
+private val GroundPad = 8.dp
+
+// 道具使用一次的紀錄；id 每次加一，讓動畫重新播放
+private data class ItemUse(val type: ItemType, val id: Int)
 
 // 戰鬥模式：聽英文發音，拼出整個單字。
-// 答對時人物衝上去攻擊、怪物扣血，答錯被怪物攻擊；全部答對才用職業招式把怪物打飛，錯超過一半就被打倒
+// 答對時人物衝上去攻擊、怪物扣血；答錯被怪物攻擊，扣 1/5 的 HP，HP 歸零就被打倒
+// 最後一題結束時怪物的血打光了，才用職業招式把怪物打飛（沒用道具就要全對）
 // 招式和頭像隨稱號（每 10 級一階）變強；每記住 50 / 100 個字會遇到中魔王 / 大魔王
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val profile by vm.currentProfile.collectAsState()
     val books by vm.books.collectAsState()
+    val items by vm.items.collectAsState()
     val avatar = Avatar.from(profile?.avatar)
     val race = avatar.race
     // 戰鬥開始時的稱號階級，決定頭像和招式
@@ -101,9 +114,11 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val bookName = books.firstOrNull { it.id == bookId }?.name ?: ""
     val questions = remember { vm.pickBattleWords(bookId) }
     val monster = remember { vm.pickBattleMonster() }
+    val isBoss = monster.rank != MonsterRank.Normal
     val scene = remember { ReviewScene.entries.random() }
     val speaker = rememberSpeaker()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val musicOn = remember { isMusicOn(context) }
     var index by remember { mutableIntStateOf(0) }
     var correct by remember { mutableIntStateOf(0) }
@@ -113,6 +128,17 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var result by remember { mutableStateOf<Boolean?>(null) }
     var finished by remember { mutableStateOf(false) }
     var died by remember { mutableStateOf(false) }
+    // 魔王出場動畫播完了才開始出題
+    var introDone by remember { mutableStateOf(!isBoss) }
+    // 玩家被打掉的 HP、道具讓怪物多扣的血
+    var damage by remember { mutableIntStateOf(0) }
+    var bonus by remember { mutableIntStateOf(0) }
+    var bonusHits by remember { mutableIntStateOf(0) }
+    var itemUse by remember { mutableStateOf<ItemUse?>(null) }
+    var showBag by remember { mutableStateOf(false) }
+    // 念單字的前後 0.5 秒把背景音樂停住
+    var quiet by remember { mutableStateOf(false) }
+    var sayJob by remember { mutableStateOf<Job?>(null) }
     // 結束動畫（打飛怪物或拖棺材）播完了，可以顯示結果
     var endShown by remember { mutableStateOf(false) }
     var reward by remember { mutableStateOf<BattleReward?>(null) }
@@ -121,33 +147,54 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val leveledUp = reward?.let { it.levelAfter > it.levelBefore } == true
     val showingLevelUp = endShown && leveledUp && !levelUpDone
 
-    // 念單字時音樂調到很小聲，避免蓋過發音；被打倒或升級時換成專屬音樂
     LoopingMusic(
         when (monster.rank) {
             MonsterRank.Big -> R.raw.bigboss_bgm
             MonsterRank.Mid -> R.raw.midboss_bgm
             MonsterRank.Normal -> R.raw.battle_bgm
         },
-        enabled = musicOn && !died && !showingLevelUp,
-        volume = if (speaker.speaking) 0.05f else 0.3f,
+        enabled = musicOn && introDone && !died && !showingLevelUp,
+        volume = 0.3f,
+        paused = quiet,
     )
+    OneShotSound(R.raw.warning_jingle, play = isBoss && !introDone)
     OneShotSound(R.raw.death_jingle, play = died)
     OneShotSound(R.raw.levelup_jingle, play = showingLevelUp)
 
     val total = questions.size
     val word = questions.getOrNull(index)
     val answer = word?.text?.trim().orEmpty()
-    val heroMax = heroMaxHp(total)
-    // 錯超過一半就被打倒
-    val dying = wrong.size * 2 > total
-    val perfect = finished && !died && wrong.isEmpty()
+    val heroHp = (HERO_MAX_HP - damage).coerceAtLeast(0)
+    val monsterHp = (total - correct - bonus).coerceAtLeast(0)
+    val knocked = finished && !died && total > 0 && monsterHp == 0
+    val answering = introDone && !finished && word != null && result == null
+
+    // 念一次英文：先停住音樂 0.5 秒，念完再等 0.5 秒才放音樂
+    fun sayWord() {
+        sayJob?.cancel()
+        sayJob = scope.launch {
+            try {
+                quiet = true
+                delay(500)
+                speaker.say(answer, rate = 0.85f)
+                delay(500)
+            } finally {
+                quiet = false
+            }
+        }
+    }
 
     fun submit() {
-        if (result != null || input.isBlank() || word == null) return
+        if (!answering || input.isBlank() || word == null) return
         // 要拼出整個單字
         val ok = input.trim().equals(answer, ignoreCase = true)
         result = ok
-        if (ok) correct++ else wrong.add(word)
+        if (ok) {
+            correct++
+        } else {
+            wrong.add(word)
+            damage += WRONG_DAMAGE
+        }
     }
 
     fun next() {
@@ -161,11 +208,31 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
-    // 每一題先念一次英文發音
-    LaunchedEffect(index) {
-        if (word != null && !finished) {
-            delay(400)
-            speaker.say(answer, rate = 0.85f)
+    fun useItem(type: ItemType) {
+        if (!answering) return
+        showBag = false
+        vm.useItem(type)
+        itemUse = ItemUse(type, (itemUse?.id ?: 0) + 1)
+        when {
+            type.heal > 0 -> damage = (damage - type.heal).coerceAtLeast(0)
+            type == ItemType.SmartPill -> {
+                // 直接顯示答案，算答對
+                input = answer
+                result = true
+                correct++
+            }
+            else -> {
+                bonus += type.monsterDamage(total)
+                bonusHits++
+            }
+        }
+    }
+
+    // 每一題先念一次英文發音（魔王戰等出場動畫播完）
+    LaunchedEffect(index, introDone) {
+        if (word != null && !finished && introDone) {
+            delay(300)
+            sayWord()
         }
     }
     // 答對：停 1.5 秒看攻擊動畫，再自動下一題
@@ -175,10 +242,10 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             next()
         }
     }
-    // 答錯：看完正確答案，按向右箭頭才進下一回；錯太多就倒下
+    // 答錯：看完正確答案，按向右箭頭才進下一回；HP 歸零就倒下
     fun nextRound() {
         if (result != false) return
-        if (dying) {
+        if (heroHp <= 0) {
             died = true
             finished = true
             vm.finishBattle(bookId, questions.take(index + 1), wrong.toList(), total, died = true, monster) { reward = it }
@@ -186,9 +253,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             next()
         }
     }
-    // 沒有全對：怪物留在原地，稍等一下就顯示結果
+    // 怪物還有血：留在原地，稍等一下就顯示結果
     LaunchedEffect(finished) {
-        if (finished && !died && wrong.isNotEmpty()) {
+        if (finished && !died && !knocked) {
             delay(900)
             endShown = true
         }
@@ -217,16 +284,21 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     scene = scene,
                     monster = monster,
                     hero = avatar,
+                    heroName = profile?.name.orEmpty(),
                     tier = tier,
                     finisher = race.finisher,
                     hits = correct,
+                    bonusHits = bonusHits,
                     attacks = wrong.size,
-                    monsterHp = total - correct,
+                    monsterHp = monsterHp,
                     monsterMax = total,
-                    heroHp = (heroMax - wrong.size).coerceAtLeast(0),
-                    heroMax = heroMax,
-                    knockout = perfect,
+                    heroHp = heroHp,
+                    heroMax = HERO_MAX_HP,
+                    knockout = knocked,
                     onKnockoutEnd = { endShown = true },
+                    intro = !introDone,
+                    onIntroEnd = { introDone = true },
+                    itemUse = itemUse,
                 )
             }
 
@@ -235,7 +307,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                if (total > 0 && !finished && monster.rank != MonsterRank.Normal) {
+                if (total > 0 && !finished && isBoss) {
                     Text(
                         "${if (monster.rank == MonsterRank.Big) "大魔王" else "中魔王"}「${monster.name}」出現了！",
                         style = MaterialTheme.typography.titleMedium,
@@ -244,7 +316,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 }
                 when {
                     total == 0 -> {
-                        Text("這本單字簿還沒有可以出題的單字（至少 3 個字母、已記住過）")
+                        Text("這本單字簿還沒有可以出題的單字（至少 3 個字母、已記住、戰鬥考不到 $MAX_TESTS 次）")
                         Button(onClick = onBack) { Text("回單字本") }
                     }
                     died -> {
@@ -252,27 +324,39 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                         Text("同伴把你拖回了教堂")
                         reward?.let { Text("這是你第 ${it.deaths} 次倒下", color = PixelRed) }
                     }
-                    perfect -> {
+                    knocked -> {
                         Text("${race.finisher.label(tier)}！", style = MaterialTheme.typography.headlineSmall)
                         Text("擊倒了 ${monster.name}！")
                     }
                     finished -> {
                         Text("${monster.name} 還站著！", style = MaterialTheme.typography.headlineSmall)
-                        Text("全部答對才能把牠打飛，下次再來")
+                        Text("把怪物的血打光才能把牠打飛，下次再來")
                     }
+                    !introDone -> Text("小心！", style = MaterialTheme.typography.titleMedium)
                     word != null -> Question(
                         answer = answer,
                         meaning = word.meaning,
                         input = input,
                         onInput = { if (result == null) input = it.filterNot { c -> c == '\n' } },
                         result = result,
-                        onListen = { speaker.speak(answer) },
+                        onListen = ::sayWord,
                         onSubmit = ::submit,
                         onNext = ::nextRound,
+                        onBag = { showBag = true },
+                        bagEnabled = answering,
                     )
                 }
             }
         }
+    }
+
+    if (showBag) {
+        ItemBagDialog(
+            counts = items,
+            canUse = { type -> answering && (type.heal == 0 || damage > 0) },
+            onUse = ::useItem,
+            onDismiss = { showBag = false },
+        )
     }
 
     val done = reward
@@ -280,7 +364,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         if (showingLevelUp) {
             LevelUpScreen(avatar, race, done.levelBefore, done.levelAfter, onClose = { levelUpDone = true })
         } else {
-            ResultDialog(done, monster, race, onClose = onBack)
+            ResultDialog(done, monster, race, knocked, onClose = onBack)
         }
     }
 }
@@ -295,6 +379,8 @@ private fun Question(
     onListen: () -> Unit,
     onSubmit: () -> Unit,
     onNext: () -> Unit,
+    onBag: () -> Unit,
+    bagEnabled: Boolean,
 ) {
     // 空白的輸入框，聽發音拼出整個單字；答錯時框裡直接換成正確答案（紅字），不會被鍵盤擋住
     val wrong = result == false
@@ -316,15 +402,11 @@ private fun Question(
         keyboardActions = KeyboardActions(onDone = { if (wrong) onNext() else onSubmit() }),
         modifier = Modifier.fillMaxWidth(),
     )
-    // 左下：大聲公再聽一次；右下：劍攻擊，答錯後換成向右箭頭「下一回」
+    // 左下：大聲公再聽一次；中間：道具袋；右下：劍攻擊，答錯後換成向右箭頭「下一回」
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         PixelIconButton(IconMegaphone, "再聽一次", onClick = onListen, size = 64.dp, palette = ColorIconPalette)
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            when (result) {
-                true -> Text("命中！", style = MaterialTheme.typography.headlineSmall, color = PixelRed)
-                false -> Text("被怪物攻擊了！", style = MaterialTheme.typography.titleMedium, color = PixelRed)
-                null -> Unit
-            }
+            PixelIconButton(IconBag, "道具", onClick = onBag, size = 64.dp, palette = ItemPalette, enabled = bagEnabled)
         }
         if (wrong) {
             PixelIconButton(IconArrowRight, "下一回", onClick = onNext, size = 64.dp, color = PixelGold, palette = ColorIconPalette)
@@ -339,6 +421,11 @@ private fun Question(
                 enabled = result == null && input.isNotBlank(),
             )
         }
+    }
+    when (result) {
+        true -> Text("命中！", style = MaterialTheme.typography.headlineSmall, color = PixelRed)
+        false -> Text("被怪物攻擊了！", style = MaterialTheme.typography.titleMedium, color = PixelRed)
+        null -> Unit
     }
     if (wrong && meaning.isNotBlank()) Text(meaning, style = MaterialTheme.typography.titleMedium)
 }
@@ -355,15 +442,30 @@ private fun MiniHpBar(hp: Int, max: Int, modifier: Modifier = Modifier) {
     }
 }
 
-// 戰鬥場景：背景、怪物（會呼吸、被打會晃、答錯會衝過來攻擊）、自己的人物、擊倒特效
+// 頭上的名字牌：深色底白字，魔王是紅字
+@Composable
+private fun NameTag(name: String, color: Color = Color.White) {
+    Text(
+        name,
+        color = color,
+        style = MaterialTheme.typography.labelSmall,
+        maxLines = 1,
+        modifier = Modifier.background(PixelInk.copy(alpha = 0.7f)).padding(horizontal = 4.dp, vertical = 1.dp),
+    )
+}
+
+// 戰鬥場景：背景、左半邊是自己的人物、右半邊是怪物（會呼吸、被打會晃、答錯會衝過來攻擊）、
+// 招式和道具的特效、魔王出場動畫
 @Composable
 private fun BattleField(
     scene: ReviewScene,
     monster: Monster,
     hero: Avatar,
+    heroName: String,
     tier: Int,
     finisher: Finisher,
     hits: Int,
+    bonusHits: Int,
     attacks: Int,
     monsterHp: Int,
     monsterMax: Int,
@@ -371,127 +473,140 @@ private fun BattleField(
     heroMax: Int,
     knockout: Boolean,
     onKnockoutEnd: () -> Unit,
+    intro: Boolean,
+    onIntroEnd: () -> Unit,
+    itemUse: ItemUse?,
 ) {
-    val width = Cell * monster.art.first().length
-    val height = Cell * monster.art.size
+    val artW = Cell * monster.art.first().length
+    val artH = Cell * monster.art.size
     val endCallback by rememberUpdatedState(onKnockoutEnd)
+    val introCallback by rememberUpdatedState(onIntroEnd)
 
     // 待機的小動作：上下彈跳、身體一伸一縮
     val idle = rememberInfiniteTransition(label = "idle")
     val bob by idle.animateFloat(
         0f, 1f, infiniteRepeatable(tween(650, easing = LinearEasing), RepeatMode.Reverse), label = "bob",
     )
-    // 答對：人物衝上去出招，怪物被打中時左右晃、變透明一下
-    val shake = remember { Animatable(0f) }
-    val flash = remember { Animatable(0f) }
-    val heroLunge = remember { Animatable(0f) }
-    val strike = remember { Animatable(0f) }
-    LaunchedEffect(hits) {
-        if (hits == 0) return@LaunchedEffect
-        launch {
-            heroLunge.animateTo(0f, keyframes {
-                durationMillis = 700
-                -6f at 100
-                70f at 250
-                70f at 450
-                0f at 700
-            })
-        }
-        launch {
-            strike.snapTo(0f)
-            strike.animateTo(1f, tween(700, easing = LinearEasing))
-            strike.snapTo(0f)
-        }
-        delay(300)
-        launch {
-            flash.snapTo(1f)
-            flash.animateTo(0f, tween(450))
-        }
-        shake.animateTo(0f, keyframes {
-            durationMillis = 360
-            10f at 60
-            -10f at 120
-            7f at 180
-            -5f at 260
-        })
-    }
-    // 怪物攻擊：往左衝向人物再退回來，人物被打到會晃、閃爍
-    val lunge = remember { Animatable(0f) }
-    val heroShake = remember { Animatable(0f) }
-    val heroFlash = remember { Animatable(0f) }
-    LaunchedEffect(attacks) {
-        if (attacks == 0) return@LaunchedEffect
-        launch {
-            lunge.animateTo(0f, keyframes {
-                durationMillis = 600
-                12f at 120
-                -110f at 260
-                -110f at 320
-                0f at 600
-            })
-        }
-        delay(260)
-        launch {
-            heroFlash.snapTo(1f)
-            heroFlash.animateTo(0f, tween(600))
-        }
-        heroShake.animateTo(0f, keyframes {
-            durationMillis = 400
-            -8f at 60
-            8f at 140
-            -6f at 220
-            4f at 300
-        })
-    }
 
-    // 擊倒：前半段是招式特效，後半段怪物飛走
-    val ko = remember { Animatable(0f) }
-    LaunchedEffect(knockout) {
-        if (!knockout) return@LaunchedEffect
-        delay(300)
-        ko.animateTo(1f, tween(2200, easing = LinearEasing))
-        endCallback()
-    }
+    BoxWithConstraints(Modifier.fillMaxWidth().clipToBounds()) {
+        val half = maxWidth / 2
+        // 衝過去的距離：差不多走到對方面前
+        val reach = (half * 0.6f).value
 
-    Box(Modifier.fillMaxWidth().clipToBounds()) {
-        BattleBackdrop(scene, monster.rank)
-        PixelAvatar(
-            hero,
-            size = 36.dp,
-            tier = tier,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 12.dp, bottom = 6.dp)
-                .graphicsLayer {
-                    translationX = heroShake.value.dp.toPx() + heroLunge.value.dp.toPx()
-                    // 被打中時一閃一閃
-                    alpha = if (heroFlash.value > 0f && (heroFlash.value * 10).toInt() % 2 == 0) 0.25f else 1f
-                },
-        )
-        // 血條放在人物和怪物頭上，下方留給輸入框和鍵盤
-        MiniHpBar(
-            heroHp,
-            heroMax,
-            Modifier.align(Alignment.BottomStart).padding(start = 8.dp, bottom = 6.dp + 36.dp + 4.dp).size(44.dp, 8.dp),
-        )
-        if (!knockout) {
-            MiniHpBar(
-                monsterHp,
-                monsterMax,
-                Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp + height + 4.dp).size(maxOf(width, 48.dp), 8.dp),
-            )
-        }
-        // 打在人物身上的爪痕
-        if (heroFlash.value > 0.4f) {
-            Canvas(Modifier.matchParentSize()) {
-                val px = 3.dp.toPx()
-                val cx = (12 + 18).dp.toPx()
-                val cy = size.height - (6 + 18).dp.toPx()
-                for (i in -1..1) {
-                    val off = i * 8.dp.toPx()
-                    drawLine(Color.White, Offset(cx - 14.dp.toPx() + off, cy - 14.dp.toPx()), Offset(cx + 10.dp.toPx() + off, cy + 14.dp.toPx()), px)
-                }
+        // 答對：人物衝上去出招；怪物被打中時左右晃、變透明一下
+        val shake = remember { Animatable(0f) }
+        val flash = remember { Animatable(0f) }
+        val heroLunge = remember { Animatable(0f) }
+        val strike = remember { Animatable(0f) }
+        LaunchedEffect(hits) {
+            if (hits == 0) return@LaunchedEffect
+            launch {
+                heroLunge.animateTo(0f, keyframes {
+                    durationMillis = 700
+                    -6f at 100
+                    reach at 250
+                    reach at 450
+                    0f at 700
+                })
             }
+            launch {
+                strike.snapTo(0f)
+                strike.animateTo(1f, tween(700, easing = LinearEasing))
+                strike.snapTo(0f)
+            }
+            delay(300)
+            launch {
+                flash.snapTo(1f)
+                flash.animateTo(0f, tween(450))
+            }
+            shake.animateTo(0f, keyframes {
+                durationMillis = 360
+                10f at 60
+                -10f at 120
+                7f at 180
+                -5f at 260
+            })
+        }
+        // 道具（天使、村民）打中怪物
+        LaunchedEffect(bonusHits) {
+            if (bonusHits == 0) return@LaunchedEffect
+            delay(900)
+            launch {
+                flash.snapTo(1f)
+                flash.animateTo(0f, tween(600))
+            }
+            shake.animateTo(0f, keyframes {
+                durationMillis = 500
+                14f at 80
+                -14f at 160
+                10f at 240
+                -6f at 360
+            })
+        }
+        // 怪物攻擊：往左衝向人物再退回來，人物被打到會晃、閃爍
+        val lunge = remember { Animatable(0f) }
+        val heroShake = remember { Animatable(0f) }
+        val heroFlash = remember { Animatable(0f) }
+        LaunchedEffect(attacks) {
+            if (attacks == 0) return@LaunchedEffect
+            launch {
+                lunge.animateTo(0f, keyframes {
+                    durationMillis = 600
+                    12f at 120
+                    -reach at 260
+                    -reach at 320
+                    0f at 600
+                })
+            }
+            delay(260)
+            launch {
+                heroFlash.snapTo(1f)
+                heroFlash.animateTo(0f, tween(600))
+            }
+            heroShake.animateTo(0f, keyframes {
+                durationMillis = 400
+                -8f at 60
+                8f at 140
+                -6f at 220
+                4f at 300
+            })
+        }
+
+        // 擊倒：前半段是招式特效，後半段怪物飛走
+        val ko = remember { Animatable(0f) }
+        LaunchedEffect(knockout) {
+            if (!knockout) return@LaunchedEffect
+            delay(300)
+            ko.animateTo(1f, tween(2200, easing = LinearEasing))
+            endCallback()
+        }
+
+        // 魔王出場：WARNING 閃紅光 → 魔王從天而降 → 落地震動
+        val introAnim = remember { Animatable(if (intro) 0f else 1f) }
+        val bigBoss = monster.rank == MonsterRank.Big
+        LaunchedEffect(Unit) {
+            if (!intro) return@LaunchedEffect
+            introAnim.animateTo(1f, tween(if (bigBoss) 2600 else 1800, easing = LinearEasing))
+            introCallback()
+        }
+        val ip = introAnim.value
+        val drop = ((ip - 0.45f) / 0.25f).coerceIn(0f, 1f)
+        val landShake = if (ip in 0.7f..0.85f) sin(ip * 120f) * (if (bigBoss) 8f else 4f) else 0f
+
+        // 道具動畫
+        val itemAnim = remember { Animatable(0f) }
+        LaunchedEffect(itemUse?.id) {
+            if (itemUse == null) return@LaunchedEffect
+            itemAnim.snapTo(0f)
+            val duration = when (itemUse.type) {
+                ItemType.Angel -> 1800
+                ItemType.Riot -> 1600
+                ItemType.Elixir -> 1600
+                ItemType.SmartPill -> 1400
+                else -> 1100
+            }
+            itemAnim.animateTo(1f, tween(duration, easing = LinearEasing))
+            itemAnim.snapTo(0f)
         }
 
         val p = ko.value
@@ -500,36 +615,123 @@ private fun BattleField(
         val move = flight(finisher, fly)
         // 巨斧落下時怪物被壓扁
         val squash = if (finisher == Finisher.Smash && effect in 0.6f..1f && fly == 0f) 0.45f else 1f
-        PixelArt(
-            monster.art,
-            ScenePalette,
-            Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 8.dp)
-                .size(width, height)
-                .graphicsLayer {
-                    transformOrigin = TransformOrigin(0.5f, 1f)
-                    translationX = shake.value.dp.toPx() + lunge.value.dp.toPx() + move.dx.dp.toPx()
-                    translationY = -bob * 4.dp.toPx() + move.dy.dp.toPx()
-                    rotationZ = move.rotation
-                    scaleX = move.scale * (1f + 0.04f * bob)
-                    scaleY = move.scale * (1f - 0.04f * bob) * squash
-                    alpha = move.alpha * (1f - 0.7f * flash.value)
-                },
-        )
-        // 答對時的小招式（比擊倒的招式小一點）
-        if (!knockout && strike.value > 0f) {
-            Canvas(Modifier.matchParentSize()) {
-                val center = Offset(size.width / 2, size.height - 8.dp.toPx() - height.toPx() / 2)
-                val radius = maxOf(width, height).toPx() / 2 * 0.7f
-                drawFinisher(finisher, strike.value, center, radius, tier, small = true)
+
+        Box(Modifier.fillMaxWidth().graphicsLayer { translationX = landShake.dp.toPx() }) {
+            BattleBackdrop(scene, monster.rank)
+            Row(Modifier.matchParentSize()) {
+                // 左半邊：自己的人物
+                Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.BottomCenter) {
+                    Column(
+                        Modifier.padding(bottom = GroundPad),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        if (heroName.isNotBlank()) NameTag(heroName)
+                        MiniHpBar(heroHp, heroMax, Modifier.padding(vertical = 2.dp).size(48.dp, 8.dp))
+                        PixelAvatar(
+                            hero,
+                            size = HeroSize,
+                            tier = tier,
+                            modifier = Modifier.graphicsLayer {
+                                translationX = heroShake.value.dp.toPx() + heroLunge.value.dp.toPx()
+                                // 被打中時一閃一閃
+                                alpha = if (heroFlash.value > 0f && (heroFlash.value * 10).toInt() % 2 == 0) 0.25f else 1f
+                            },
+                        )
+                    }
+                }
+                // 右半邊：怪物
+                Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.BottomCenter) {
+                    Column(
+                        Modifier.padding(bottom = GroundPad),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        val tagsVisible = !knockout && drop >= 1f
+                        Box(Modifier.alpha(if (tagsVisible) 1f else 0f)) {
+                            NameTag(monster.name, if (monster.rank == MonsterRank.Normal) Color.White else Color(0xFFFF7060))
+                        }
+                        MiniHpBar(
+                            monsterHp,
+                            monsterMax,
+                            Modifier.padding(vertical = 2.dp).size(maxOf(artW, 48.dp), 8.dp).alpha(if (tagsVisible) 1f else 0f),
+                        )
+                        PixelArt(
+                            monster.art,
+                            ScenePalette,
+                            Modifier
+                                .size(artW, artH)
+                                .graphicsLayer {
+                                    transformOrigin = TransformOrigin(0.5f, 1f)
+                                    translationX = shake.value.dp.toPx() + lunge.value.dp.toPx() + move.dx.dp.toPx()
+                                    translationY = -bob * 4.dp.toPx() + move.dy.dp.toPx() -
+                                        (1f - drop) * (artH + 160.dp).toPx()
+                                    rotationZ = move.rotation
+                                    scaleX = move.scale * (1f + 0.04f * bob)
+                                    scaleY = move.scale * (1f - 0.04f * bob) * squash
+                                    alpha = if (drop <= 0f) 0f else move.alpha * (1f - 0.7f * flash.value)
+                                },
+                        )
+                    }
+                }
             }
-        }
-        if (knockout && fly < 0.3f) {
+
+            // 特效都畫在這一層：位置用左右兩半的中心算
             Canvas(Modifier.matchParentSize()) {
-                val center = Offset(size.width / 2, size.height - 8.dp.toPx() - height.toPx() / 2)
-                val radius = maxOf(width, height).toPx() / 2 + 6.dp.toPx()
-                drawFinisher(finisher, effect, center, radius, tier)
+                val ground = size.height - GroundPad.toPx()
+                val heroCenter = Offset(size.width / 4 + heroLunge.value.dp.toPx(), ground - HeroSize.toPx() / 2)
+                val monsterCenter = Offset(size.width * 3 / 4, ground - artH.toPx() / 2)
+                val radius = maxOf(artW, artH).toPx() / 2
+                // 打在人物身上的爪痕
+                if (heroFlash.value > 0.4f) {
+                    val px = 3.dp.toPx()
+                    for (i in -1..1) {
+                        val off = i * 8.dp.toPx()
+                        drawLine(
+                            Color.White,
+                            Offset(heroCenter.x - 14.dp.toPx() + off, heroCenter.y - 14.dp.toPx()),
+                            Offset(heroCenter.x + 10.dp.toPx() + off, heroCenter.y + 14.dp.toPx()),
+                            px,
+                        )
+                    }
+                }
+                // 答對時的小招式（比擊倒的招式小一點）
+                if (!knockout && strike.value > 0f) {
+                    drawFinisher(finisher, strike.value, monsterCenter, radius * 0.7f, tier, heroCenter, small = true)
+                }
+                if (knockout && fly < 0.3f) {
+                    drawFinisher(finisher, effect, monsterCenter, radius + 6.dp.toPx(), tier, heroCenter)
+                }
+                // 道具效果
+                val t = itemAnim.value
+                if (itemUse != null && t > 0f) {
+                    when (itemUse.type) {
+                        ItemType.SmallPotion, ItemType.BigPotion, ItemType.Elixir ->
+                            drawHeal(itemUse.type, t, heroCenter, HeroSize.toPx())
+                        ItemType.SmartPill -> drawBulb(t, heroCenter, HeroSize.toPx())
+                        ItemType.Angel -> drawAngels(t, monsterCenter)
+                        ItemType.Riot -> drawRiot(t, ground)
+                    }
+                }
+                // 魔王出場：畫面一閃一閃的紅光
+                if (ip < 0.9f) {
+                    val blink = if ((ip * 16).toInt() % 2 == 0) 1f else 0.3f
+                    val tint = if (bigBoss) Color(0xFFE02020) else Color(0xFFF09030)
+                    drawRect(tint.copy(alpha = 0.35f * blink * (1f - ip)))
+                }
+            }
+
+            // 魔王出場：WARNING 橫幅
+            if (ip < 0.9f) {
+                val on = (ip * 12).toInt() % 2 == 0
+                Box(
+                    Modifier.align(Alignment.Center).fillMaxWidth().background(PixelInk.copy(alpha = 0.8f)).padding(vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        if (bigBoss) "!! WARNING !!" else "! WARNING !",
+                        color = if (on) PixelRed else PixelGold,
+                        style = if (bigBoss) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
+                    )
+                }
             }
         }
     }
@@ -544,9 +746,10 @@ private fun flight(finisher: Finisher, t: Float): Flight = when (finisher) {
     Finisher.Arrow -> Flight(t * 380f, -t * 140f, t * 480f)
     Finisher.Bomb -> Flight(t * 40f, -t * 360f, t * 200f)
     Finisher.Smash -> Flight(t * 340f, -sin(t * PI.toFloat()) * 90f, t * 540f)
-    Finisher.Claw -> Flight(-t * 340f, -t * 180f, -t * 540f)
+    Finisher.Claw -> Flight(t * 340f, -t * 180f, -t * 540f)
     Finisher.Fire -> Flight(t * 260f, -t * 300f, t * 360f, alpha = 1f - 0.6f * t)
     Finisher.Laser -> Flight(t * 400f, -t * 60f, t * 1080f)
+    Finisher.DarkFire -> Flight(t * 200f, -t * 280f, t * 720f, scale = 1f - 0.5f * t, alpha = 1f - 0.8f * t)
 }
 
 // 招式特效，e 從 0 到 1；稱號階級 tier 越高，特效越大、越華麗；small 是答對時的小招式
@@ -556,6 +759,7 @@ private fun DrawScope.drawFinisher(
     center: Offset,
     baseRadius: Float,
     tier: Int,
+    from: Offset,
     small: Boolean = false,
 ) {
     val radius = baseRadius * (1f + 0.12f * tier)
@@ -568,10 +772,10 @@ private fun DrawScope.drawFinisher(
             style = Stroke(width = 3.dp.toPx()),
         )
     }
-    drawFinisherMove(finisher, e, center, radius, tier, small)
+    drawFinisherMove(finisher, e, center, radius, tier, small, from)
     // 第 2 階以上：斬擊、魔法、爪擊再轉個角度多出一次
     if (tier >= 2 && finisher in listOf(Finisher.Slash, Finisher.Magic, Finisher.Claw)) {
-        rotate(90f, center) { drawFinisherMove(finisher, (e * 1.2f - 0.2f).coerceIn(0f, 1f), center, radius, tier, small) }
+        rotate(90f, center) { drawFinisherMove(finisher, (e * 1.2f - 0.2f).coerceIn(0f, 1f), center, radius, tier, small, from) }
     }
     // 最高階：整個畫面閃一下白光
     if (tier >= 5 && !small && e in 0.4f..0.7f) {
@@ -579,7 +783,15 @@ private fun DrawScope.drawFinisher(
     }
 }
 
-private fun DrawScope.drawFinisherMove(finisher: Finisher, e: Float, center: Offset, radius: Float, tier: Int, small: Boolean) {
+private fun DrawScope.drawFinisherMove(
+    finisher: Finisher,
+    e: Float,
+    center: Offset,
+    radius: Float,
+    tier: Int,
+    small: Boolean,
+    from: Offset,
+) {
     val px = 4.dp.toPx()
     when (finisher) {
         // 勇者：兩道交叉的劍光
@@ -607,7 +819,7 @@ private fun DrawScope.drawFinisherMove(finisher: Finisher, e: Float, center: Off
             for (i in 0 until count) {
                 val t = (e * 1.6f - i * 0.1f).coerceIn(0f, 1f)
                 if (t <= 0f) continue
-                val start = Offset(40.dp.toPx(), size.height - (30 + i * 5).dp.toPx())
+                val start = from + Offset(0f, -(i * 5).dp.toPx())
                 val target = center + Offset(((i % 3) - 1) * px * 2, ((i % 2) * 2 - 1) * px * (i / 2))
                 val pos = Offset(start.x + (target.x - start.x) * t, start.y + (target.y - start.y) * t - sin(t * PI.toFloat()) * 30.dp.toPx())
                 val dx = target.x - start.x
@@ -629,7 +841,7 @@ private fun DrawScope.drawFinisherMove(finisher: Finisher, e: Float, center: Off
         Finisher.Bomb -> {
             if (e < 0.5f) {
                 val t = e / 0.5f
-                val start = Offset(24.dp.toPx(), size.height - 30.dp.toPx())
+                val start = from
                 val pos = Offset(start.x + (center.x - start.x) * t, start.y + (center.y - start.y) * t - sin(t * PI.toFloat()) * 60.dp.toPx())
                 drawCircle(Color(0xFF202030), px * 2.5f, pos)
                 drawRect(Color(0xFFF09030), pos + Offset(px, -px * 4), Size(px, px))
@@ -664,9 +876,9 @@ private fun DrawScope.drawFinisherMove(finisher: Finisher, e: Float, center: Off
                 drawLine(Color(0xFFE04030), s, s + Offset(2 * r * t, 2 * r * t), px * 1.2f)
             }
         }
-        // 龍族：從左下角噴出火焰
+        // 龍族：從人物口中噴出火焰
         Finisher.Fire -> {
-            val start = Offset(30.dp.toPx(), size.height - 24.dp.toPx())
+            val start = from
             val colors = listOf(Color(0xFFE04030), Color(0xFFF09030), Color(0xFFF8D030))
             for (i in 0 until 18) {
                 val t = (e * 1.6f - i * 0.05f).coerceIn(0f, 1f)
@@ -681,15 +893,38 @@ private fun DrawScope.drawFinisherMove(finisher: Finisher, e: Float, center: Off
         Finisher.Laser -> {
             val t = (e / 0.4f).coerceIn(0f, 1f)
             val thick = px * (2f + 2f * sin(e * 20f).coerceAtLeast(0f))
-            val endX = center.x * t + radius * t
-            drawRect(Color(0xFF90D0F8), Offset(0f, center.y - thick), Size(endX, thick * 2))
-            drawRect(Color.White, Offset(0f, center.y - thick / 3), Size(endX, thick * 2 / 3))
+            val endX = from.x + (center.x + radius - from.x) * t
+            drawRect(Color(0xFF90D0F8), Offset(from.x, center.y - thick), Size(endX - from.x, thick * 2))
+            drawRect(Color.White, Offset(from.x, center.y - thick / 3), Size(endX - from.x, thick * 2 / 3))
+        }
+        // 魔族：從手上丟出暗影球，打中後紫黑色的火焰從怪物腳下竄起
+        Finisher.DarkFire -> {
+            val dark = Color(0xFF302848)
+            val purple = Color(0xFF9060C0)
+            val pink = Color(0xFFC090E8)
+            if (e < 0.4f) {
+                val t = e / 0.4f
+                val pos = Offset(from.x + (center.x - from.x) * t, from.y + (center.y - from.y) * t)
+                drawCircle(purple, px * 3f, pos)
+                drawCircle(dark, px * 2f, pos)
+            } else {
+                val t = (e - 0.4f) / 0.6f
+                val flames = if (small) 5 else 9
+                for (i in 0 until flames) {
+                    val x = center.x + (i - flames / 2) * radius * 0.28f
+                    val h = radius * (0.8f + 0.6f * sin(i * 1.3f + e * 18f).coerceAtLeast(0f)) * sin(t * PI.toFloat())
+                    val bottom = center.y + radius * 0.8f
+                    drawRect(dark, Offset(x - px, bottom - h), Size(px * 2.2f, h))
+                    drawRect(purple, Offset(x - px * 0.6f, bottom - h * 0.75f), Size(px * 1.4f, h * 0.75f))
+                    drawRect(pink, Offset(x - px * 0.3f, bottom - h * 0.35f), Size(px * 0.8f, h * 0.35f))
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun ResultDialog(reward: BattleReward, monster: Monster, race: Race, onClose: () -> Unit) {
+private fun ResultDialog(reward: BattleReward, monster: Monster, race: Race, knocked: Boolean, onClose: () -> Unit) {
     val monsterName = monster.name
     val leveled = reward.levelAfter > reward.levelBefore
     val oldTitle = race.title(reward.levelBefore)
@@ -711,11 +946,17 @@ private fun ResultDialog(reward: BattleReward, monster: Monster, race: Race, onC
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 when {
                     reward.died -> Text("被 $monsterName 打倒了，在教堂休息一下再來吧（第 ${reward.deaths} 次倒下）")
-                    perfect -> Text("把 $monsterName 打飛了！")
-                    else -> Text("$monsterName 還站著，全部答對才能把牠打飛")
+                    knocked -> Text("把 $monsterName 打飛了！")
+                    else -> Text("$monsterName 還站著，把牠的血打光才能打飛")
                 }
                 Text("答對 ${reward.correct} / ${reward.total}（${passScore(reward.total)} 題以上通過）")
-                Text("得到經驗值 +${reward.exp}")
+                Text("得到經驗值 +${reward.exp}${if (monster.rank != MonsterRank.Normal) "（魔王加倍）" else ""}")
+                reward.item?.let { item ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        PixelArt(item.icon, ItemPalette, Modifier.size(32.dp))
+                        Text("打開寶箱，獲得「${item.label}」！", color = PixelRed, modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
                 if (leveled) Text("升級！Lv ${reward.levelBefore} → Lv ${reward.levelAfter}", color = PixelRed)
                 if (newTitle != oldTitle) Text("獲得新稱號「$newTitle」！", color = PixelRed)
                 if (reward.passed && monster.rank != MonsterRank.Normal) {

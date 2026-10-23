@@ -43,7 +43,7 @@ private val palette = mapOf(
 // cloth 是衣服（或身體）的顏色字元，clothTiers 是 6 個階段要換成的顏色
 enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val clothTiers: String) {
     Hero(
-        "男勇者",
+        "勇者",
         listOf(
             "....KKKK....",
             "...KHHHHK...",
@@ -62,7 +62,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "ByMMMY",
     ),
     Mage(
-        "女魔法師",
+        "魔法師",
         listOf(
             "......KK....",
             ".....KVVK...",
@@ -81,7 +81,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "VyyrrY",
     ),
     ElfArcher(
-        "女精靈弓箭手",
+        "精靈弓手",
         listOf(
             "....KKKK....",
             "...KYYYYK...",
@@ -179,6 +179,25 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         ),
         cloth = 'G',
         clothTiers = "GEERRY",
+    ),
+    Demon(
+        "魔族",
+        listOf(
+            "..d......d..",
+            "..dd.KK.dd..",
+            "...dKVVKd...",
+            "..KVVVVVVK..",
+            "..KVSSSSVK..",
+            "..KSRSSRSK..",
+            "..KSSSSSSK..",
+            "...KSWWSK...",
+            "..KKVVVVKK..",
+            ".KrVVYVVVrK.",
+            ".KrVVVVVVrK.",
+            ".KKKKKKKKKK.",
+        ),
+        cloth = 'V',
+        clothTiers = "VhhmmY",
     ),
     Robot(
         "機器人",

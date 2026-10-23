@@ -7,11 +7,12 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Word::class, Profile::class, Book::class], version = 9)
+@Database(entities = [Word::class, Profile::class, Book::class, Item::class], version = 10)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun wordDao(): WordDao
     abstract fun profileDao(): ProfileDao
     abstract fun bookDao(): BookDao
+    abstract fun itemDao(): ItemDao
 
     companion object {
         @Volatile
@@ -23,7 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "wordsnap.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).build().also { instance = it }
             }
 
         // v0.3 加入複習欄位，保留舊的單字
@@ -103,6 +104,17 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE profiles ADD COLUMN midBossSeen INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE profiles ADD COLUMN bigBossSeen INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        // v0.71 加入道具袋，並記錄每個字在戰鬥中考過幾次
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `items` (`profileId` INTEGER NOT NULL, `type` TEXT NOT NULL, " +
+                        "`count` INTEGER NOT NULL, PRIMARY KEY(`profileId`, `type`))"
+                )
+                db.execSQL("ALTER TABLE words ADD COLUMN testCount INTEGER NOT NULL DEFAULT 0")
             }
         }
 

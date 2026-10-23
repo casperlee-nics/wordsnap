@@ -2,7 +2,20 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.70（暫定名稱：像素單字）
+## 目前版本 0.71（暫定名稱：像素單字）
+
+v0.71 的改變：
+- 中文解釋精簡：拿掉 n. v. 這類詞性，最多 2 個意思；舊單字的字典解釋第一次開啟時自動整理
+- 單字簿：標題列頭像放大；右上角選單每本後面有垃圾桶可刪除（只剩一本時不能刪）；讀取同一個冒險者時會停在上次讀的那本
+- 主畫面「刪除進度」改成「刪除冒險者」
+- 職業名稱不分性別：勇者、魔法師、精靈弓手；新種族「魔族」（小惡魔～魔界之王，6 個頭像，招式暗影球～魔界審判）
+- 經驗值改成越高級越難升（Lv n→n+1 需要 80 + 20n + 1.5n²）；中魔王經驗 2 倍、大魔王 3 倍
+- 戰鬥：人物和怪物頭上顯示名字；玩家站左半邊、怪物站右半邊；玩家放大
+- 戰鬥：玩家 HP 10 格，每答錯扣 2 格（1/5），HP 歸零才倒下；最後怪物的血打光就把牠打飛
+- 戰鬥：魔王出場動畫（WARNING 閃紅光、魔王從天而降、落地震動，`warning_jingle.ogg`）
+- 戰鬥：念單字前後 0.5 秒停住背景音樂
+- 道具：勝利時 50% 掉寶箱，寶箱內抽一個道具：小回復劑 30%、聰明藥 30%、大回復劑 15%、村民暴動 15%、聖靈藥 5%、天使召喚 5%（資料庫 v10 新增 items 表）；戰鬥畫面中間的道具袋按鈕可使用
+- 出題：同一個字在戰鬥中考滿 2 次就不再出現（words.testCount），變回「沒記住」時歸零
 
 v0.70 的改變：
 - 中文解釋改用離線字典 ECDICT（5 萬個常用字，含詞性，例如「n. 蘋果」），字典查不到才用 ML Kit 翻譯；過去式、複數等變化形會查原形
@@ -84,7 +97,7 @@ v0.65 的改變：
 
 ## 授權
 
-- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
 - 字典 `app/src/main/assets/ecdict.db`：取自 [ECDICT](https://github.com/skywind3000/ECDICT)（MIT License，Copyright (c) 2017 Linwei），挑出常用的 5 萬字，用 [OpenCC](https://github.com/BYVoid/OpenCC)（Apache License 2.0）轉成台灣繁體用語。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 

@@ -85,7 +85,7 @@ fun TitleScreen(
                         Text("讀取遊戲")
                     }
                     OutlinedButton(onClick = onDeleteSave, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
-                        Text("刪除進度")
+                        Text("刪除冒險者")
                     }
                     TextButton(onClick = {
                         musicOn = !musicOn

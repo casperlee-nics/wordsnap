@@ -11,7 +11,8 @@ enum class Finisher(val moves: List<String>) {
     Smash(listOf("斧頭劈", "重斧擊", "大地裂", "岩崩斧", "山崩地裂", "大地之怒")),
     Claw(listOf("貓貓拳", "貓爪擊", "三連爪", "疾風爪", "貓咪亂舞", "萌萌貓娘拳")),
     Fire(listOf("火花", "火焰吐息", "烈焰", "灼熱風暴", "地獄火", "神龍烈焰")),
-    Laser(listOf("電擊", "雷射光束", "雙重雷射", "電漿砲", "超級光束", "終極機神砲"));
+    Laser(listOf("電擊", "雷射光束", "雙重雷射", "電漿砲", "超級光束", "終極機神砲")),
+    DarkFire(listOf("暗影球", "黑炎彈", "冥獄火", "魔劍閃", "黑暗風暴", "魔界審判"));
 
     // 第 tier 階的招式名稱（tier 見 avatarTier）
     fun label(tier: Int): String = moves[tier.coerceIn(0, moves.size - 1)]
@@ -30,7 +31,7 @@ enum class Race(
         listOf("見習勇者", "勇者", "王國勇者", "聖光勇者", "傳說勇者", "救世勇者")),
     Mage("人類・魔法師", Stats(3, 4, 9, 5), Stats(1, 2, 3, 2), Finisher.Magic,
         listOf("魔法學徒", "見習魔法師", "魔法師", "大魔法師", "魔導賢者", "星辰魔女")),
-    Archer("精靈・弓箭手", Stats(5, 4, 5, 7), Stats(2, 1, 2, 3), Finisher.Arrow,
+    Archer("精靈・弓手", Stats(5, 4, 5, 7), Stats(2, 1, 2, 3), Finisher.Arrow,
         listOf("森林見習弓手", "精靈弓手", "疾風射手", "月光神射手", "森林守護者", "精靈王")),
     Goblin("哥布林", Stats(4, 4, 3, 9), Stats(2, 1, 1, 3), Finisher.Bomb,
         listOf("小嘍囉", "盜賊", "突襲隊長", "哥布林頭目", "哥布林王", "混沌之王")),
@@ -42,6 +43,8 @@ enum class Race(
         listOf("幼龍", "飛龍", "火焰龍", "古龍", "龍王", "神龍")),
     Machine("機械族", Stats(6, 9, 6, 1), Stats(2, 3, 2, 1), Finisher.Laser,
         listOf("試作機", "戰鬥機兵", "強化機兵", "鋼鐵守衛", "超級機甲", "終極機神")),
+    Demon("魔族", Stats(7, 5, 7, 3), Stats(3, 1, 3, 1), Finisher.DarkFire,
+        listOf("小惡魔", "魔族戰士", "魔劍士", "魔將軍", "魔王子", "魔界之王")),
 }
 
 data class Stats(val str: Int, val vit: Int, val intel: Int, val luk: Int)
@@ -56,12 +59,13 @@ val Avatar.race: Race
         Avatar.Cat -> Race.Cat
         Avatar.Dragon -> Race.Dragon
         Avatar.Robot -> Race.Machine
+        Avatar.Demon -> Race.Demon
     }
 
 const val MAX_LEVEL = 99
 
 // 從 Lv n 升到 n+1 需要的經驗值，越高級需要越多
-fun expToNext(level: Int): Int = 100 + 20 * (level - 1)
+fun expToNext(level: Int): Int = 80 + 20 * level + 3 * level * level / 2
 
 // 用總經驗值算出等級，以及這一級已經累積多少、還要多少
 data class LevelInfo(val level: Int, val current: Int, val needed: Int)

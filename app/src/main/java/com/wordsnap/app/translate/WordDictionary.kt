@@ -34,17 +34,41 @@ object WordDictionary {
         }.also { db = it }
     }
 
-    // 查一個字；過去式、複數這類變化形會找回原形，例如 went → (go) vi. 去…
+    // 查一個字；過去式、複數這類變化形會找回原形，例如 went → (go) 去、走
+    // 字典裡的解釋很長，只留最前面 2 個中文意思，並拿掉 n. v. 這類詞性
     suspend fun lookup(context: Context, word: String): String? {
         val database = open(context) ?: return null
         val key = word.trim().lowercase()
         if (key.isEmpty()) return null
         return withContext(Dispatchers.IO) {
-            meaning(database, key) ?: lemma(database, key)?.let { base ->
-                meaning(database, base)?.let { "($base) $it" }
+            meaning(database, key)?.let(::simplify) ?: lemma(database, key)?.let { base ->
+                meaning(database, base)?.let { "($base) ${simplify(it)}" }
             }
         }
     }
+
+    // 字典格式的解釋（例如「vi. 去、走、達到\nvt. 對付」）精簡成「去、走」；原形的括號會保留
+    fun simplify(raw: String): String {
+        val base = BASE.find(raw)
+        val body = if (base != null) raw.substring(base.value.length) else raw
+        val senses = body.lines()
+            .flatMap { line -> line.replace(POS, "").split('、', '；', ';', '，', ',') }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .take(MAX_SENSES)
+        val text = senses.joinToString("、")
+        return if (base != null) "${base.value}$text" else text
+    }
+
+    // 看起來是舊版字典格式（開頭有 n. vi. adj. 這類詞性）的解釋，才需要精簡
+    fun looksLikeDictionary(meaning: String): Boolean =
+        DICT_FORMAT.containsMatchIn(meaning)
+
+    private const val MAX_SENSES = 2
+    private val BASE = Regex("^\\([a-zA-Z' -]+\\) ")
+    private val POS = Regex("^\\s*([a-z]{1,5}\\.\\s*)+")
+    private val DICT_FORMAT = Regex("^(\\([a-zA-Z' -]+\\) )?[a-z]{1,5}\\. ")
 
     private fun meaning(db: SQLiteDatabase, word: String): String? =
         db.rawQuery("SELECT meaning FROM dict WHERE word = ?", arrayOf(word)).use { c ->

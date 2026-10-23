@@ -92,7 +92,7 @@ fun WordListScreen(
                             Modifier.clickable { showMenu = true },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            PixelAvatar(Avatar.from(profile?.avatar), size = 32.dp, tier = avatarTier(levelInfo(profile?.exp ?: 0).level))
+                            PixelAvatar(Avatar.from(profile?.avatar), size = 48.dp, tier = avatarTier(levelInfo(profile?.exp ?: 0).level))
                             Column(Modifier.padding(start = 8.dp)) {
                                 Text(profile?.name ?: "", maxLines = 1)
                                 Text("Lv ${levelInfo(profile?.exp ?: 0).level}", style = MaterialTheme.typography.labelSmall)
@@ -114,6 +114,7 @@ fun WordListScreen(
                         label = "",
                         allowAll = true,
                         onTopBar = true,
+                        onDelete = vm::deleteBook,
                     )
                 },
                 colors = pixelTopBarColors(),
@@ -140,6 +141,13 @@ fun WordListScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
             )
+            if (unlock.exhausted) {
+                Text(
+                    "這本的單字都在戰鬥考過 $MAX_TESTS 次了，去加新單字或複習吧！",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
             if (hasBlank) TranslatorBanner(translatorStatus, onRetry = vm::retryTranslation)
             if (words.isEmpty()) {
                 Box(Modifier.fillMaxSize().padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
@@ -260,7 +268,7 @@ private fun TranslatorBanner(status: ModelStatus, onRetry: () -> Unit) {
     }
 }
 
-// 單字本下方的按鈕列；單字簿記住 20 個字或整本都記住，「戰鬥」就會亮起來
+// 單字本下方的按鈕列；單字簿記住 15 個字或整本都記住，「戰鬥」就會亮起來
 @Composable
 private fun BottomActions(
     onListen: () -> Unit,

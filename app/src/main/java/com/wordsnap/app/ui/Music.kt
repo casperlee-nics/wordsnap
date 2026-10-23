@@ -9,6 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -26,11 +27,13 @@ fun setMusicOn(context: Context, on: Boolean) =
     context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_MUSIC, on).apply()
 
 // 循環播放一段 8-bit 音樂；App 切到背景時暫停，離開畫面時停止
+// paused 為 true 時暫時停住（例如戰鬥念單字時），變回 false 從停住的地方接著播
 @Composable
-fun LoopingMusic(@RawRes resId: Int, enabled: Boolean, volume: Float) {
+fun LoopingMusic(@RawRes resId: Int, enabled: Boolean, volume: Float, paused: Boolean = false) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var player by remember { mutableStateOf<MediaPlayer?>(null) }
+    val pausedNow by rememberUpdatedState(paused)
     DisposableEffect(resId, enabled, lifecycleOwner) {
         if (!enabled) return@DisposableEffect onDispose { }
         val created = MediaPlayer.create(context, resId)?.apply {
@@ -40,7 +43,7 @@ fun LoopingMusic(@RawRes resId: Int, enabled: Boolean, volume: Float) {
         player = created
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> created?.start()
+                Lifecycle.Event.ON_RESUME -> if (!pausedNow) created?.start()
                 Lifecycle.Event.ON_PAUSE -> created?.pause()
                 else -> Unit
             }
@@ -55,6 +58,15 @@ fun LoopingMusic(@RawRes resId: Int, enabled: Boolean, volume: Float) {
     // 音量改變時（例如念單字時調小）直接套用
     LaunchedEffect(player, volume) {
         player?.setVolume(volume, volume)
+    }
+    LaunchedEffect(player, paused) {
+        val p = player ?: return@LaunchedEffect
+        val resumed = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        if (paused) {
+            if (p.isPlaying) p.pause()
+        } else if (resumed && !p.isPlaying) {
+            p.start()
+        }
     }
 }
 

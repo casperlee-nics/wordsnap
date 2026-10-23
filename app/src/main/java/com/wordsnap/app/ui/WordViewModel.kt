@@ -23,8 +23,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 private const val DAY = 24 * 60 * 60 * 1000L
 
@@ -34,6 +36,7 @@ private val INTERVALS = longArrayOf(0, 1 * DAY, 3 * DAY, 7 * DAY, 14 * DAY, 30 *
 private const val PREFS = "wordsnap"
 private const val KEY_PROFILE = "current_profile_id"
 private const val KEY_BOOK = "last_book_"
+private const val KEY_MEANING_CLEANUP = "meaning_cleanup_v1"
 
 const val BATTLE_SIZE = 15
 private const val EXP_PER_WORD = 10
@@ -42,7 +45,11 @@ private const val EXP_PASS_BONUS = 50
 // 答對七成算通過
 fun passScore(total: Int): Int = (total * 7 + 9) / 10
 
-data class BattleUnlock(val unlocked: Boolean, val remembered: Int, val total: Int)
+// exhausted：已經解鎖，但記住的字都考滿兩次了，沒有字可以出題
+data class BattleUnlock(val unlocked: Boolean, val remembered: Int, val total: Int, val exhausted: Boolean = false)
+
+// 一個字在戰鬥中最多考幾次
+const val MAX_TESTS = 2
 
 data class BattleReward(
     val passed: Boolean,
@@ -57,10 +64,16 @@ data class BattleReward(
     val forgotten: List<String> = emptyList(),
     // 到目前為止總共被打倒幾次（含這次）
     val deaths: Int = 0,
+    // 打開寶箱拿到的道具，沒掉寶箱是 null
+    val item: ItemType? = null,
 )
 
-// 答錯超過一半就被打倒，所以人物的 HP 是題數的一半再多 1
-fun heroMaxHp(total: Int): Int = total / 2 + 1
+// 打魔王的經驗值倍數：一般 1 倍、中魔王 2 倍、大魔王 3 倍
+private fun MonsterRank.expMultiplier(): Int = when (this) {
+    MonsterRank.Normal -> 1
+    MonsterRank.Mid -> 2
+    MonsterRank.Big -> 3
+}
 
 // 畫面和資料庫之間的橋樑
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -69,6 +82,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     private val dao = db.wordDao()
     private val profileDao = db.profileDao()
     private val bookDao = db.bookDao()
+    private val itemDao = db.itemDao()
     private val prefs = application.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     // ---- 暱稱 ----
@@ -97,11 +111,12 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 刪除進度：這個冒險者的單字、單字簿和暱稱一起刪掉
+    // 刪除冒險者：這個冒險者的單字、單字簿、道具和暱稱一起刪掉
     fun deleteProfile(profile: Profile) {
         viewModelScope.launch {
             db.withTransaction {
                 dao.deleteForProfile(profile.id)
+                itemDao.deleteForProfile(profile.id)
                 bookDao.deleteForProfile(profile.id)
                 profileDao.delete(profile.id)
             }
@@ -110,7 +125,13 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectProfile(id: Long) {
         prefs.edit().putLong(KEY_PROFILE, id).apply()
+        // 讀取的就是目前的冒險者：單字簿清單不會重新送來，保留目前選的那本（上次讀的）
+        val same = currentProfile.value?.id == id
         selectedProfileId.value = id
+        if (same) {
+            if (selectedBookId.value == null && !showAllBooks) restoreBook(books.value)
+            return
+        }
         showAllBooks = false
         selectedBookId.value = null
     }
@@ -139,18 +160,31 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     init {
         // 單字簿讀進來（或換暱稱、刪掉目前那本）時，回到上次讀的那本；第一次就選第一本（我的冒險日誌）
         viewModelScope.launch {
-            books.collect { list ->
-                if (list.isEmpty()) return@collect
-                val id = selectedBookId.value
-                val missing = id != null && list.none { it.id == id }
-                if ((id == null && !showAllBooks) || missing) {
-                    val saved = profileId?.let { pid -> prefs.getLong(KEY_BOOK + pid, -1L) } ?: -1L
-                    when {
-                        saved == 0L && !missing -> showAllBooks = true
-                        list.any { it.id == saved } -> selectedBookId.value = saved
-                        else -> selectedBookId.value = list.first().id
-                    }
-                }
+            books.collect { list -> restoreBook(list) }
+        }
+    }
+
+    private fun restoreBook(list: List<Book>) {
+        if (list.isEmpty()) return
+        val id = selectedBookId.value
+        val missing = id != null && list.none { it.id == id }
+        if ((id == null && !showAllBooks) || missing) {
+            val saved = profileId?.let { pid -> prefs.getLong(KEY_BOOK + pid, -1L) } ?: -1L
+            when {
+                saved == 0L && !missing -> showAllBooks = true
+                list.any { it.id == saved } -> selectedBookId.value = saved
+                else -> selectedBookId.value = list.first().id
+            }
+        }
+    }
+
+    // 刪除一本單字簿和裡面的單字；至少要留一本
+    fun deleteBook(book: Book) {
+        if (books.value.size <= 1) return
+        viewModelScope.launch {
+            db.withTransaction {
+                dao.deleteForBook(book.id)
+                bookDao.delete(book.id)
             }
         }
     }
@@ -182,7 +216,34 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     val translatorStatus: StateFlow<ModelStatus> = WordTranslator.status
 
     init {
-        fillMissingMeanings()
+        viewModelScope.launch {
+            cleanupMeaningsOnce()
+            fillMissingMeaningsNow()
+        }
+    }
+
+    // v0.71：之前從字典查到的長解釋，精簡成最多 2 個中文意思（只做一次）
+    private suspend fun cleanupMeaningsOnce() {
+        if (prefs.getBoolean(KEY_MEANING_CLEANUP, false)) return
+        for (word in dao.getWithMeaning()) {
+            if (!WordDictionary.looksLikeDictionary(word.meaning)) continue
+            val simple = WordDictionary.simplify(word.meaning)
+            if (simple.isNotEmpty() && simple != word.meaning) dao.setMeaning(word.id, simple)
+        }
+        prefs.edit().putBoolean(KEY_MEANING_CLEANUP, true).apply()
+    }
+
+    // ---- 道具 ----
+
+    // 目前冒險者的道具和數量
+    val items: StateFlow<Map<ItemType, Int>> = currentProfile
+        .flatMapLatest { profile -> if (profile == null) flowOf(emptyList()) else itemDao.getForProfile(profile.id) }
+        .map { list -> list.mapNotNull { item -> ItemType.from(item.type)?.let { it to item.count } }.toMap() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    fun useItem(type: ItemType) {
+        val pid = profileId ?: return
+        viewModelScope.launch { itemDao.use(pid, type.name) }
     }
 
     fun add(text: String, meaning: String) {
@@ -246,13 +307,16 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         val inBook = allWords.value.filter { it.bookId == bookId }
         val remembered = inBook.count { it.box >= 1 }
         val unlocked = remembered >= BATTLE_SIZE || (inBook.isNotEmpty() && remembered == inBook.size)
-        val pool = inBook.count { it.box >= 1 && it.text.trim().length >= 3 }
-        return BattleUnlock(unlocked && pool > 0, remembered, inBook.size)
+        val pool = inBook.count { it.isBattleReady() }
+        return BattleUnlock(unlocked && pool > 0, remembered, inBook.size, exhausted = unlocked && pool == 0)
     }
 
-    // 出題：從記住的字裡隨機挑最多 15 個，先挑沒考過的，不夠再隨機用考過的補
+    // 可以出題的字：記住了、至少 3 個字母、考過不到兩次
+    private fun Word.isBattleReady() = box >= 1 && text.trim().length >= 3 && testCount < MAX_TESTS
+
+    // 出題：從記住的字裡隨機挑最多 15 個，先挑沒考過的，不夠再隨機用考過一次的補
     fun pickBattleWords(bookId: Long): List<Word> {
-        val pool = allWords.value.filter { it.bookId == bookId && it.box >= 1 && it.text.trim().length >= 3 }
+        val pool = allWords.value.filter { it.bookId == bookId && it.isBattleReady() }
         val fresh = pool.filter { it.testedAt == null }.shuffled()
         val tested = pool.filter { it.testedAt != null }.shuffled()
         val picked = fresh.take(BATTLE_SIZE)
@@ -284,7 +348,9 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         val profile = currentProfile.value ?: return
         val correct = asked.size - wrong.size
         val passed = !died && correct >= passScore(total)
-        val gained = correct * EXP_PER_WORD + if (passed) EXP_PASS_BONUS else 0
+        val gained = (correct * EXP_PER_WORD + if (passed) EXP_PASS_BONUS else 0) * monster.rank.expMultiplier()
+        // 勝利時有一半機率掉寶箱
+        val item = if (passed && Random.nextFloat() < CHEST_CHANCE) ItemType.roll() else null
         val before = levelInfo(profile.exp).level
         val after = levelInfo(profile.exp + gained).level
         val forgotten = wrong.filter { it.wrongCount + 1 >= 2 && it.box >= 1 }.map { it.text }
@@ -300,6 +366,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 profileDao.addExp(profile.id, gained)
                 if (died) profileDao.addDeath(profile.id)
                 if (passed) bookDao.markCleared(bookId, now)
+                if (item != null) itemDao.add(profile.id, item.name)
                 // 魔王要通過這場戰鬥才算打倒，不然下次還會再出現
                 if (passed && monster.rank != MonsterRank.Normal) {
                     val remembered = allWords.value.count { it.box >= 1 }
@@ -312,7 +379,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             val deaths = profile.deaths + if (died) 1 else 0
-            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths))
+            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths, item))
         }
     }
 
@@ -357,6 +424,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                     box = box,
                     dueAt = System.currentTimeMillis() + INTERVALS[box],
                     wrongCount = if (remembered) word.wrongCount else 0,
+                    // 忘記了就重新算，記住後可以再上戰場
+                    testCount = if (remembered) word.testCount else 0,
                 )
             }
         }
