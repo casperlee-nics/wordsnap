@@ -42,7 +42,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -80,7 +82,6 @@ import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelRed
 import com.wordsnap.app.ui.theme.PixelShape
-import com.wordsnap.app.ui.theme.pixelTopBarColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -267,17 +268,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("戰鬥：$bookName") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "逃跑")
-                    }
-                },
-                colors = pixelTopBarColors(),
-            )
-        },
+        topBar = { BattleHeader("戰鬥：$bookName", onBack) },
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
@@ -312,9 +303,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                if (practice && total > 0 && !finished) {
-                    Text("練習戰：經驗值 1/4，不會掉寶箱", style = MaterialTheme.typography.bodySmall)
-                }
                 if (total > 0 && !finished && isBoss) {
                     Text(
                         "${if (monster.rank == MonsterRank.Big) "大魔王" else "中魔王"}「${monster.name}」出現了！",
@@ -379,6 +367,55 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 }
+
+// 戰鬥畫面上方的標題：深色底加上像素風的雙線金框，和下方的戰鬥場景連在一起
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BattleHeader(title: String, onBack: () -> Unit) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .background(HeaderDark)
+            .windowInsetsPadding(TopAppBarDefaults.windowInsets),
+    ) {
+        Canvas(Modifier.matchParentSize()) {
+            val px = 2.dp.toPx()
+            // 深色底上的小點點花紋
+            var y = px * 3
+            while (y < size.height) {
+                var x = px * 3 + if (((y / (px * 6)).toInt()) % 2 == 0) 0f else px * 3
+                while (x < size.width) {
+                    drawRect(HeaderDot, Offset(x, y), Size(px, px))
+                    x += px * 6
+                }
+                y += px * 6
+            }
+            // 雙線外框：外面一圈金色、隔一格、裡面一圈淡金色
+            drawRect(PixelGold, Offset(px, px), Size(size.width - px * 2, size.height - px * 2), style = Stroke(px))
+            drawRect(HeaderGoldLight, Offset(px * 4, px * 4), Size(size.width - px * 8, size.height - px * 8), style = Stroke(px))
+        }
+        Row(
+            Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "逃跑", tint = Color.White)
+            }
+            Text(
+                title,
+                color = Color.White,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 4.dp, end = 12.dp),
+            )
+        }
+    }
+}
+
+private val HeaderDark = Color(0xFF302848)
+private val HeaderDot = Color(0xFF483868)
+private val HeaderGoldLight = Color(0xFFF8F0A0)
 
 @Composable
 private fun Question(

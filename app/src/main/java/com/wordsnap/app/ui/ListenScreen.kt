@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +36,7 @@ import com.wordsnap.app.ui.theme.PixelShape
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 import kotlinx.coroutines.delay
 
-// 朗讀模式：一個字接一個字自動念，先逐字母拼，再念整個單字，最後念中文解釋，念完從頭再來
+// 朗讀模式：一個字接一個字自動念，先念英文，再念中文解釋，念完從頭再來
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
@@ -50,8 +49,6 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
     var round by remember { mutableIntStateOf(0) }
     // 目前念到哪個部分，畫面跟著標示
     var step by remember { mutableStateOf("") }
-    // 朗讀速度：1 倍或 2 倍，換速度時不會從頭念
-    var speed by remember { mutableFloatStateOf(1f) }
 
     val word = words.getOrNull(index % words.size.coerceAtLeast(1))
 
@@ -62,22 +59,14 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
             return@LaunchedEffect
         }
         val text = word.text.trim()
-        step = "拼字"
-        for (ch in text) {
-            if (ch.isLetter()) {
-                speaker.say(ch.uppercase(), rate = 0.9f * speed)
-                delay((120 / speed).toLong())
-            }
-        }
-        delay((300 / speed).toLong())
-        step = "單字"
-        speaker.say(text, rate = 0.85f * speed)
-        delay((400 / speed).toLong())
+        step = "英文"
+        speaker.say(text, rate = 0.85f)
+        delay(400)
         if (word.meaning.isNotBlank()) {
             step = "解釋"
-            speaker.say(word.meaning, chinese = true, rate = speed)
+            speaker.say(word.meaning, chinese = true)
         }
-        delay((1200 / speed).toLong())
+        delay(1200)
         index = (index + 1) % words.size
         round++
     }
@@ -121,11 +110,6 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                     ) {
                         Text(word.text, style = wordStyle(word.text), textAlign = TextAlign.Center)
                         Text(
-                            word.text.filter { it.isLetter() }.uppercase().toList().joinToString(" "),
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center,
-                        )
-                        Text(
                             word.meaning.ifBlank { "（還沒有中文意思）" },
                             style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center,
@@ -133,7 +117,7 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                     }
                 }
                 Text(if (playing) "♪ 正在念：$step" else "已暫停", style = MaterialTheme.typography.bodyMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     PixelIconButton(IconPrev, "上一個", onClick = { index = (index - 1 + words.size) % words.size })
                     PixelIconButton(
                         if (playing) IconPause else IconPlay,
@@ -142,12 +126,6 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                         color = PixelGold,
                     )
                     PixelIconButton(IconNext, "下一個", onClick = { index = (index + 1) % words.size })
-                    // 最右邊：切換 1 倍 / 2 倍速
-                    PixelIconButton(
-                        if (speed > 1f) IconSpeed2 else IconSpeed1,
-                        if (speed > 1f) "2 倍速" else "1 倍速",
-                        onClick = { speed = if (speed > 1f) 1f else 2f },
-                    )
                 }
                 Text(
                     "關掉螢幕也會繼續念；若太久沒操作，手機可能會自動暫停",
