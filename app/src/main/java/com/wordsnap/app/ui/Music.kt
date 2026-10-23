@@ -18,13 +18,34 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 
 private const val PREFS = "wordsnap"
 private const val KEY_MUSIC = "music_on"
+private const val KEY_LEVEL = "music_level"
 
-// 背景音樂開關存在手機裡，主畫面可以切換
-fun isMusicOn(context: Context): Boolean =
-    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_MUSIC, true)
+// 背景音樂音量：關、小、大（只調整音樂和音效，不影響念單字的聲音）
+enum class MusicLevel(val label: String, val scale: Float) {
+    Off("關", 0f),
+    Low("小", 0.4f),
+    High("大", 1f),
+}
 
-fun setMusicOn(context: Context, on: Boolean) =
-    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_MUSIC, on).apply()
+// 目前的音量設定，主畫面一切換，正在播的音樂馬上跟著變
+private var currentLevel by mutableStateOf<MusicLevel?>(null)
+
+fun musicLevel(context: Context): MusicLevel {
+    currentLevel?.let { return it }
+    val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    val saved = prefs.getString(KEY_LEVEL, null)?.let { name -> MusicLevel.entries.find { it.name == name } }
+    // 舊版只有開/關：關 → 關，開 → 大
+    val level = saved ?: if (prefs.getBoolean(KEY_MUSIC, true)) MusicLevel.High else MusicLevel.Off
+    currentLevel = level
+    return level
+}
+
+fun setMusicLevel(context: Context, level: MusicLevel) {
+    currentLevel = level
+    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_LEVEL, level.name).apply()
+}
+
+fun isMusicOn(context: Context): Boolean = musicLevel(context) != MusicLevel.Off
 
 // 循環播放一段 8-bit 音樂；App 切到背景時暫停，離開畫面時停止
 // paused 為 true 時暫時停住（例如戰鬥念單字時），變回 false 從停住的地方接著播
@@ -33,12 +54,15 @@ fun LoopingMusic(@RawRes resId: Int, enabled: Boolean, volume: Float, paused: Bo
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var player by remember { mutableStateOf<MediaPlayer?>(null) }
+    val level = musicLevel(context)
+    val on = enabled && level != MusicLevel.Off
+    val scaled = volume * level.scale
     val pausedNow by rememberUpdatedState(paused)
-    DisposableEffect(resId, enabled, lifecycleOwner) {
-        if (!enabled) return@DisposableEffect onDispose { }
+    DisposableEffect(resId, on, lifecycleOwner) {
+        if (!on) return@DisposableEffect onDispose { }
         val created = MediaPlayer.create(context, resId)?.apply {
             isLooping = true
-            setVolume(volume, volume)
+            setVolume(scaled, scaled)
         }
         player = created
         val observer = LifecycleEventObserver { _, event ->
@@ -56,8 +80,8 @@ fun LoopingMusic(@RawRes resId: Int, enabled: Boolean, volume: Float, paused: Bo
         }
     }
     // 音量改變時（例如念單字時調小）直接套用
-    LaunchedEffect(player, volume) {
-        player?.setVolume(volume, volume)
+    LaunchedEffect(player, scaled) {
+        player?.setVolume(scaled, scaled)
     }
     LaunchedEffect(player, paused) {
         val p = player ?: return@LaunchedEffect
@@ -75,9 +99,10 @@ fun LoopingMusic(@RawRes resId: Int, enabled: Boolean, volume: Float, paused: Bo
 fun OneShotSound(@RawRes resId: Int, play: Boolean, volume: Float = 0.6f) {
     val context = LocalContext.current
     DisposableEffect(resId, play) {
-        if (!play || !isMusicOn(context)) return@DisposableEffect onDispose { }
+        val scaled = volume * musicLevel(context).scale
+        if (!play || scaled <= 0f) return@DisposableEffect onDispose { }
         val player = MediaPlayer.create(context, resId)?.apply {
-            setVolume(volume, volume)
+            setVolume(scaled, scaled)
             start()
         }
         onDispose { player?.release() }

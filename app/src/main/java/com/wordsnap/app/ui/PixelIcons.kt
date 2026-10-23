@@ -224,6 +224,46 @@ val IconArrowRight = listOf(
     "................",
 )
 
+// 記錄管理：改名字（鉛筆）
+val IconPencil = listOf(
+    "................",
+    "............KK..",
+    "...........KRRK.",
+    "..........KMRRRK",
+    ".........KYKMRK.",
+    "........KYYYKK..",
+    ".......KYYYYK...",
+    "......KYYYYK....",
+    ".....KYYYYK.....",
+    "....KYYYYK......",
+    "...KSYYYK.......",
+    "...KSSYK........",
+    "..KKSSK.........",
+    "..KKKK..........",
+    "................",
+    "................",
+)
+
+// 記錄管理：刪除紀錄（垃圾桶）
+val IconTrash = listOf(
+    "................",
+    "......KKKK......",
+    "..KKKKMMMMKKKK..",
+    "..KWWWWWWWWWWK..",
+    "..KKKKKKKKKKKK..",
+    "...KMMMMMMMMK...",
+    "...KMmMmMmMMK...",
+    "...KMmMmMmMMK...",
+    "...KMmMmMmMMK...",
+    "...KMmMmMmMMK...",
+    "...KMmMmMmMMK...",
+    "...KMmMmMmMMK...",
+    "...KMMMMMMMMK...",
+    "....KKKKKKKK....",
+    "................",
+    "................",
+)
+
 // 方形的像素按鈕，只有圖示沒有文字
 @Composable
 fun PixelIconButton(

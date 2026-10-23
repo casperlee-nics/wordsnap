@@ -6,6 +6,9 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 
+// 拍照找到的東西：words 是不重複的單字，tokens 是照原本順序排的所有字（用來找片語）
+class ScanResult(val words: List<String>, val tokens: List<String>)
+
 // 用 ML Kit 從照片裡找出英文單字
 object TextScanner {
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -14,7 +17,7 @@ object TextScanner {
     fun scan(
         context: Context,
         uri: Uri,
-        onResult: (List<String>) -> Unit,
+        onResult: (ScanResult) -> Unit,
         onError: (Exception) -> Unit,
     ) {
         val image = try {
@@ -24,7 +27,7 @@ object TextScanner {
             return
         }
         recognizer.process(image)
-            .addOnSuccessListener { result -> onResult(extractWords(result.text)) }
+            .addOnSuccessListener { result -> onResult(ScanResult(extractWords(result.text), tokens(result.text))) }
             .addOnFailureListener { e -> onError(e) }
     }
 
@@ -59,13 +62,17 @@ object TextScanner {
     // 沒有母音的不是單字（拆散的音標常變成 pl、str 這種）
     private fun hasVowel(word: String): Boolean = word.any { it in "aeiouy" }
 
-    // 只留下兩個字母以上的英文字，轉小寫並去掉重複；音標和一看就不是單字的字母組合會略過
-    fun extractWords(text: String): List<String> =
+    // 照原本順序排的所有英文字（轉小寫），音標會略過
+    fun tokens(text: String): List<String> =
         text.replace(phoneticPattern, " ")
             .split(Regex("\\s+"))
             // 一整段裡有音標符號就整段跳過，不拆出零碎的字母
             .filterNot { chunk -> chunk.any(::isPhoneticSymbol) }
             .flatMap { chunk -> wordPattern.findAll(chunk).map { it.value.lowercase() } }
+
+    // 只留下兩個字母以上的英文字，去掉重複；一看就不是單字的字母組合會略過
+    fun extractWords(text: String): List<String> =
+        tokens(text)
             .filter { it.length >= 2 && hasVowel(it) && it !in partOfSpeech }
             .distinct()
             .toList()

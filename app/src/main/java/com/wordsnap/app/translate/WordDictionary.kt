@@ -12,7 +12,7 @@ import java.io.File
 // 查不到的字再交給 WordTranslator（ML Kit）翻譯
 object WordDictionary {
     // 換新版字典檔時把版本加一，App 會重新複製
-    private const val VERSION = 1
+    private const val VERSION = 2
     private const val ASSET = "ecdict.db"
 
     private val lock = Mutex()
@@ -24,6 +24,8 @@ object WordDictionary {
         withContext(Dispatchers.IO) {
             runCatching {
                 val file = File(context.noBackupFilesDir, "ecdict_v$VERSION.db")
+                // 舊版的字典檔刪掉，省空間
+                for (old in 1 until VERSION) File(context.noBackupFilesDir, "ecdict_v$old.db").delete()
                 if (!file.exists()) {
                     val tmp = File(file.path + ".tmp")
                     context.assets.open(ASSET).use { input -> tmp.outputStream().use { input.copyTo(it) } }
@@ -38,12 +40,33 @@ object WordDictionary {
     // 字典裡的解釋很長，只留最前面 2 個中文意思，並拿掉 n. v. 這類詞性
     suspend fun lookup(context: Context, word: String): String? {
         val database = open(context) ?: return null
-        val key = word.trim().lowercase()
+        val key = word.trim().lowercase().replace(Regex("\\s+"), " ")
         if (key.isEmpty()) return null
         return withContext(Dispatchers.IO) {
             meaning(database, key)?.let(::simplify) ?: lemma(database, key)?.let { base ->
                 meaning(database, base)?.let { "($base) ${simplify(it)}" }
             }
+        }
+    }
+
+    // 從照片裡依順序排的字找出片語（2 到 4 個字，例如 give up、look forward to）
+    // 變化形會換回原形：gave up → give up
+    suspend fun findPhrases(context: Context, tokens: List<String>): List<String> {
+        val database = open(context) ?: return emptyList()
+        return withContext(Dispatchers.IO) {
+            val found = LinkedHashSet<String>()
+            for (i in tokens.indices) {
+                for (n in 4 downTo 2) {
+                    if (i + n > tokens.size) continue
+                    val candidate = tokens.subList(i, i + n).joinToString(" ")
+                    val hit = database.rawQuery("SELECT 1 FROM phrases WHERE phrase = ?", arrayOf(candidate)).use { it.moveToFirst() }
+                    if (hit) {
+                        found += lemma(database, candidate) ?: candidate
+                        break
+                    }
+                }
+            }
+            found.toList()
         }
     }
 

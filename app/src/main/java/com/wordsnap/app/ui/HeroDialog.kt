@@ -2,7 +2,6 @@ package com.wordsnap.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,10 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,40 +31,37 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit) {
     val nextTitleAt = race.nextTitleLevel(info.level)
     val tier = avatarTier(info.level)
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = onDismiss) { Text("關閉") } },
-        title = {
+    PixelWindowDialog(
+        title = "人物能力",
+        onDismiss = onDismiss,
+        header = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 PixelAvatar(avatar, size = 56.dp, tier = tier)
                 Column(Modifier.padding(start = 12.dp)) {
-                    Text(profile.name)
+                    Text(profile.name, style = MaterialTheme.typography.titleLarge)
                     Text("「${race.title(info.level)}」", style = MaterialTheme.typography.bodyMedium)
                 }
             }
         },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("職業：${race.label}　Lv ${info.level}")
-                Text("已記住的單字：$remembered 個")
-                if (info.level < MAX_LEVEL) {
-                    Text("經驗值 ${info.current} / ${info.needed}", style = MaterialTheme.typography.bodySmall)
-                    Meter(info.current.toFloat() / info.needed, PixelBlue)
-                }
-                StatRow("力量", stats.str)
-                StatRow("體力", stats.vit)
-                StatRow("智慧", stats.intel)
-                StatRow("運氣", stats.luk)
-                Text("必殺技：${race.finisher.label(tier)}", style = MaterialTheme.typography.bodySmall)
-                if (nextTitleAt != null) {
-                    Text(
-                        "Lv $nextTitleAt 可獲得稱號「${race.title(nextTitleAt)}」",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-        },
-    )
+    ) {
+        Text("職業：${race.label}　Lv ${info.level}")
+        Text("已記住的單字：$remembered 個")
+        if (info.level < MAX_LEVEL) {
+            Text("經驗值 ${info.current} / ${info.needed}", style = MaterialTheme.typography.bodySmall)
+            Meter(info.current.toFloat() / info.needed, PixelBlue)
+        }
+        StatRow("力量", stats.str)
+        StatRow("體力", stats.vit)
+        StatRow("智慧", stats.intel)
+        StatRow("運氣", stats.luk)
+        Text("必殺技：${race.finisher.label(tier)}", style = MaterialTheme.typography.bodySmall)
+        if (nextTitleAt != null) {
+            Text(
+                "Lv $nextTitleAt 可獲得稱號「${race.title(nextTitleAt)}」",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
 }
 
 // 能力值長條，以 200 為滿格

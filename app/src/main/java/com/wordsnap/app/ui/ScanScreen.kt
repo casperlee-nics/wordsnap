@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,10 +49,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.wordsnap.app.data.Book
 import com.wordsnap.app.ocr.TextScanner
+import com.wordsnap.app.translate.WordDictionary
 import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelShape
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 import java.io.File
+import kotlinx.coroutines.launch
 
 // 拍照或選圖 → 辨識單字 → 點選要加入的字
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -67,6 +70,7 @@ fun ScanScreen(
     openCamera: Boolean = false,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var scanning by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var found by remember { mutableStateOf<List<String>?>(null) }
@@ -82,9 +86,13 @@ fun ScanScreen(
         selected.clear()
         TextScanner.scan(
             context, uri,
-            onResult = { words ->
-                found = words
-                scanning = false
+            onResult = { result ->
+                // 片語（例如 give up）排在最前面，接著是單字
+                scope.launch {
+                    val phrases = WordDictionary.findPhrases(context, result.tokens)
+                    found = phrases + result.words.filter { it !in phrases }
+                    scanning = false
+                }
             },
             onError = { e ->
                 error = "辨識失敗：${e.message}"
@@ -140,11 +148,12 @@ fun ScanScreen(
                 }
                 error != null -> Text(error!!)
                 found == null -> Text("拍一張課本或文章的照片，我會幫你找出隱藏的單字怪物。")
-                found!!.none { !TextScanner.isCommon(it) } -> Text("沒有找到英文單字，換一張清楚一點的照片試試。")
+                found!!.none { ' ' in it || !TextScanner.isCommon(it) } -> Text("沒有找到英文單字，換一張清楚一點的照片試試。")
                 else -> {
                     // 濾掉 the、and 這類常見字；已經收錄的字照樣列出但不能選
                     val all = found!!
-                    val words = all.filterNot(TextScanner::isCommon)
+                    // 片語由常見字組成，不能被常見字過濾掉
+                    val words = all.filter { ' ' in it || !TextScanner.isCommon(it) }
                     val skipped = all.size - words.size
                     val selectable = words.filter { it !in existing }
                     val allSelected = selectable.isNotEmpty() && selected.size == selectable.size

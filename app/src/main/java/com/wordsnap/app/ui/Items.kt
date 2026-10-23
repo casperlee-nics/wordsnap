@@ -1,16 +1,18 @@
 package com.wordsnap.app.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,6 +22,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
+import com.wordsnap.app.ui.theme.PixelInk
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.random.Random
@@ -227,36 +230,39 @@ fun ItemBagDialog(
     canUse: (ItemType) -> Boolean = { true },
     onUse: ((ItemType) -> Unit)? = null,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (onUse != null) "道具袋" else "道具欄") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                val owned = ItemType.entries.filter { (counts[it] ?: 0) > 0 }
-                if (owned.isEmpty()) {
-                    Text("道具袋是空的。戰鬥勝利時有機會打開寶箱拿到道具！")
+    PixelWindowDialog(title = if (onUse != null) "道具袋" else "道具欄", onDismiss = onDismiss) {
+        val owned = ItemType.entries.filter { (counts[it] ?: 0) > 0 }
+        if (owned.isEmpty()) {
+            Text("道具袋是空的。戰鬥勝利時有機會打開寶箱拿到道具！")
+        }
+        owned.forEachIndexed { index, type ->
+            val enabled = onUse == null || canUse(type)
+            if (index > 0) Box(Modifier.fillMaxWidth().height(2.dp).background(ItemDivider))
+            Row(
+                Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.4f)
+                    .clickable(enabled = enabled && onUse != null) { onUse?.invoke(type) }
+                    .padding(vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                // 道具圖示放在小小的像素格子裡
+                Box(
+                    Modifier.size(48.dp).border(2.dp, PixelInk).background(ItemSlot).padding(4.dp),
+                ) {
+                    PixelArt(type.icon, ItemPalette, Modifier.size(40.dp))
                 }
-                owned.forEach { type ->
-                    val enabled = onUse == null || canUse(type)
-                    Row(
-                        Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.4f)
-                            .clickable(enabled = enabled && onUse != null) { onUse?.invoke(type) },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        PixelArt(type.icon, ItemPalette, Modifier.size(40.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(type.label, style = MaterialTheme.typography.titleMedium)
-                            Text(type.effect, style = MaterialTheme.typography.bodySmall)
-                        }
-                        Text("x${counts[type] ?: 0}", style = MaterialTheme.typography.titleMedium)
-                    }
+                Column(Modifier.weight(1f)) {
+                    Text(type.label, style = MaterialTheme.typography.titleMedium)
+                    Text(type.effect, style = MaterialTheme.typography.bodySmall)
                 }
+                Text("x${counts[type] ?: 0}", style = MaterialTheme.typography.titleMedium)
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("關閉") } },
-    )
+        }
+    }
 }
+
+private val ItemSlot = Color(0xFFE8D8B0)
+private val ItemDivider = Color(0x40202030)
 
 // 在戰鬥畫面上畫道具的效果動畫，t 從 0 到 1
 private val SpritePalette = ScenePalette + mapOf('S' to Color(0xFFF8C898), 'H' to Color(0xFF704020))

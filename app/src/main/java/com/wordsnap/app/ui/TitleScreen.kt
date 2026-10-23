@@ -6,10 +6,13 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -20,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,12 +30,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
 import com.wordsnap.app.ui.theme.PixelBorder
+import com.wordsnap.app.ui.theme.PixelGold
+import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelShape
 import kotlin.math.PI
 import kotlin.math.cos
@@ -46,13 +51,13 @@ fun TitleScreen(
     hasSaves: Boolean,
     onNewGame: () -> Unit,
     onLoadGame: () -> Unit,
-    onDeleteSave: () -> Unit,
+    onManageSaves: () -> Unit,
 ) {
     val context = LocalContext.current
-    var musicOn by remember { mutableStateOf(isMusicOn(context)) }
+    var level by remember { mutableStateOf(musicLevel(context)) }
     // 每次進主畫面從 5 首裡隨機挑一首
     val music = remember { TitleMusic.random() }
-    LoopingMusic(music, enabled = musicOn, volume = 0.6f)
+    LoopingMusic(music, enabled = true, volume = 0.6f)
     // 依手機時間：早上 6 點到晚上 6 點是白天的城堡，其他時間是夜晚燈火通明的城堡
     val night = remember { isNight() }
 
@@ -88,13 +93,29 @@ fun TitleScreen(
                     OutlinedButton(onClick = onLoadGame, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
                         Text("讀取遊戲")
                     }
-                    OutlinedButton(onClick = onDeleteSave, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
-                        Text("刪除冒險者")
+                    OutlinedButton(onClick = onManageSaves, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
+                        Text("記錄管理")
                     }
-                    TextButton(onClick = {
-                        musicOn = !musicOn
-                        setMusicOn(context, musicOn)
-                    }) { Text(if (musicOn) "♪ 音樂：開" else "♪ 音樂：關") }
+                    // 背景音樂音量：關、小、大（念單字的聲音不受影響）
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("♪ 音樂：", style = MaterialTheme.typography.bodyMedium)
+                        MusicLevel.entries.forEach { option ->
+                            val chosen = option == level
+                            Box(
+                                Modifier
+                                    .padding(horizontal = 3.dp)
+                                    .border(2.dp, if (chosen) PixelInk else Color.Transparent)
+                                    .background(if (chosen) PixelGold else Color.Transparent)
+                                    .clickable {
+                                        level = option
+                                        setMusicLevel(context, option)
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                            ) {
+                                Text(option.label, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
                 }
             }
         }

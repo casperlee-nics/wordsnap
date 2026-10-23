@@ -94,13 +94,13 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
             hasSaves = profiles.isNotEmpty(),
             onNewGame = { screen = Screen.NewGame },
             onLoadGame = { screen = Screen.Load },
-            onDeleteSave = { screen = Screen.Delete },
+            onManageSaves = { screen = Screen.Delete },
         )
         Screen.NewGame -> NicknameScreen(onStart = { name, avatar ->
             vm.createProfile(name, avatar) { screen = Screen.List }
         })
         Screen.Load -> SaveSlotScreen(
-            deleting = false,
+            managing = false,
             profiles = profiles,
             onPick = { profile ->
                 vm.selectProfile(profile.id)
@@ -109,10 +109,12 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
             onBack = backToTitle,
         )
         Screen.Delete -> SaveSlotScreen(
-            deleting = true,
+            managing = true,
             profiles = profiles,
-            onPick = vm::deleteProfile,
+            onPick = {},
             onBack = backToTitle,
+            onRename = vm::renameProfile,
+            onDelete = vm::deleteProfile,
         )
         Screen.List -> WordListScreen(
             vm,

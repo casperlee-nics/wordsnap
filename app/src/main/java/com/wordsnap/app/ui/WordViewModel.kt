@@ -117,6 +117,21 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // 記錄管理：改名字，不能和別的冒險者同名；失敗時回傳原因
+    fun renameProfile(profile: Profile, name: String, onDone: (String?) -> Unit) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return onDone("名字不能是空白")
+        viewModelScope.launch {
+            val other = profileDao.findByName(trimmed)
+            if (other != null && other.id != profile.id) {
+                onDone("已經有叫「$trimmed」的冒險者了")
+            } else {
+                profileDao.rename(profile.id, trimmed)
+                onDone(null)
+            }
+        }
+    }
+
     // 刪除冒險者：這個冒險者的單字、單字簿、道具和暱稱一起刪掉
     fun deleteProfile(profile: Profile) {
         viewModelScope.launch {

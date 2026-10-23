@@ -17,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -38,25 +39,28 @@ import com.wordsnap.app.ui.theme.PixelRed
 import com.wordsnap.app.ui.theme.PixelShape
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 
-// 讀取遊戲（點存檔進入）或刪除冒險者（點存檔刪除）共用的存檔清單
+// 讀取遊戲（點存檔進入）或記錄管理（右邊有改名字、刪除紀錄的按鈕）共用的存檔清單
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaveSlotScreen(
-    deleting: Boolean,
+    managing: Boolean,
     profiles: List<Profile>,
     onPick: (Profile) -> Unit,
     onBack: () -> Unit,
+    onRename: (Profile, String, (String?) -> Unit) -> Unit = { _, _, _ -> },
+    onDelete: (Profile) -> Unit = {},
 ) {
     var confirm by remember { mutableStateOf<Profile?>(null) }
+    var renaming by remember { mutableStateOf<Profile?>(null) }
     val context = LocalContext.current
     val musicOn = remember { isMusicOn(context) }
     // 讀取遊戲時播放專屬音樂
-    LoopingMusic(R.raw.load_bgm, enabled = musicOn && !deleting, volume = 0.5f)
+    LoopingMusic(R.raw.load_bgm, enabled = musicOn && !managing, volume = 0.5f)
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (deleting) "刪除冒險者" else "讀取遊戲") },
+                title = { Text(if (managing) "記錄管理" else "讀取遊戲") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -80,17 +84,30 @@ fun SaveSlotScreen(
                         shape = PixelShape,
                         border = PixelBorder,
                         color = MaterialTheme.colorScheme.surfaceContainer,
-                        modifier = Modifier.fillMaxWidth().clickable {
-                            if (deleting) confirm = profile else onPick(profile)
-                        },
+                        modifier = Modifier.fillMaxWidth().clickable(enabled = !managing) { onPick(profile) },
                     ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            // 左邊：人物、名字和職業
                             PixelAvatar(Avatar.from(profile.avatar), size = 56.dp, tier = avatarTier(levelInfo(profile.exp).level))
                             Column(Modifier.weight(1f).padding(start = 16.dp)) {
                                 Text(profile.name, style = MaterialTheme.typography.titleLarge)
                                 Text(Avatar.from(profile.avatar).label, style = MaterialTheme.typography.bodyMedium)
                             }
-                            Text(if (deleting) "刪除" else "→", color = if (deleting) PixelRed else MaterialTheme.colorScheme.primary)
+                            if (managing) {
+                                // 右邊：改名字（鉛筆）、刪除紀錄（垃圾桶）
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    PixelIconButton(
+                                        IconPencil, "改名字", onClick = { renaming = profile },
+                                        size = 48.dp, palette = ColorIconPalette,
+                                    )
+                                    PixelIconButton(
+                                        IconTrash, "刪除紀錄", onClick = { confirm = profile },
+                                        size = 48.dp, palette = ColorIconPalette,
+                                    )
+                                }
+                            } else {
+                                Text("→", color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
@@ -98,18 +115,60 @@ fun SaveSlotScreen(
         }
     }
 
+    renaming?.let { profile ->
+        RenameDialog(
+            profile = profile,
+            onDismiss = { renaming = null },
+            onRename = { name, onError ->
+                onRename(profile, name) { error -> if (error == null) renaming = null else onError(error) }
+            },
+        )
+    }
+
     confirm?.let { profile ->
         AlertDialog(
             onDismissRequest = { confirm = null },
-            title = { Text("刪除冒險者 ${profile.name}？") },
+            title = { Text("刪除 ${profile.name} 的紀錄？") },
             text = { Text("${profile.name} 的所有單字簿、單字、道具和複習進度都會刪除，無法復原。") },
             confirmButton = {
                 TextButton(onClick = {
-                    onPick(profile)
+                    onDelete(profile)
                     confirm = null
                 }) { Text("刪除", color = PixelRed) }
             },
             dismissButton = { TextButton(onClick = { confirm = null }) { Text("取消") } },
         )
     }
+}
+
+@Composable
+private fun RenameDialog(profile: Profile, onDismiss: () -> Unit, onRename: (String, (String) -> Unit) -> Unit) {
+    var name by remember { mutableStateOf(profile.name) }
+    var error by remember { mutableStateOf<String?>(null) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("改名字") },
+        text = {
+            val message = error
+            OutlinedTextField(
+                value = name,
+                onValueChange = {
+                    name = it.take(12)
+                    error = null
+                },
+                label = { Text("新的名字") },
+                singleLine = true,
+                isError = message != null,
+                supportingText = if (message != null) {
+                    { Text(message) }
+                } else {
+                    null
+                },
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onRename(name) { error = it } }, enabled = name.isNotBlank()) { Text("確定") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+    )
 }
