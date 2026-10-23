@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -30,7 +28,6 @@ import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelShape
-import com.wordsnap.app.ui.theme.pixelTopBarColors
 
 // 單字卡複習：卡片出現就念英文、同時顯示中文，按「不記得」或「記得」直接換下一張
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,17 +39,7 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
     val scene = remember { ReviewScene.entries.random() }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("${if (vm.practiceMode) "練習" else "複習"}（剩 ${vm.reviewQueue.size} 張）") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                    }
-                },
-                colors = pixelTopBarColors(),
-            )
-        },
+        topBar = { PixelHeader("${if (vm.practiceMode) "練習" else "複習"}（剩 ${vm.reviewQueue.size} 張）", onBack) },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             PixelArt(scene.art, ScenePalette, Modifier.fillMaxWidth())

@@ -6,17 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,7 +28,6 @@ import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelShape
-import com.wordsnap.app.ui.theme.pixelTopBarColors
 import kotlinx.coroutines.delay
 
 // 朗讀模式：一個字接一個字自動念，先念英文，再念中文解釋，念完從頭再來
@@ -72,17 +66,7 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("朗讀模式") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                    }
-                },
-                colors = pixelTopBarColors(),
-            )
-        },
+        topBar = { PixelHeader("朗讀模式", onBack) },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             PixelArt(scene.art, ScenePalette, Modifier.fillMaxWidth())

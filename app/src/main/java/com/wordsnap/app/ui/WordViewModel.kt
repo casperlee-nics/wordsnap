@@ -40,6 +40,8 @@ private const val KEY_MEANING_CLEANUP = "meaning_cleanup_v1"
 private const val KEY_TESTCOUNT_RESET = "testcount_reset_v1"
 
 const val BATTLE_SIZE = 15
+// 每場最少 5 題，能出的字不夠時用已經記住的字補
+private const val MIN_BATTLE_SIZE = 5
 private const val EXP_PER_WORD = 10
 private const val EXP_PASS_BONUS = 50
 
@@ -350,12 +352,19 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // 出題：從記住的字裡隨機挑最多 15 個，先挑沒考過的，不夠再隨機用考過的補；練習戰從全部記住的字挑
+    // 少於 5 題時，隨機用已經記住的字補到 5 題
     fun pickBattleWords(bookId: Long, practice: Boolean = false): List<Word> {
         val pool = allWords.value.filter { it.bookId == bookId && if (practice) it.canPractice() else it.isBattleReady() }
         val fresh = pool.filter { it.testedAt == null }.shuffled()
         val tested = pool.filter { it.testedAt != null }.shuffled()
         val picked = fresh.take(BATTLE_SIZE)
-        return (picked + tested.take(BATTLE_SIZE - picked.size)).shuffled()
+        val chosen = picked + tested.take(BATTLE_SIZE - picked.size)
+        if (chosen.size >= MIN_BATTLE_SIZE) return chosen.shuffled()
+        // 不到 5 題：先用這本其他記住的字補，還不夠再用別本記住的字補
+        val ids = chosen.map { it.id }.toSet()
+        val extra = allWords.value.filter { it.id !in ids && it.canPractice() }
+            .let { list -> list.filter { it.bookId == bookId }.shuffled() + list.filter { it.bookId != bookId }.shuffled() }
+        return (chosen + extra.take(MIN_BATTLE_SIZE - chosen.size)).shuffled()
     }
 
     // 這次要打的怪物：每記住 100 個字出現一隻大魔王、每 50 個字一隻中魔王，其他時候隨機一般怪物

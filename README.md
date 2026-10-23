@@ -2,7 +2,13 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.74（暫定名稱：像素單字）
+## 目前版本 0.75（暫定名稱：像素單字）
+
+v0.75 的改變：
+- 主畫面「像素單字」選單改成像素視窗外框（和人物能力、道具欄同款），位置往上移一些
+- 戰鬥、朗讀、複習畫面上方都改成同一種像素雙線金框標題列，字體放大一點
+- 戰鬥能出的字少於 5 個時，隨機用已經記住的字補到 5 題（先用同一本，不夠再用別本）
+- 夜晚主畫面小彩蛋：點城堡會放 6 發像素煙火，搭配煙火音效（`fireworks_sfx.ogg`）
 
 v0.74 的改變：
 - 離線字典加入約 2 萬個常用片語（例如 give up、look forward to），手動輸入片語也會自動填中文；變化形會換回原形（gave up → give up）
@@ -122,7 +128,7 @@ v0.65 的改變：
 
 ## 授權
 
-- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`、`fireworks_sfx.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
 - 字典 `app/src/main/assets/ecdict.db`：取自 [ECDICT](https://github.com/skywind3000/ECDICT)（MIT License，Copyright (c) 2017 Linwei），挑出常用的 5 萬字，用 [OpenCC](https://github.com/BYVoid/OpenCC)（Apache License 2.0）轉成台灣繁體用語。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 

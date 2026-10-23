@@ -1,6 +1,17 @@
 package com.wordsnap.app.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +43,36 @@ import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelPaper
 
+// 戰鬥、朗讀、複習畫面上方的標題：深色點點底加上像素風的雙線金框，和下方場景連在一起
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PixelHeader(title: String, onBack: () -> Unit, backDescription: String = "返回") {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .background(WindowTitleDark)
+            .windowInsetsPadding(TopAppBarDefaults.windowInsets),
+    ) {
+        Canvas(Modifier.matchParentSize()) { drawHeaderPanel() }
+        Row(
+            Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onBack, modifier = Modifier.size(38.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDescription, tint = Color.White)
+            }
+            Text(
+                title,
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 4.dp, end = 12.dp),
+            )
+        }
+    }
+}
+
 // 像素遊戲風的視窗：羊皮紙底、黑金雙線外框、上方深色標題列，下面一排像素按鈕
 @Composable
 fun PixelWindowDialog(
@@ -44,7 +85,7 @@ fun PixelWindowDialog(
         Column(
             Modifier
                 .fillMaxWidth()
-                .drawBehind { drawWindowFrame() }
+                .pixelWindowFrame()
                 .padding(10.dp),
         ) {
             WindowTitle(title)
@@ -87,20 +128,8 @@ fun PixelWindowButton(label: String, onClick: () -> Unit) {
 private fun WindowTitle(title: String) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Canvas(Modifier.matchParentSize()) {
-            val px = 2.dp.toPx()
             drawRect(WindowTitleDark)
-            // 深色底上的小點點花紋
-            var y = px * 3
-            while (y < size.height) {
-                var x = px * 3 + if (((y / (px * 6)).toInt()) % 2 == 0) 0f else px * 3
-                while (x < size.width) {
-                    drawRect(WindowTitleDot, Offset(x, y), Size(px, px))
-                    x += px * 6
-                }
-                y += px * 6
-            }
-            drawRect(PixelGold, Offset(px, px), Size(size.width - px * 2, size.height - px * 2), style = Stroke(px))
-            drawRect(WindowGoldLight, Offset(px * 4, px * 4), Size(size.width - px * 8, size.height - px * 8), style = Stroke(px))
+            drawHeaderPanel()
         }
         Text(
             title,
@@ -111,6 +140,25 @@ private fun WindowTitle(title: String) {
         )
     }
 }
+
+// 深色底上的小點點花紋，外面一圈金色、隔一格、裡面一圈淡金色
+private fun DrawScope.drawHeaderPanel() {
+    val px = 2.dp.toPx()
+    var y = px * 3
+    while (y < size.height) {
+        var x = px * 3 + if (((y / (px * 6)).toInt()) % 2 == 0) 0f else px * 3
+        while (x < size.width) {
+            drawRect(WindowTitleDot, Offset(x, y), Size(px, px))
+            x += px * 6
+        }
+        y += px * 6
+    }
+    drawRect(PixelGold, Offset(px, px), Size(size.width - px * 2, size.height - px * 2), style = Stroke(px))
+    drawRect(WindowGoldLight, Offset(px * 4, px * 4), Size(size.width - px * 8, size.height - px * 8), style = Stroke(px))
+}
+
+// 像素視窗外框，主畫面選單也用這個
+fun Modifier.pixelWindowFrame(): Modifier = drawBehind { drawWindowFrame() }
 
 // 外框：缺角的黑框、金色一圈、再一圈細黑線，裡面是羊皮紙
 private fun DrawScope.drawWindowFrame() {

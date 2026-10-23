@@ -13,8 +13,8 @@ android {
         applicationId = "com.wordsnap.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 19
-        versionName = "0.74"
+        versionCode = 20
+        versionName = "0.75"
     }
 
     buildTypes {
