@@ -137,7 +137,7 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
             onBack = backToList,
             openCamera = true,
         )
-        Screen.Review -> ReviewScreen(vm, onListen = { screen = Screen.Listen }, onBack = backToList)
+        Screen.Review -> ReviewScreen(vm, onBack = backToList)
         Screen.Listen -> ListenScreen(vm, onBack = backToList)
         Screen.Battle -> BattleScreen(vm, battleBookId, onBack = backToList)
     }

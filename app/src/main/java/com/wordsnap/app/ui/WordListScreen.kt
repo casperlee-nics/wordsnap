@@ -68,6 +68,8 @@ fun WordListScreen(
     val unlock = remember(allWords, selectedBookId) { vm.battleUnlock(selectedBookId) }
     var showMenu by remember { mutableStateOf(false) }
     var showHero by remember { mutableStateOf(false) }
+    var showItems by remember { mutableStateOf(false) }
+    val itemCounts by vm.items.collectAsState()
     val speaker = rememberSpeaker()
     val translatorStatus by vm.translatorStatus.collectAsState()
     val hasBlank = words.any { it.meaning.isBlank() }
@@ -81,12 +83,14 @@ fun WordListScreen(
     val musicOn = remember { isMusicOn(context) }
     LoopingMusic(R.raw.book_bgm, enabled = musicOn, volume = if (speaker.speaking) 0.05f else 0.35f)
     var editing by remember { mutableStateOf<Word?>(null) }
+    // 整本都答對兩次了，進戰鬥前先提醒是練習戰
+    var confirmPractice by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    // 點人物打開選單：人物能力、回到主畫面
+                    // 點人物打開選單：人物能力、道具欄、回到主畫面
                     Box {
                         Row(
                             Modifier.clickable { showMenu = true },
@@ -100,6 +104,7 @@ fun WordListScreen(
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             DropdownMenuItem(text = { Text("人物能力") }, onClick = { showMenu = false; showHero = true })
+                            DropdownMenuItem(text = { Text("道具欄") }, onClick = { showMenu = false; showItems = true })
                             DropdownMenuItem(text = { Text("回到主畫面") }, onClick = { showMenu = false; onHome() })
                         }
                     }
@@ -131,7 +136,11 @@ fun WordListScreen(
                 onReview = onReview,
                 onAdd = { choosingAdd = true },
                 battleEnabled = battleBook != null && unlock.unlocked,
-                onBattle = { if (battleBook != null) onBattle(battleBook) },
+                onBattle = {
+                    if (battleBook != null) {
+                        if (unlock.exhausted) confirmPractice = true else onBattle(battleBook)
+                    }
+                },
             )
         },
     ) { padding ->
@@ -143,7 +152,7 @@ fun WordListScreen(
             )
             if (unlock.exhausted) {
                 Text(
-                    "這本的單字都在戰鬥考過 $MAX_TESTS 次了，去加新單字或複習吧！",
+                    "這本的單字都在戰鬥答對 $MAX_TESTS 次了，加新單字就能再拿到完整的經驗值和寶箱",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
@@ -185,6 +194,23 @@ fun WordListScreen(
         }
     }
 
+    if (showItems) {
+        ItemBagDialog(counts = itemCounts, onDismiss = { showItems = false })
+    }
+    if (confirmPractice) {
+        AlertDialog(
+            onDismissRequest = { confirmPractice = false },
+            title = { Text("練習戰") },
+            text = { Text("這本的單字都已經在戰鬥中答對 $MAX_TESTS 次了。還是可以繼續練習，但經驗值只有 1/4，也不會掉寶箱。") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmPractice = false
+                    selectedBookId?.let(onBattle)
+                }) { Text("開始練習") }
+            },
+            dismissButton = { TextButton(onClick = { confirmPractice = false }) { Text("取消") } },
+        )
+    }
     if (choosingAdd) {
         AddChoiceDialog(
             onDismiss = { choosingAdd = false },

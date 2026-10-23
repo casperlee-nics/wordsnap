@@ -2,7 +2,20 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.71（暫定名稱：像素單字）
+## 目前版本 0.72（暫定名稱：像素單字）
+
+v0.72 的改變：
+- 戰鬥勝利掉寶箱時有開寶箱動畫（寶箱抖動、打開發光、道具飛出來，`chest_jingle.ogg`）
+- 點標題列人物的選單多了「道具欄」，顯示道具圖示、說明和數量
+- 修正：改成「答對」2 次的字才不再出題（v0.71 誤把「考過」也算進去，第一次開啟會重新計算）
+- 整本都答對 2 次後仍可按「戰鬥」，會先提示是練習戰：經驗值 1/4、不會掉寶箱
+- 戰鬥念單字前後 0.5 秒改回把背景音樂調小聲
+- 升級畫面背景隨機三選一：城堡、村民歡呼的城鎮、怪物逃竄的黑暗森林
+- 新增 5 個場景（戰鬥、朗讀、複習隨機出現）：城鎮內、地下迷宮、羅馬競技場、船上、雪地；大魔王仍是熔岩魔王城
+- 主畫面依手機時間切換：早上 6 點到晚上 6 點是白天城堡，其他時間是燈火通明的夜晚城堡
+- 主畫面 BGM 新增兩首（`title2_bgm.ogg`、`title3_bgm.ogg`），和主畫面、選角色、讀取遊戲的三首一起隨機播放
+- 複習頁右上角的「朗讀模式」移除
+- 發音自動選手機上品質最好、不需要網路的英文和中文聲音
 
 v0.71 的改變：
 - 中文解釋精簡：拿掉 n. v. 這類詞性，最多 2 個意思；舊單字的字典解釋第一次開啟時自動整理
@@ -97,7 +110,7 @@ v0.65 的改變：
 
 ## 授權
 
-- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
 - 字典 `app/src/main/assets/ecdict.db`：取自 [ECDICT](https://github.com/skywind3000/ECDICT)（MIT License，Copyright (c) 2017 Linwei），挑出常用的 5 萬字，用 [OpenCC](https://github.com/BYVoid/OpenCC)（Apache License 2.0）轉成台灣繁體用語。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 

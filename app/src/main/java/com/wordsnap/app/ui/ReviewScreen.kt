@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,13 +30,12 @@ import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelShape
-import com.wordsnap.app.ui.theme.pixelTopBarButtonColors
 import com.wordsnap.app.ui.theme.pixelTopBarColors
 
 // 單字卡複習：卡片出現就念英文、同時顯示中文，按「不記得」或「記得」直接換下一張
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReviewScreen(vm: WordViewModel, onListen: () -> Unit, onBack: () -> Unit) {
+fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
     val speaker = rememberSpeaker()
     LaunchedEffect(Unit) { vm.startReview() }
     // 每次進來隨機一個場景，複習途中不換
@@ -51,9 +49,6 @@ fun ReviewScreen(vm: WordViewModel, onListen: () -> Unit, onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
-                },
-                actions = {
-                    TextButton(onClick = onListen, colors = pixelTopBarButtonColors()) { Text("朗讀模式") }
                 },
                 colors = pixelTopBarColors(),
             )

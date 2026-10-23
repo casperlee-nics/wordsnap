@@ -43,8 +43,16 @@ interface WordDao {
     suspend fun delete(word: Word)
 
     // 戰鬥模式考過的單字記下時間，下次優先出沒考過的
-    @Query("UPDATE words SET testedAt = :time, testCount = testCount + 1 WHERE id IN (:ids)")
+    @Query("UPDATE words SET testedAt = :time WHERE id IN (:ids)")
     suspend fun markTested(ids: List<Long>, time: Long)
+
+    // 戰鬥答對一次加一，答對兩次就不再出題
+    @Query("UPDATE words SET testCount = testCount + 1 WHERE id IN (:ids)")
+    suspend fun addCorrect(ids: List<Long>)
+
+    // v0.72 修正：v0.71 把「考過」也算進去了，全部重新算
+    @Query("UPDATE words SET testCount = 0")
+    suspend fun resetTestCounts()
 
     // 戰鬥模式答錯的字加一次錯誤
     @Query("UPDATE words SET wrongCount = wrongCount + 1 WHERE id IN (:ids)")

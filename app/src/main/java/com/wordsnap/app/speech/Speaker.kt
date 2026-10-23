@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.Voice
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -51,16 +52,46 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
         main.post { speaking = false }
     }
 
+    // 手機上品質最好的英文、中文聲音（找不到就用預設的）
+    private var englishVoice: Voice? = null
+    private var chineseVoice: Voice? = null
+
     override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) tts.setLanguage(Locale.US)
+        if (status == TextToSpeech.SUCCESS) {
+            tts.setLanguage(Locale.US)
+            val voices = runCatching { tts.voices }.getOrNull().orEmpty()
+                .filter { TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features }
+            englishVoice = bestVoice(voices.filter { it.locale.language == "en" && it.locale.country == "US" })
+            chineseVoice = bestVoice(voices.filter { it.locale.language == "zh" && it.locale.country == "TW" })
+                ?: bestVoice(voices.filter { it.locale.language == "zh" })
+            useEnglish()
+        }
         isReady = status == TextToSpeech.SUCCESS
         ready.complete(status == TextToSpeech.SUCCESS)
+    }
+
+    // 不需要網路的聲音裡品質最高的（沒網路也念得出來）；沒有才用需要網路的
+    private fun bestVoice(voices: List<Voice>): Voice? =
+        voices.sortedWith(compareBy<Voice> { it.isNetworkConnectionRequired }.thenByDescending { it.quality }).firstOrNull()
+
+    private fun useEnglish() {
+        val voice = englishVoice
+        if (voice == null || tts.setVoice(voice) != TextToSpeech.SUCCESS) tts.setLanguage(Locale.US)
+    }
+
+    private fun useChinese() {
+        val voice = chineseVoice
+        if (voice != null && tts.setVoice(voice) == TextToSpeech.SUCCESS) return
+        val result = tts.setLanguage(Locale.TRADITIONAL_CHINESE)
+        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            tts.setLanguage(Locale.CHINESE)
+        }
     }
 
     // 直接念一個英文單字（會打斷正在念的）
     fun speak(text: String) {
         if (!isReady) return
-        tts.setLanguage(Locale.US)
+        useEnglish()
         tts.setSpeechRate(1f)
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "speak-${nextId.incrementAndGet()}")
     }
@@ -68,14 +99,7 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
     // 念完才回來，用在朗讀模式一句接一句
     suspend fun say(text: String, chinese: Boolean = false, rate: Float = 1f) {
         if (!ready.await() || text.isBlank()) return
-        if (chinese) {
-            val result = tts.setLanguage(Locale.TRADITIONAL_CHINESE)
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                tts.setLanguage(Locale.CHINESE)
-            }
-        } else {
-            tts.setLanguage(Locale.US)
-        }
+        if (chinese) useChinese() else useEnglish()
         tts.setSpeechRate(rate)
         val id = "say-${nextId.incrementAndGet()}"
         val done = CompletableDeferred<Unit>()

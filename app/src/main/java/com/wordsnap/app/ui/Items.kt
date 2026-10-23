@@ -218,17 +218,18 @@ val IconBag = listOf(
 )
 
 
-// 戰鬥中打開的道具袋：列出擁有的道具，點一下就使用
+// 道具袋：列出擁有的道具（圖示、名稱、說明、數量）
+// 戰鬥中傳 onUse，點一下就使用；單字簿的「道具欄」只能看不能用
 @Composable
 fun ItemBagDialog(
     counts: Map<ItemType, Int>,
-    canUse: (ItemType) -> Boolean,
-    onUse: (ItemType) -> Unit,
     onDismiss: () -> Unit,
+    canUse: (ItemType) -> Boolean = { true },
+    onUse: ((ItemType) -> Unit)? = null,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("道具袋") },
+        title = { Text(if (onUse != null) "道具袋" else "道具欄") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 val owned = ItemType.entries.filter { (counts[it] ?: 0) > 0 }
@@ -236,10 +237,10 @@ fun ItemBagDialog(
                     Text("道具袋是空的。戰鬥勝利時有機會打開寶箱拿到道具！")
                 }
                 owned.forEach { type ->
-                    val enabled = canUse(type)
+                    val enabled = onUse == null || canUse(type)
                     Row(
                         Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.4f)
-                            .clickable(enabled = enabled) { onUse(type) },
+                            .clickable(enabled = enabled && onUse != null) { onUse?.invoke(type) },
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
@@ -366,6 +367,17 @@ fun DrawScope.drawAngels(t: Float, monster: Offset) {
             val r = 70.dp.toPx() * f
             drawRect(Color(0xFFF8D030).copy(alpha = 1f - f), Offset(monster.x + kotlin.math.cos(a) * r, monster.y + sin(a) * r), Size(cell * 2, cell * 2))
         }
+    }
+}
+
+// 畫一個村民（升級畫面的城鎮用）：bottom 是腳底的位置，cheering 時兩手舉高
+fun DrawScope.drawVillager(left: Float, bottom: Float, cell: Float, shirt: Char, cheering: Boolean) {
+    val top = bottom - VillagerArt.size * cell
+    drawSprite(VillagerArt, left, top, cell, recolor = mapOf('G' to shirt))
+    if (cheering) {
+        val skin = SpritePalette.getValue('S')
+        drawRect(skin, Offset(left + 1 * cell, top + 3 * cell), Size(cell, cell * 3))
+        drawRect(skin, Offset(left + 8 * cell, top + 3 * cell), Size(cell, cell * 3))
     }
 }
 

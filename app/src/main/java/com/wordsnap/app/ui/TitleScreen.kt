@@ -50,16 +50,20 @@ fun TitleScreen(
 ) {
     val context = LocalContext.current
     var musicOn by remember { mutableStateOf(isMusicOn(context)) }
-    LoopingMusic(R.raw.title_bgm, enabled = musicOn, volume = 0.6f)
+    // 每次進主畫面從 5 首裡隨機挑一首
+    val music = remember { TitleMusic.random() }
+    LoopingMusic(music, enabled = musicOn, volume = 0.6f)
+    // 依手機時間：早上 6 點到晚上 6 點是白天的城堡，其他時間是夜晚燈火通明的城堡
+    val night = remember { isNight() }
 
-    Box(Modifier.fillMaxSize().background(SceneGrass)) {
+    Box(Modifier.fillMaxSize().background(if (night) SceneGrassNight else SceneGrass)) {
         Column(Modifier.fillMaxSize()) {
             Box {
-                PixelArt(TitleSky, ScenePalette, Modifier.fillMaxWidth())
+                PixelArt(if (night) TitleSkyNight else TitleSky, ScenePalette, Modifier.fillMaxWidth())
                 TitleParty(Modifier.matchParentSize())
             }
             Box(Modifier.weight(1f))
-            PixelArt(TitleGround, ScenePalette, Modifier.fillMaxWidth())
+            PixelArt(if (night) TitleGroundNight else TitleGround, ScenePalette, Modifier.fillMaxWidth())
         }
 
         // 選單放在草地中間，不會擋到上方的城堡
@@ -95,6 +99,14 @@ fun TitleScreen(
             }
         }
     }
+}
+
+// 主畫面的背景音樂
+private val TitleMusic = listOf(R.raw.title_bgm, R.raw.title2_bgm, R.raw.title3_bgm, R.raw.hope_bgm, R.raw.load_bgm)
+
+private fun isNight(): Boolean {
+    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    return hour < 6 || hour >= 18
 }
 
 // 人物在原地做的小動作

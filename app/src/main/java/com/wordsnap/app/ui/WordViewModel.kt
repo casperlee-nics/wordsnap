@@ -37,6 +37,7 @@ private const val PREFS = "wordsnap"
 private const val KEY_PROFILE = "current_profile_id"
 private const val KEY_BOOK = "last_book_"
 private const val KEY_MEANING_CLEANUP = "meaning_cleanup_v1"
+private const val KEY_TESTCOUNT_RESET = "testcount_reset_v1"
 
 const val BATTLE_SIZE = 15
 private const val EXP_PER_WORD = 10
@@ -45,10 +46,10 @@ private const val EXP_PASS_BONUS = 50
 // 答對七成算通過
 fun passScore(total: Int): Int = (total * 7 + 9) / 10
 
-// exhausted：已經解鎖，但記住的字都考滿兩次了，沒有字可以出題
+// exhausted：記住的字都已經答對兩次了，只能進練習戰（經驗值 1/4、不掉道具）
 data class BattleUnlock(val unlocked: Boolean, val remembered: Int, val total: Int, val exhausted: Boolean = false)
 
-// 一個字在戰鬥中最多考幾次
+// 一個字在戰鬥中答對幾次後就不再出題
 const val MAX_TESTS = 2
 
 data class BattleReward(
@@ -66,7 +67,12 @@ data class BattleReward(
     val deaths: Int = 0,
     // 打開寶箱拿到的道具，沒掉寶箱是 null
     val item: ItemType? = null,
+    // 練習戰：經驗值只有 1/4、不會掉道具
+    val practice: Boolean = false,
 )
+
+// 練習戰的經驗值除以幾
+private const val PRACTICE_EXP_DIVISOR = 4
 
 // 打魔王的經驗值倍數：一般 1 倍、中魔王 2 倍、大魔王 3 倍
 private fun MonsterRank.expMultiplier(): Int = when (this) {
@@ -217,6 +223,10 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
+            if (!prefs.getBoolean(KEY_TESTCOUNT_RESET, false)) {
+                dao.resetTestCounts()
+                prefs.edit().putBoolean(KEY_TESTCOUNT_RESET, true).apply()
+            }
             cleanupMeaningsOnce()
             fillMissingMeaningsNow()
         }
@@ -307,16 +317,26 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         val inBook = allWords.value.filter { it.bookId == bookId }
         val remembered = inBook.count { it.box >= 1 }
         val unlocked = remembered >= BATTLE_SIZE || (inBook.isNotEmpty() && remembered == inBook.size)
-        val pool = inBook.count { it.isBattleReady() }
-        return BattleUnlock(unlocked && pool > 0, remembered, inBook.size, exhausted = unlocked && pool == 0)
+        val ready = inBook.count { it.isBattleReady() }
+        val any = inBook.count { it.canPractice() }
+        return BattleUnlock(unlocked && any > 0, remembered, inBook.size, exhausted = unlocked && any > 0 && ready == 0)
     }
 
-    // 可以出題的字：記住了、至少 3 個字母、考過不到兩次
-    private fun Word.isBattleReady() = box >= 1 && text.trim().length >= 3 && testCount < MAX_TESTS
+    // 練習戰也能出的字：記住了、至少 3 個字母
+    private fun Word.canPractice() = box >= 1 && text.trim().length >= 3
 
-    // 出題：從記住的字裡隨機挑最多 15 個，先挑沒考過的，不夠再隨機用考過一次的補
-    fun pickBattleWords(bookId: Long): List<Word> {
-        val pool = allWords.value.filter { it.bookId == bookId && it.isBattleReady() }
+    // 一般戰鬥出題的字：再加上答對不到兩次
+    private fun Word.isBattleReady() = canPractice() && testCount < MAX_TESTS
+
+    // 這本的字都答對兩次了：進戰鬥就是練習戰
+    fun isPracticeBattle(bookId: Long): Boolean {
+        val inBook = allWords.value.filter { it.bookId == bookId }
+        return inBook.none { it.isBattleReady() } && inBook.any { it.canPractice() }
+    }
+
+    // 出題：從記住的字裡隨機挑最多 15 個，先挑沒考過的，不夠再隨機用考過的補；練習戰從全部記住的字挑
+    fun pickBattleWords(bookId: Long, practice: Boolean = false): List<Word> {
+        val pool = allWords.value.filter { it.bookId == bookId && if (practice) it.canPractice() else it.isBattleReady() }
         val fresh = pool.filter { it.testedAt == null }.shuffled()
         val tested = pool.filter { it.testedAt != null }.shuffled()
         val picked = fresh.take(BATTLE_SIZE)
@@ -343,14 +363,16 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         total: Int,
         died: Boolean,
         monster: Monster,
+        practice: Boolean,
         onDone: (BattleReward) -> Unit,
     ) {
         val profile = currentProfile.value ?: return
         val correct = asked.size - wrong.size
         val passed = !died && correct >= passScore(total)
-        val gained = (correct * EXP_PER_WORD + if (passed) EXP_PASS_BONUS else 0) * monster.rank.expMultiplier()
-        // 勝利時有一半機率掉寶箱
-        val item = if (passed && Random.nextFloat() < CHEST_CHANCE) ItemType.roll() else null
+        val full = (correct * EXP_PER_WORD + if (passed) EXP_PASS_BONUS else 0) * monster.rank.expMultiplier()
+        val gained = if (practice) full / PRACTICE_EXP_DIVISOR else full
+        // 勝利時有一半機率掉寶箱；練習戰不會掉，避免一直刷道具
+        val item = if (passed && !practice && Random.nextFloat() < CHEST_CHANCE) ItemType.roll() else null
         val before = levelInfo(profile.exp).level
         val after = levelInfo(profile.exp + gained).level
         val forgotten = wrong.filter { it.wrongCount + 1 >= 2 && it.box >= 1 }.map { it.text }
@@ -358,6 +380,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
             val now = System.currentTimeMillis()
             db.withTransaction {
                 dao.markTested(asked.map { it.id }, now)
+                val wrongIds = wrong.map { it.id }.toSet()
+                dao.addCorrect(asked.map { it.id }.filter { it !in wrongIds })
                 if (wrong.isNotEmpty()) {
                     val ids = wrong.map { it.id }
                     dao.addWrong(ids)
@@ -379,7 +403,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             val deaths = profile.deaths + if (died) 1 else 0
-            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths, item))
+            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths, item, practice))
         }
     }
 

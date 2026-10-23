@@ -112,7 +112,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     // 戰鬥開始時的稱號階級，決定頭像和招式
     val tier = remember { avatarTier(levelInfo(profile?.exp ?: 0).level) }
     val bookName = books.firstOrNull { it.id == bookId }?.name ?: ""
-    val questions = remember { vm.pickBattleWords(bookId) }
+    // 這本的字都答對兩次了：練習戰，經驗值 1/4、不掉道具
+    val practice = remember { vm.isPracticeBattle(bookId) }
+    val questions = remember { vm.pickBattleWords(bookId, practice) }
     val monster = remember { vm.pickBattleMonster() }
     val isBoss = monster.rank != MonsterRank.Normal
     val scene = remember { ReviewScene.entries.random() }
@@ -136,7 +138,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var bonusHits by remember { mutableIntStateOf(0) }
     var itemUse by remember { mutableStateOf<ItemUse?>(null) }
     var showBag by remember { mutableStateOf(false) }
-    // 念單字的前後 0.5 秒把背景音樂停住
+    // 念單字的前後 0.5 秒把背景音樂調小聲
     var quiet by remember { mutableStateOf(false) }
     var sayJob by remember { mutableStateOf<Job?>(null) }
     // 結束動畫（打飛怪物或拖棺材）播完了，可以顯示結果
@@ -146,6 +148,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var levelUpDone by remember { mutableStateOf(false) }
     val leveledUp = reward?.let { it.levelAfter > it.levelBefore } == true
     val showingLevelUp = endShown && leveledUp && !levelUpDone
+    // 升級之後（沒升級就直接）播放寶箱動畫，最後才顯示戰鬥結果
+    var chestDone by remember { mutableStateOf(false) }
+    val showingChest = endShown && !showingLevelUp && reward?.item != null && !chestDone
 
     LoopingMusic(
         when (monster.rank) {
@@ -153,13 +158,13 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             MonsterRank.Mid -> R.raw.midboss_bgm
             MonsterRank.Normal -> R.raw.battle_bgm
         },
-        enabled = musicOn && introDone && !died && !showingLevelUp,
-        volume = 0.3f,
-        paused = quiet,
+        enabled = musicOn && introDone && !died && !showingLevelUp && !showingChest,
+        volume = if (quiet) 0.05f else 0.3f,
     )
     OneShotSound(R.raw.warning_jingle, play = isBoss && !introDone)
     OneShotSound(R.raw.death_jingle, play = died)
     OneShotSound(R.raw.levelup_jingle, play = showingLevelUp)
+    OneShotSound(R.raw.chest_jingle, play = showingChest)
 
     val total = questions.size
     val word = questions.getOrNull(index)
@@ -169,7 +174,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val knocked = finished && !died && total > 0 && monsterHp == 0
     val answering = introDone && !finished && word != null && result == null
 
-    // 念一次英文：先停住音樂 0.5 秒，念完再等 0.5 秒才放音樂
+    // 念一次英文：先把音樂調小聲 0.5 秒，念完再等 0.5 秒才調回來
     fun sayWord() {
         sayJob?.cancel()
         sayJob = scope.launch {
@@ -202,7 +207,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         result = null
         if (index + 1 >= total) {
             finished = true
-            vm.finishBattle(bookId, questions, wrong.toList(), total, died = false, monster) { reward = it }
+            vm.finishBattle(bookId, questions, wrong.toList(), total, died = false, monster, practice) { reward = it }
         } else {
             index++
         }
@@ -248,7 +253,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         if (heroHp <= 0) {
             died = true
             finished = true
-            vm.finishBattle(bookId, questions.take(index + 1), wrong.toList(), total, died = true, monster) { reward = it }
+            vm.finishBattle(bookId, questions.take(index + 1), wrong.toList(), total, died = true, monster, practice) { reward = it }
         } else {
             next()
         }
@@ -307,6 +312,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (practice && total > 0 && !finished) {
+                    Text("練習戰：經驗值 1/4，不會掉寶箱", style = MaterialTheme.typography.bodySmall)
+                }
                 if (total > 0 && !finished && isBoss) {
                     Text(
                         "${if (monster.rank == MonsterRank.Big) "大魔王" else "中魔王"}「${monster.name}」出現了！",
@@ -316,7 +324,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 }
                 when {
                     total == 0 -> {
-                        Text("這本單字簿還沒有可以出題的單字（至少 3 個字母、已記住、戰鬥考不到 $MAX_TESTS 次）")
+                        Text("這本單字簿還沒有可以出題的單字（至少 3 個字母、已記住）")
                         Button(onClick = onBack) { Text("回單字本") }
                     }
                     died -> {
@@ -353,16 +361,19 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     if (showBag) {
         ItemBagDialog(
             counts = items,
+            onDismiss = { showBag = false },
             canUse = { type -> answering && (type.heal == 0 || damage > 0) },
             onUse = ::useItem,
-            onDismiss = { showBag = false },
         )
     }
 
     val done = reward
     if (endShown && done != null) {
+        val chestItem = done.item
         if (showingLevelUp) {
             LevelUpScreen(avatar, race, done.levelBefore, done.levelAfter, onClose = { levelUpDone = true })
+        } else if (showingChest && chestItem != null) {
+            ChestScreen(chestItem, onClose = { chestDone = true })
         } else {
             ResultDialog(done, monster, race, knocked, onClose = onBack)
         }
@@ -951,6 +962,7 @@ private fun ResultDialog(reward: BattleReward, monster: Monster, race: Race, kno
                 }
                 Text("答對 ${reward.correct} / ${reward.total}（${passScore(reward.total)} 題以上通過）")
                 Text("得到經驗值 +${reward.exp}${if (monster.rank != MonsterRank.Normal) "（魔王加倍）" else ""}")
+                if (reward.practice) Text("練習戰：經驗值只有 1/4，不會掉寶箱", style = MaterialTheme.typography.bodySmall)
                 reward.item?.let { item ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         PixelArt(item.icon, ItemPalette, Modifier.size(32.dp))
@@ -992,6 +1004,9 @@ private fun LevelUpScreen(hero: Avatar, race: Race, before: Int, after: Int, onC
     val oldTitle = race.title(before)
     val newTitle = race.title(after)
     val oldTier = avatarTier(before)
+    // 背景隨機：城堡、歡呼的城鎮、怪物逃竄的黑暗森林
+    val backdrop = remember { LevelUpBackdrop.entries.random() }
+    val fleeing = remember { NormalMonsters.shuffled().take(5) }
     val newTier = avatarTier(after)
     var shown by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
@@ -1008,24 +1023,35 @@ private fun LevelUpScreen(hero: Avatar, race: Race, before: Int, after: Int, onC
     val blink by anim.animateFloat(
         0f, 1f, infiniteRepeatable(tween(400, easing = LinearEasing), RepeatMode.Restart), label = "blink",
     )
+    // 怪物慢慢跑過整個畫面
+    val roam by anim.animateFloat(
+        0f, 1f, infiniteRepeatable(tween(8000, easing = LinearEasing), RepeatMode.Restart), label = "roam",
+    )
     // 閃閃發亮的星星
     val twinkle by anim.animateFloat(
         0f, 8f, infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Restart), label = "twinkle",
     )
 
     Dialog(onDismissRequest = { }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Box(Modifier.fillMaxSize().background(SceneGrass)) {
+        Box(Modifier.fillMaxSize().background(backdrop.ground)) {
             Box(Modifier.fillMaxWidth()) {
-                PixelArt(TitleSky, ScenePalette, Modifier.fillMaxWidth())
+                PixelArt(backdrop.art, ScenePalette, Modifier.fillMaxWidth())
                 Canvas(Modifier.matchParentSize()) {
-                    val cell = size.width / TitleSky.first().length
-                    val step = twinkle.toInt()
-                    LevelUpStars.forEachIndexed { i, (x, y) ->
-                        if ((i + step) % 3 != 0) {
-                            val c = if ((i + step) % 2 == 0) PixelGold else Color.White
-                            drawRect(c, Offset(x * cell, y * cell), Size(cell, cell))
-                            drawRect(c.copy(alpha = 0.6f), Offset((x - 1) * cell, y * cell), Size(cell * 3, cell * 0.5f))
+                    val cell = size.width / backdrop.art.first().length
+                    when (backdrop) {
+                        // 城堡：天空閃閃發亮的星星
+                        LevelUpBackdrop.Castle -> {
+                            val step = twinkle.toInt()
+                            LevelUpStars.forEachIndexed { i, (x, y) ->
+                                if ((i + step) % 3 != 0) {
+                                    val c = if ((i + step) % 2 == 0) PixelGold else Color.White
+                                    drawRect(c, Offset(x * cell, y * cell), Size(cell, cell))
+                                    drawRect(c.copy(alpha = 0.6f), Offset((x - 1) * cell, y * cell), Size(cell * 3, cell * 0.5f))
+                                }
+                            }
                         }
+                        LevelUpBackdrop.Town -> drawCheeringTown(twinkle / 8f, cell)
+                        LevelUpBackdrop.Forest -> drawFleeingMonsters(roam, cell, fleeing)
                     }
                 }
             }
@@ -1071,6 +1097,52 @@ private fun LevelUpScreen(hero: Avatar, race: Race, before: Int, after: Int, onC
                 }
             }
         }
+    }
+}
+
+// 升級畫面的背景；ground 是背景圖下方空白處的顏色
+private enum class LevelUpBackdrop(val art: List<String>, val ground: Color) {
+    Castle(TitleSky, SceneGrass),
+    Town(ReviewScene.TownInside.art, ScenePalette.getValue('M')),
+    Forest(DarkForest, ScenePalette.getValue('i')),
+}
+
+// 城鎮：村民們一跳一跳地歡呼，彩色紙花往下飄（t 從 0 到 1 一直循環）
+private fun DrawScope.drawCheeringTown(t: Float, cell: Float) {
+    val ground = size.height - cell
+    val shirts = listOf('G', 'R', 'B', 'O', 'p', 'y', 'k')
+    for (i in 0 until 7) {
+        val x = (3 + i * 9) * cell
+        // 每個人錯開時間跳
+        val jump = if (((t * 16).toInt() + i) % 2 == 0) 0f else cell * 2
+        drawVillager(x, ground - jump, cell * 0.8f, shirts[i % shirts.size], cheering = jump > 0f)
+    }
+    val colors = listOf(Color(0xFFE04030), Color(0xFFF8D030), Color(0xFF3A58C8), Color(0xFF40A048), Color.White)
+    for (k in 0 until 30) {
+        val x = ((k * 37) % 64) * cell
+        val y = (((k * 13) % 28) + t * 28 * 2) % 28 * cell
+        drawRect(colors[k % colors.size], Offset(x, y), Size(cell * 0.8f, cell * 0.8f))
+    }
+}
+
+// 黑暗森林：怪物們嚇得往右邊逃跑
+private fun DrawScope.drawFleeingMonsters(t: Float, cell: Float, monsters: List<Monster>) {
+    val ground = size.height - cell
+    monsters.forEachIndexed { i, monster ->
+        val small = cell * 0.5f
+        val w = monster.art.first().length * small
+        val h = monster.art.size * small
+        val span = size.width + w * 2
+        val x = ((t + i * 0.2f) % 1f) * span - w
+        val hop = if (((t * 24).toInt() + i) % 2 == 0) 0f else cell
+        monster.art.forEachIndexed { y, row ->
+            row.forEachIndexed { cx, ch ->
+                val color = ScenePalette[ch] ?: return@forEachIndexed
+                drawRect(color, Offset(x + cx * small, ground - h - hop + y * small), Size(small + 0.5f, small + 0.5f))
+            }
+        }
+        // 逃跑時冒出的汗滴
+        drawRect(Color(0xFF90D0F8), Offset(x - small * 2, ground - h - hop), Size(small * 2, small * 3))
     }
 }
 
