@@ -5,6 +5,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,30 +22,27 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -50,8 +52,10 @@ import com.wordsnap.app.ocr.DocumentText
 import com.wordsnap.app.ocr.ScanResult
 import com.wordsnap.app.ocr.TextScanner
 import com.wordsnap.app.translate.WordDictionary
-import com.wordsnap.app.ui.theme.pixelTopBarColors
 import java.io.File
+import kotlin.math.PI
+import kotlin.math.floor
+import kotlin.math.sin
 import kotlinx.coroutines.launch
 
 // 加單字的三種來源
@@ -150,15 +154,7 @@ fun ScanScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("捕捉怪物") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                    }
-                },
-                colors = pixelTopBarColors(),
-            )
+            PixelHeader("捕捉怪物", onBack, theme = HeaderTheme.HuntNet)
         },
     ) { padding ->
         Column(
@@ -167,21 +163,20 @@ fun ScanScreen(
         ) {
             // 找完之後可以用同一種方式再找一次（取消就回到加單字選單）
             if (found != null && !scanning) {
-                PixelOutlinedButton(onClick = {
+                RetroButton(
                     when (source) {
-                        ScanSource.Camera -> showAimHint = true
-                        ScanSource.Gallery -> openGallery()
-                        ScanSource.Pdf -> openPdf()
-                    }
-                }) {
-                    Text(
+                        ScanSource.Camera -> "再拍一張"
+                        ScanSource.Gallery -> "換一張圖"
+                        ScanSource.Pdf -> "換一本古書"
+                    },
+                    onClick = {
                         when (source) {
-                            ScanSource.Camera -> "再拍一張"
-                            ScanSource.Gallery -> "換一張圖"
-                            ScanSource.Pdf -> "換一本古書"
-                        },
-                    )
-                }
+                            ScanSource.Camera -> showAimHint = true
+                            ScanSource.Gallery -> openGallery()
+                            ScanSource.Pdf -> openPdf()
+                        }
+                    },
+                )
             }
 
             when {
@@ -201,11 +196,16 @@ fun ScanScreen(
                     val selectable = words.filter { it !in existing }
                     val allSelected = selectable.isNotEmpty() && selected.size == selectable.size
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("要新增的怪物（找到 ${words.size} 隻）", Modifier.weight(1f))
-                        TextButton(onClick = {
-                            selected.clear()
-                            if (!allSelected) selected.addAll(selectable)
-                        }, enabled = selectable.isNotEmpty()) { Text(if (allSelected) "全不選" else "全選") }
+                        Text("要新增的怪物", Modifier.weight(1f))
+                        RetroButton(
+                            if (allSelected) "全不選" else "全選",
+                            onClick = {
+                                selected.clear()
+                                if (!allSelected) selected.addAll(selectable)
+                            },
+                            enabled = selectable.isNotEmpty(),
+                            textStyle = MaterialTheme.typography.labelLarge,
+                        )
                     }
                     if (skipped > 0) {
                         Text("已略過 $skipped 個常見字（如 the、and、is）", style = MaterialTheme.typography.bodySmall)
@@ -231,14 +231,7 @@ fun ScanScreen(
                                 )
                             }
                         }
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                        ) {
-                            Monsters.forEach { art ->
-                                PixelArt(art, ScenePalette, Modifier.size(30.dp))
-                            }
-                        }
+                        LurkingMonsters(Modifier.fillMaxWidth().padding(horizontal = 12.dp))
                     }
                     BookPicker(
                         books = books,
@@ -247,12 +240,15 @@ fun ScanScreen(
                         onCreate = { name -> onCreateBook(name) { id -> targetBookId = id } },
                         label = "存到：",
                         allowAll = false,
+                        // 和單字簿右上角的冒險日誌按鈕同一種樣子
+                        onTopBar = true,
                     )
-                    Button(
+                    RetroButton(
+                        "加入單字本（${selected.size}）",
                         onClick = { onAdd(selected.toList(), targetBookId) },
                         enabled = selected.isNotEmpty(),
                         modifier = Modifier.fillMaxWidth(),
-                    ) { Text("加入單字本（${selected.size}）") }
+                    )
                 }
             }
         }
@@ -283,4 +279,40 @@ private fun newPhotoUri(context: Context): Uri {
     val dir = File(context.cacheDir, "photos").apply { mkdirs() }
     val file = File(dir, "scan.jpg")
     return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+}
+
+// 選字框上緣的 10 隻小怪物：每次隨機挑，各自一格一格跳、左右張望
+@Composable
+private fun LurkingMonsters(modifier: Modifier = Modifier) {
+    val cast = remember { NormalMonsters.shuffled().take(10).map { it.art } }
+    val time by rememberInfiniteTransition(label = "lurk").animateFloat(
+        0f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing)), label = "time",
+    )
+    Row(modifier, horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
+        cast.forEachIndexed { i, art ->
+            Box(Modifier.size(28.dp), contentAlignment = Alignment.BottomCenter) {
+                PixelArt(
+                    art,
+                    ScenePalette,
+                    Modifier.fillMaxWidth().graphicsLayer {
+                        // 每隻錯開，不會一起動
+                        val p = (time + i * 0.137f) % 1f
+                        transformOrigin = TransformOrigin(0.5f, 1f)
+                        when (i % 3) {
+                            // 一格一格往上跳
+                            0 -> translationY = -floor(sin(p * PI.toFloat()) * 2.99f) * 2.dp.toPx()
+                            // 左看看右看看
+                            1 -> scaleX = if (p < 0.5f) 1f else -1f
+                            // 壓扁再彈起來
+                            else -> {
+                                val sq = if (p < 0.3f) 0.85f else 1f
+                                scaleY = sq
+                                scaleX = 2f - sq
+                            }
+                        }
+                    },
+                )
+            }
+        }
+    }
 }

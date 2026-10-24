@@ -75,6 +75,8 @@ enum class HeaderTheme(val text: Color, val draw: DrawScope.() -> Unit) {
     Banner(Color(0xFFF8F0D8), { drawBanner() }),
     // 記錄管理：深褐皮革，邊緣有一圈縫線＋米黃字
     Leather(Color(0xFFF8E0A8), { drawLeather() }),
+    // 捕捉怪物：琥珀色獵人帆布，上面罩著一張斜斜的捕獸網＋深褐色字
+    HuntNet(Color(0xFF2A1808), { drawHuntNet() }),
 }
 
 // 戰鬥、朗讀、複習、記錄管理畫面上方的標題：依 theme 換底色，外面一圈深色木紋框
@@ -330,8 +332,11 @@ fun RetroButtonWithIcon(
     modifier: Modifier = Modifier,
     textStyle: TextStyle = MaterialTheme.typography.labelLarge,
     palette: Map<Char, Color> = ColorIconPalette,
+    // 標題列上空間比較矮，可以把按鈕調矮一點
+    height: Dp = 48.dp,
+    iconSize: Dp = 26.dp,
 ) {
-    RetroButtonFrame(onClick, modifier, true) { lift ->
+    RetroButtonFrame(onClick, modifier, true, height) { lift ->
         Row(
             Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).padding(start = 12.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -344,7 +349,7 @@ fun RetroButtonWithIcon(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            PixelArt(icon, palette, Modifier.padding(start = 4.dp).size(26.dp))
+            PixelArt(icon, palette, Modifier.padding(start = 4.dp).size(iconSize))
         }
     }
 }
@@ -368,6 +373,7 @@ private fun RetroButtonFrame(
     onClick: () -> Unit,
     modifier: Modifier,
     enabled: Boolean,
+    height: Dp = 48.dp,
     content: @Composable (lift: Dp) -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -375,7 +381,7 @@ private fun RetroButtonFrame(
     val lift = if (pressed) 0.dp else 3.dp
     Box(
         modifier
-            .height(48.dp)
+            .height(height)
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
             .drawBehind {
@@ -519,6 +525,44 @@ private val StoneMortar = Color(0xFF26282E)
 private val StoneColors = listOf(Color(0xFF50545E), Color(0xFF5A5E68), Color(0xFF464A54), Color(0xFF545864))
 private val StoneLight = Color(0xFF6E727C)
 private val StoneSpeck = Color(0xFF3A3D45)
+// 捕獸網：琥珀色帆布底，兩個方向的斜線交叉成網，交叉點打一個繩結
+private fun DrawScope.drawHuntNet() {
+    drawRect(NetCanvas)
+    val px = 2.dp.toPx()
+    val step = px * 8
+    // 帆布的橫向織紋
+    var y = px
+    while (y < size.height) {
+        drawRect(NetCanvasLight, Offset(0f, y), Size(size.width, px * 0.5f + 0.5f))
+        y += px * 3
+    }
+    // 網線：一格一格畫成像素斜線
+    var start = -size.height
+    while (start < size.width + size.height) {
+        var k = 0f
+        while (k < size.height) {
+            drawRect(NetRope, Offset(start + k, k), Size(px, px))
+            drawRect(NetRope, Offset(start + size.height - k, k), Size(px, px))
+            k += px
+        }
+        start += step
+    }
+    // 繩結：兩個方向的網線交叉的地方
+    val starts = generateSequence(-size.height) { it + step }.takeWhile { it < size.width + size.height }.toList()
+    for (a in starts) {
+        for (b in starts) {
+            val ky = (b + size.height - a) / 2f
+            if (ky < 0f || ky > size.height) continue
+            drawRect(NetKnot, Offset(a + ky - px / 2, ky - px / 2), Size(px * 2, px * 2))
+        }
+    }
+}
+
+private val NetCanvas = Color(0xFFD9A54E)
+private val NetCanvasLight = Color(0xFFE6BA6A)
+private val NetRope = Color(0xFF8A5A22)
+private val NetKnot = Color(0xFF5C3A14)
+
 private val TapestryBase = Color(0xFF5E1A26)
 private val TapestryDark = Color(0xFF4A121C)
 private val TapestryGold = Color(0xFFB8883A)

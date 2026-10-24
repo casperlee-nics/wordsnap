@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -127,26 +126,20 @@ private fun RenameDialog(profile: Profile, onDismiss: () -> Unit, onRename: (Str
         onDismissRequest = onDismiss,
         title = { Text("改名字") },
         text = {
-            val message = error
-            OutlinedTextField(
-                value = name,
-                onValueChange = {
-                    name = it.take(12)
-                    error = null
-                },
-                label = { Text("新的名字") },
-                singleLine = true,
-                isError = message != null,
-                supportingText = if (message != null) {
-                    { Text(message) }
-                } else {
-                    null
-                },
-            )
+            // 和新冒險一樣：寫在羊皮書卷上，右邊蓋章確認
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ScrollNameInput(
+                    value = name,
+                    onValueChange = {
+                        name = it.take(12)
+                        error = null
+                    },
+                    placeholder = "寫下新的名字",
+                    onConfirm = { onRename(name.trim()) { error = it } },
+                )
+                error?.let { Text(it, color = PixelRed, style = MaterialTheme.typography.bodyMedium) }
+            }
         },
-        confirmButton = {
-            TextButton(onClick = { onRename(name) { error = it } }, enabled = name.isNotBlank()) { Text("確定") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     )
 }

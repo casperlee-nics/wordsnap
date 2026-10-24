@@ -15,25 +15,23 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.draw.alpha
-import kotlinx.coroutines.Job
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,14 +42,19 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -71,12 +74,13 @@ import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelRed
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.math.floor
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.sin
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // 怪物每一格像素的大小
 private val Cell = 4.dp
@@ -432,23 +436,11 @@ private fun Question(
 ) {
     // 空白的輸入框，聽發音拼出整個單字；答錯時框裡直接換成正確答案（紅字），不會被鍵盤擋住
     val wrong = result == false
-    OutlinedTextField(
+    SpellSlab(
         value = if (wrong) answer else input,
         onValueChange = onInput,
-        readOnly = result != null,
-        singleLine = true,
-        textStyle = MaterialTheme.typography.displaySmall.copy(
-            textAlign = TextAlign.Center,
-            color = if (wrong) PixelRed else MaterialTheme.colorScheme.onSurface,
-        ),
-        keyboardOptions = KeyboardOptions(
-            capitalization = KeyboardCapitalization.None,
-            autoCorrectEnabled = false,
-            keyboardType = KeyboardType.Ascii,
-            imeAction = ImeAction.Done,
-        ),
-        keyboardActions = KeyboardActions(onDone = { if (wrong) onNext() else onSubmit() }),
-        modifier = Modifier.fillMaxWidth(),
+        result = result,
+        onDone = { if (wrong) onNext() else onSubmit() },
     )
     // 左下：大聲公再聽一次；中間：道具袋；右下：劍攻擊，答錯後換成向右箭頭「下一回」
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -1265,3 +1257,107 @@ private fun DrawScope.drawFleeingMonsters(t: Float, cell: Float, monsters: List<
 private val LevelUpStars = listOf(
     3 to 2, 12 to 6, 20 to 1, 26 to 4, 40 to 2, 47 to 7, 58 to 1, 61 to 6, 8 to 9, 33 to 8, 52 to 10, 17 to 11,
 )
+
+// 戰鬥的輸入框：一塊刻著金框的黑石板，左上角掛著「咒語」小牌，四個角鑲著寶石；
+// 打字時字會發出藍光，答對變金色、答錯變紅色，石板外圈的光跟著一閃一閃
+@Composable
+private fun SpellSlab(value: String, onValueChange: (String) -> Unit, result: Boolean?, onDone: () -> Unit) {
+    val glow by rememberInfiniteTransition(label = "slab").animateFloat(
+        0f, 1f, infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Reverse), label = "glow",
+    )
+    val tint = when (result) {
+        true -> SpellGold
+        false -> SpellRed
+        null -> SpellBlue
+    }
+    Box(Modifier.fillMaxWidth().padding(top = 10.dp)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(84.dp)
+                .drawBehind { drawSpellSlab(tint, if (result == null && value.isEmpty()) glow else 1f) }
+                .padding(horizontal = 22.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (value.isEmpty()) {
+                Text("聽發音，拼出咒語", color = SpellHint, style = MaterialTheme.typography.titleMedium)
+            }
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                readOnly = result != null,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.displaySmall.copy(
+                    textAlign = TextAlign.Center,
+                    color = tint,
+                    shadow = Shadow(tint.copy(alpha = 0.8f), blurRadius = 12f),
+                ),
+                cursorBrush = SolidColor(SpellBlue),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrectEnabled = false,
+                    keyboardType = KeyboardType.Ascii,
+                    imeAction = ImeAction.Done,
+                ),
+                keyboardActions = KeyboardActions(onDone = { onDone() }),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        // 左上角的小木牌
+        Text(
+            "咒語",
+            color = Color(0xFFFFE8A8),
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier
+                .offset(x = 16.dp, y = (-10).dp)
+                .background(Color(0xFF5A381C))
+                .border(2.dp, PixelInk)
+                .padding(horizontal = 8.dp, vertical = 1.dp),
+        )
+    }
+}
+
+private fun DrawScope.drawSpellSlab(tint: Color, glow: Float) {
+    val px = 3.dp.toPx()
+    val w = size.width
+    val h = size.height
+    // 外圈發光
+    drawRect(tint.copy(alpha = 0.15f + 0.25f * glow), Offset(-px, -px), Size(w + px * 2, h + px * 2))
+    // 缺角的黑框
+    drawRect(PixelInk, Offset(px, 0f), Size(w - px * 2, h))
+    drawRect(PixelInk, Offset(0f, px), Size(w, h - px * 2))
+    // 金框：左上亮、右下暗
+    drawRect(SlabGoldDark, Offset(px, px), Size(w - px * 2, h - px * 2))
+    drawRect(SlabGold, Offset(px, px), Size(w - px * 3, h - px * 3))
+    drawRect(SlabGoldLight, Offset(px, px), Size(w - px * 3, px))
+    drawRect(SlabGoldLight, Offset(px, px), Size(px, h - px * 3))
+    // 黑石板本體，有一塊一塊的石紋
+    val inset = px * 3
+    drawRect(PixelInk, Offset(inset - px, inset - px), Size(w - inset * 2 + px * 2, h - inset * 2 + px * 2))
+    drawRect(SlabStone, Offset(inset, inset), Size(w - inset * 2, h - inset * 2))
+    val random = java.util.Random(7)
+    repeat(((w / px) / 3).toInt()) {
+        val x = inset + random.nextFloat() * (w - inset * 2 - px * 2)
+        val y = inset + random.nextFloat() * (h - inset * 2 - px)
+        drawRect(if (random.nextBoolean()) SlabStoneLight else SlabStoneDark, Offset(x, y), Size(px * (1 + random.nextInt(3)), px * 0.7f))
+    }
+    // 寫咒語的發光底線
+    drawRect(tint.copy(alpha = 0.35f + 0.4f * glow), Offset(inset + px * 4, h - inset - px * 3), Size(w - inset * 2 - px * 8, px * 0.7f))
+    // 四個角的寶石
+    for ((cx, cy) in listOf(px * 1.5f to px * 1.5f, w - px * 4.5f to px * 1.5f, px * 1.5f to h - px * 4.5f, w - px * 4.5f to h - px * 4.5f)) {
+        drawRect(PixelInk, Offset(cx, cy), Size(px * 3, px * 3))
+        drawRect(tint, Offset(cx + px * 0.5f, cy + px * 0.5f), Size(px * 2, px * 2))
+        drawRect(Color.White.copy(alpha = 0.8f), Offset(cx + px * 0.5f, cy + px * 0.5f), Size(px * 0.8f, px * 0.8f))
+    }
+}
+
+private val SpellBlue = Color(0xFF8CE8FF)
+private val SpellGold = Color(0xFFF8D030)
+private val SpellRed = Color(0xFFFF6A5A)
+private val SpellHint = Color(0xFF7A86A0)
+private val SlabStone = Color(0xFF262838)
+private val SlabStoneLight = Color(0xFF363A50)
+private val SlabStoneDark = Color(0xFF1A1C28)
+private val SlabGold = Color(0xFFC89A3A)
+private val SlabGoldLight = Color(0xFFF0D080)
+private val SlabGoldDark = Color(0xFF7A5418)

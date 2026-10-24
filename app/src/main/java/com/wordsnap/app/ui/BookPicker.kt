@@ -8,7 +8,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,7 +47,10 @@ fun BookPicker(
                 "$label$current",
                 IconBookList,
                 onClick = { expanded = true },
-                modifier = Modifier.widthIn(max = 190.dp),
+                modifier = Modifier.widthIn(max = 180.dp),
+                // 比一般按鈕矮一點，不會壓到標題列的外框
+                height = 40.dp,
+                iconSize = 22.dp,
             )
         } else {
             PixelOutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }
@@ -106,15 +108,15 @@ private fun NewBookDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text("新增冒險日誌") },
         text = {
-            OutlinedTextField(
+            // 和新冒險一樣：寫在羊皮書卷上，右邊蓋章確認
+            ScrollNameInput(
                 value = name,
                 onValueChange = { name = it.take(16) },
-                label = { Text("名稱，例如：課本、多益") },
-                singleLine = true,
+                placeholder = "例如：課本、多益",
+                onConfirm = { onCreate(name.trim()) },
             )
         },
-        confirmButton = { TextButton(onClick = { onCreate(name) }, enabled = name.isNotBlank()) { Text("建立") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     )
 }
 
