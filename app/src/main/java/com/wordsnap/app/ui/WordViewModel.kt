@@ -43,7 +43,8 @@ private const val KEY_BOOK = "last_book_"
 private const val KEY_MEANING_CLEANUP = "meaning_cleanup_v1"
 private const val KEY_TESTCOUNT_RESET = "testcount_reset_v1"
 
-const val BATTLE_SIZE = 15
+// 記住 10 個字就能戰鬥，每場最多 10 題
+const val BATTLE_SIZE = 10
 // 每場最少 5 題，能出的字不夠時用已經記住的字補
 private const val MIN_BATTLE_SIZE = 5
 private const val EXP_PER_WORD = 10
@@ -126,6 +127,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     // 轉職：換成別的職業（種族），等級降 10 級
     fun changeClass(profile: Profile, avatar: Avatar) {
         if (levelInfo(profile.exp).level < CLASS_CHANGE_MIN_LEVEL) return
+        // 不能轉成和現在一樣的職業
+        if (Avatar.from(profile.avatar) == avatar) return
         viewModelScope.launch { profileDao.changeClass(profile.id, avatar.name, expAfterClassChange(profile.exp)) }
     }
 
@@ -255,7 +258,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 prefs.edit().putBoolean(KEY_TESTCOUNT_RESET, true).apply()
             }
             cleanupMeaningsOnce()
-            // 目前的語言是日文、韓文，字典包有新版（或還沒裝）就先裝好，才查得到解釋
+            // 目前的語言是日文，字典包有新版（或還沒裝）就先裝好，才查得到解釋
             DictionaryPacks.install(getApplication(), appLanguage(getApplication()))
             fillMissingMeaningsNow()
         }
@@ -340,7 +343,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     // ---- 戰鬥模式 ----
 
-    // 這本單字簿的戰鬥模式是否解鎖：記住 15 個字，或整本都記住過
+    // 這本單字簿的戰鬥模式是否解鎖：記住 10 個字，或整本都記住過
     fun battleUnlock(bookId: Long?): BattleUnlock {
         if (bookId == null) return BattleUnlock(false, 0, 0)
         val inBook = allWords.value.filter { it.bookId == bookId }
@@ -363,7 +366,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         return inBook.none { it.isBattleReady() } && inBook.any { it.canPractice() }
     }
 
-    // 出題：從記住的字裡隨機挑最多 15 個，先挑沒考過的，不夠再隨機用考過的補；練習戰從全部記住的字挑
+    // 出題：從記住的字裡隨機挑最多 10 個，先挑沒考過的，不夠再隨機用考過的補；練習戰從全部記住的字挑
     // 少於 5 題時，隨機用已經記住的字補到 5 題
     fun pickBattleWords(bookId: Long, practice: Boolean = false): List<Word> {
         val pool = allWords.value.filter { it.bookId == bookId && if (practice) it.canPractice() else it.isBattleReady() }

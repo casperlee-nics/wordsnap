@@ -10,21 +10,19 @@ import com.google.mlkit.nl.translate.TranslateLanguage
 import java.util.Locale
 
 // 遊戲可以選的語言：介面文字和單字解釋都會換成這個語言
-// 介面文字放在 res/values（中文）、values-ja（日文）、values-ko（韓文）
+// 介面文字放在 res/values（中文）、values-ja（日文）
 enum class AppLanguage(val tag: String, val nativeName: String, val translateTarget: String) {
     Chinese("zh-TW", "中文", TranslateLanguage.CHINESE),
-    Japanese("ja", "日本語", TranslateLanguage.JAPANESE),
-    Korean("ko", "한국어", TranslateLanguage.KOREAN);
+    Japanese("ja", "日本語", TranslateLanguage.JAPANESE);
 
     val locale: Locale get() = Locale.forLanguageTag(tag)
 
     companion object {
-        // 手機系統是日文或韓文就用日文、韓文，其他都用中文
+        // 手機系統是日文就用日文，其他都用中文
         fun fromSystem(): AppLanguage {
             val system = Resources.getSystem().configuration.locales[0].language
             return when (system) {
                 "ja" -> Japanese
-                "ko" -> Korean
                 else -> Chinese
             }
         }

@@ -17,7 +17,7 @@ import kotlinx.coroutines.tasks.await
 // 翻譯檔的狀態，給畫面顯示提示用
 enum class ModelStatus { Unknown, Downloading, Ready, Failed }
 
-// 字典查不到的字，用 ML Kit 把英文翻成遊戲選的語言（中文、日文、韓文）
+// 字典查不到的字，用 ML Kit 把英文翻成遊戲選的語言（中文、日文）
 // ML Kit 中文只會翻成簡體，再用系統內建的轉換器轉成繁體
 object WordTranslator {
     private var translator: Translator? = null

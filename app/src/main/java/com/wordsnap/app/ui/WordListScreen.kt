@@ -332,7 +332,7 @@ private fun TranslatorBanner(status: ModelStatus, onRetry: () -> Unit) {
     }
 }
 
-// 單字本下方的按鈕列；單字簿記住 15 個字或整本都記住，「戰鬥」就會亮起來
+// 單字本下方的按鈕列；單字簿記住 10 個字或整本都記住，「戰鬥」就會亮起來
 @Composable
 private fun BottomActions(
     onListen: () -> Unit,

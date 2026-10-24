@@ -7,8 +7,8 @@ import java.io.InputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-// 日文、韓文的字典包：英文單字 → 日文／韓文解釋
-// 中文解釋在內建的 ecdict.db；日文、韓文切換語言時才「下載」安裝到手機裡
+// 日文字典包：英文單字 → 日文解釋
+// 中文解釋在內建的 ecdict.db；日文切換語言時才「下載」安裝到手機裡
 //
 // 字典包是一個 SQLite 檔，只要一個表：
 //   CREATE TABLE dict (word TEXT PRIMARY KEY, meaning TEXT NOT NULL)
@@ -16,11 +16,11 @@ import kotlinx.coroutines.withContext
 // 過去式、複數這類變化形和片語清單共用 ecdict.db 的 forms、phrases 表，不用放在字典包裡
 //
 // 字典包從哪裡來由 DictionarySource 決定：
-// - 現在（開發測試）：直接打包在 App 的 assets/dict/ja.db、assets/dict/ko.db
+// - 現在（開發測試）：直接打包在 App 的 assets/dict/ja.db
 // - 上架時：改成 Google Play 的按需下載資源包（Play Asset Delivery），一個語言一包，只要換掉 source
 object DictionaryPacks {
     // 換新版字典包時把版本加一，App 會重新安裝
-    private val VERSION = mapOf(AppLanguage.Japanese to 2, AppLanguage.Korean to 2)
+    private val VERSION = mapOf(AppLanguage.Japanese to 2)
 
     var source: DictionarySource = BundledAssetSource
 

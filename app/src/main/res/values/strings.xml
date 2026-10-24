@@ -158,7 +158,7 @@
     <string name="help_review_title">複習與朗讀</string>
     <string name="help_review">「複習」用翻卡的方式練習，記得就按燈泡、不記得按問號，記住的字會隔幾天再出現。「朗讀」會自動依序念出英文和中文解釋。每天晚上 8 點會提醒你複習。</string>
     <string name="help_battle_title">戰鬥</string>
-    <string name="help_battle">一本單字簿記住 15 個字（或整本都記住）就能戰鬥。聽發音拼出單字，答對攻擊怪物、答錯被打掉 HP。最後把怪物的血打光就能打倒牠；HP 歸零會被拖回教堂。每場 5～15 題，答對 2 次的字就不再出題。</string>
+    <string name="help_battle">一本單字簿記住 10 個字（或整本都記住）就能戰鬥。聽發音拼出單字，答對攻擊怪物、答錯被打掉 HP。最後把怪物的血打光就能打倒牠；HP 歸零會被拖回教堂。每場 5～10 題，答對 2 次的字就不再出題。</string>
     <string name="help_level_title">等級、轉職與道具</string>
     <string name="help_level">戰鬥拿到經驗值會升級，每 10 級換一個稱號，頭像和必殺技也會變強。超過 10 級可以在「人物能力」轉職成別的職業，但會降 10 級。戰鬥勝利有機會開到寶箱，道具在戰鬥中從道具袋使用。</string>
     <string name="help_boss_title">魔王</string>

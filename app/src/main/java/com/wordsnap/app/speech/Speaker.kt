@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 
-// 用手機內建的文字轉語音念英文單字，也可以念解釋（依遊戲語言：中文、日文或韓文）
+// 用手機內建的文字轉語音念英文單字，也可以念解釋（依遊戲語言：中文或日文）
 class Speaker(context: Context) : TextToSpeech.OnInitListener {
     private val tts = TextToSpeech(context.applicationContext, this)
     private val language = appLanguage(context)
@@ -113,7 +113,7 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
     }
 
     // 念完才回來，用在朗讀模式一句接一句
-    // meaning 為 true 時用解釋的語言念（中文、日文或韓文）
+    // meaning 為 true 時用解釋的語言念（中文或日文）
     suspend fun say(text: String, meaning: Boolean = false, rate: Float = 1f) {
         if (!ready.await() || text.isBlank()) return
         if (meaning) useMeaningLanguage() else useEnglish()

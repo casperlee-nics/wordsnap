@@ -2,7 +2,12 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.92（暫定名稱：像素單字）
+## 目前版本 0.93（暫定名稱：像素單字）
+
+v0.93 的改變（只保留中文、日文）：
+- 拿掉韓文：韓文介面、韓文字典和韓文字型都移除，「遊戲設定」的語言只剩中文、日本語（手機系統是日文就預設日文，其他都是中文）
+- 戰鬥：記住 10 個字就能戰鬥（原本 15 個），每場最多 10 題，能出的字不到 5 個時一樣用記住的字補到 5 題
+- 日文按鈕：「単語を追加」改成「単語追加」，標題木牌在日文時加寬，「ピクセル単語」不用縮小字
 
 v0.92 的改變：
 - 字典包第 2 版：日文 35,693 筆（含約 6,000 個片語）、韓文 13,000 筆（1 萬單字＋3,000 片語）
@@ -283,8 +288,7 @@ v0.65 的改變：
 
 - 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`、`fireworks_sfx.ogg`、`victory_jingle.ogg`、`royal_fanfare.ogg`、`logo_chime.ogg`、`hunt_bgm.ogg`、`manage_bgm.ogg`、`chu_sfx.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
 - 字典 `app/src/main/assets/ecdict.db`：取自 [ECDICT](https://github.com/skywind3000/ECDICT)（MIT License，Copyright (c) 2017 Linwei），挑出常用的 5 萬字，用 [OpenCC](https://github.com/BYVoid/OpenCC)（Apache License 2.0）轉成台灣繁體用語。
-- 日文字典 `app/src/main/assets/dict/ja.db`：常用 5,000 字為本專案整理，其餘取自 [EJDict-hand](https://github.com/kujirahand/EJDict)（CC0）。韓文字典 `app/src/main/assets/dict/ko.db`：本專案整理。
-- 韓文字型 [Galmuri11](https://github.com/quiple/galmuri)（SIL Open Font License 1.1，Copyright © 2019–2025 Lee Minseo）：只留拉丁字母、標點和韓文字，存成 `app/src/main/res/font/galmuri_11.ttf`，授權全文在 `licenses/Galmuri-OFL.md`。
+- 日文字典 `app/src/main/assets/dict/ja.db`：常用 5,000 字為本專案整理，其餘取自 [EJDict-hand](https://github.com/kujirahand/EJDict)（CC0）。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 
 ## 用 Android Studio 執行

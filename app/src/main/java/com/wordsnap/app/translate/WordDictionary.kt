@@ -11,7 +11,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 // 離線英漢字典：ECDICT（MIT 授權）挑出最常用的 5 萬個字，加上約 2 萬個常見組合字（floor lamp、alley cat），事先用 OpenCC 轉成台灣繁體，放在 assets/ecdict.db
-// 遊戲語言是日文、韓文時，解釋改從字典包（DictionaryPacks）查；變化形、片語還是用 ecdict.db
+// 遊戲語言是日文時，解釋改從字典包（DictionaryPacks）查；變化形、片語還是用 ecdict.db
 // 查不到的字再交給 WordTranslator（ML Kit）翻譯
 object WordDictionary {
     // 換新版字典檔時把版本加一，App 會重新複製
@@ -23,7 +23,7 @@ object WordDictionary {
     private var packDb: SQLiteDatabase? = null
     private var packLanguage: AppLanguage? = null
 
-    // 日文、韓文的字典包（還沒安裝就是 null）
+    // 日文的字典包（還沒安裝就是 null）
     private suspend fun openPack(context: Context, language: AppLanguage): SQLiteDatabase? = lock.withLock {
         if (packLanguage == language) packDb?.let { return@withLock it }
         val file = DictionaryPacks.file(context, language)
@@ -60,15 +60,13 @@ object WordDictionary {
     suspend fun lookup(context: Context, word: String): String? {
         val database = open(context) ?: return null
         val language = appLanguage(context)
-        // 中文查 ecdict.db；日文、韓文查字典包，字典包還沒裝好就交給 ML Kit 翻譯
+        // 中文查 ecdict.db；日文查字典包，字典包還沒裝好就交給 ML Kit 翻譯
         val meanings = if (DictionaryPacks.needsPack(language)) openPack(context, language) ?: return null else database
         val key = word.trim().lowercase().replace(Regex("\\s+"), " ")
         if (key.isEmpty()) return null
         return withContext(Dispatchers.IO) {
-            // 韓文的意思之間用「, 」隔開，中文、日文用「、」
-            val separator = if (language == AppLanguage.Korean) ", " else "、"
-            meaning(meanings, key)?.let { simplify(it, separator) } ?: lemma(database, key)?.let { base ->
-                meaning(meanings, base)?.let { "($base) ${simplify(it, separator)}" }
+            meaning(meanings, key)?.let(::simplify) ?: lemma(database, key)?.let { base ->
+                meaning(meanings, base)?.let { "($base) ${simplify(it)}" }
             }
         }
     }
@@ -108,7 +106,7 @@ object WordDictionary {
     }
 
     // 字典格式的解釋（例如「vi. 去、走、達到\nvt. 對付」）精簡成「去、走」；原形的括號會保留
-    fun simplify(raw: String, separator: String = "、"): String {
+    fun simplify(raw: String): String {
         val base = BASE.find(raw)
         val body = if (base != null) raw.substring(base.value.length) else raw
         val senses = body.lines()
@@ -117,7 +115,7 @@ object WordDictionary {
             .filter { it.isNotEmpty() }
             .distinct()
             .take(MAX_SENSES)
-        val text = senses.joinToString(separator)
+        val text = senses.joinToString("、")
         return if (base != null) "${base.value}$text" else text
     }
 

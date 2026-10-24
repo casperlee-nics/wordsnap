@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 
 // 只排一行的文字：放不下時字自動縮小（最小到原本的 minScale），不會被切掉或擠出按鈕
-// 按鈕、標題列、木牌這些寬度固定的地方用；日文、韓文的字通常比中文長
+// 按鈕、標題列、木牌這些寬度固定的地方用；日文的字通常比中文長
 @Composable
 fun FitText(
     text: String,

@@ -152,7 +152,7 @@
     <string name="help_review_title">復習と読み上げ</string>
     <string name="help_review">「復習」はカードをめくって練習します。覚えていたら電球、覚えていなければハテナを押してください。覚えた単語は数日後にまた出てきます。「読み上げ」は英語と日本語の意味を順番に自動で読み上げます。毎晩 8 時に復習のお知らせが届きます。</string>
     <string name="help_battle_title">バトル</string>
-    <string name="help_battle">1 冊の単語帳で 15 個覚える（または 1 冊全部覚える）とバトルできます。発音を聞いて単語のつづりを入力し、正解ならモンスターを攻撃、間違えると HP が減ります。モンスターの HP をゼロにすれば倒せます。自分の HP がゼロになると教会に運ばれます。1 回のバトルは 5～15 問で、2 回正解した単語はもう出題されません。</string>
+    <string name="help_battle">1 冊の単語帳で 10 個覚える（または 1 冊全部覚える）とバトルできます。発音を聞いて単語のつづりを入力し、正解ならモンスターを攻撃、間違えると HP が減ります。モンスターの HP をゼロにすれば倒せます。自分の HP がゼロになると教会に運ばれます。1 回のバトルは 5～10 問で、2 回正解した単語はもう出題されません。</string>
     <string name="help_level_title">レベル、転職、アイテム</string>
     <string name="help_level">バトルで経験値を得るとレベルが上がり、10 レベルごとに称号が変わって、見た目と必殺技も強くなります。Lv 10 を超えると「ステータス」で別の職業に転職できますが、レベルが 10 下がります。バトルに勝つと宝箱が出ることがあり、アイテムはバトル中にアイテム袋から使えます。</string>
     <string name="help_boss_title">魔王</string>
@@ -168,7 +168,7 @@
     <string name="action_review">復習</string>
     <string name="action_review_count">復習 %1$d</string>
     <string name="action_listen">読み上げ</string>
-    <string name="action_add">単語を追加</string>
+    <string name="action_add">単語追加</string>
     <string name="action_battle">バトル</string>
     <string name="word_count">全 %1$d 語</string>
     <string name="book_exhausted">この単語帳の単語はすべてバトルで %1$d 回正解しました。新しい単語を追加すると、また経験値と宝箱がすべてもらえます</string>
