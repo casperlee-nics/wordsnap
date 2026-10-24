@@ -3,7 +3,6 @@ package com.wordsnap.app.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,16 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -182,12 +175,8 @@ fun WordListScreen(
                             },
                             trailingContent = {
                                 Row {
-                                    IconButton(onClick = { speaker.speak(word.text) }) {
-                                        Icon(Icons.Filled.PlayArrow, contentDescription = "發音")
-                                    }
-                                    IconButton(onClick = { vm.delete(word) }) {
-                                        Icon(Icons.Filled.Delete, contentDescription = "刪除")
-                                    }
+                                    PixelIconPlain(IconPlayWord, "發音", onClick = { speaker.speak(word.text) }, size = 44.dp)
+                                    PixelIconPlain(IconTrash, "刪除", onClick = { vm.delete(word) }, size = 44.dp)
                                 }
                             },
                         )
@@ -321,13 +310,12 @@ private fun BottomActions(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            val small = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
-            PixelOutlinedButton(onClick = onListen, Modifier.weight(1f), contentPadding = small) { Text("朗讀") }
-            Button(onClick = onReview, Modifier.weight(1f), enabled = reviewEnabled, contentPadding = small) {
-                Text(reviewLabel, maxLines = 1)
-            }
-            Button(onClick = onAdd, Modifier.weight(1f), contentPadding = small) { Text("加單字") }
-            Button(onClick = onBattle, Modifier.weight(1f), enabled = battleEnabled, contentPadding = small) { Text("戰鬥") }
+            // 和主畫面一樣的復古黃褐色像素按鈕
+            val style = MaterialTheme.typography.labelLarge
+            RetroButton("朗讀", onListen, Modifier.weight(1f), textStyle = style)
+            RetroButton(reviewLabel, onReview, Modifier.weight(1f), enabled = reviewEnabled, textStyle = style)
+            RetroButton("加單字", onAdd, Modifier.weight(1f), textStyle = style)
+            RetroButton("戰鬥", onBattle, Modifier.weight(1f), enabled = battleEnabled, textStyle = style)
         }
     }
 }

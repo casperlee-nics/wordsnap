@@ -53,6 +53,21 @@ private val Church = listOf(
     "KKKKKKKKKKKKKKKKK",
 )
 
+// 晚上的教堂：窗戶和門口透出黃色燈光
+private val ChurchNight = Church.map { row -> row.replace('L', 'Y') }
+
+// 晚上的月亮和星星
+private val Moon = listOf(
+    "..nnn..",
+    ".nnnnn.",
+    "nnnnnnn",
+    "nnnnnnn",
+    "nnnnnnn",
+    ".nnnnn.",
+    "..nnn..",
+)
+private val NightStars = listOf(3 to 1, 20 to 3, 27 to 1, 33 to 6, 38 to 2, 52 to 1, 60 to 4, 17 to 9, 24 to 11, 58 to 9)
+
 private val Coffin = listOf(
     ".KKKKKKKK.",
     "KDDDYDDDDK",
@@ -89,6 +104,8 @@ private val Rope = Color(0xFF986030)
 fun FuneralScene(modifier: Modifier = Modifier, onEnd: () -> Unit) {
     val endCallback by rememberUpdatedState(onEnd)
     val walk = remember { Animatable(START_X.toFloat()) }
+    // 依手機時間：白天是藍天草地，晚上是星空、月亮和亮著燈的教堂
+    val night = remember { isNight() }
     LaunchedEffect(Unit) {
         delay(400)
         walk.animateTo(STOP_X.toFloat(), tween(5000, easing = LinearEasing))
@@ -99,15 +116,19 @@ fun FuneralScene(modifier: Modifier = Modifier, onEnd: () -> Unit) {
         val cell = size.width / COLUMNS
         // 天空和草地
         for (y in 0 until ROWS) {
-            val color = when {
-                y < 12 -> ScenePalette.getValue('a')
-                y <= GROUND -> ScenePalette.getValue('b')
-                y == GROUND + 1 -> ScenePalette.getValue('g')
-                else -> ScenePalette.getValue('G')
+            val key = when {
+                y < 12 -> if (night) 'x' else 'a'
+                y <= GROUND -> if (night) 'X' else 'b'
+                y == GROUND + 1 -> if (night) 'i' else 'g'
+                else -> if (night) 'j' else 'G'
             }
-            drawRect(color, Offset(0f, y * cell), Size(size.width, cell + 0.5f))
+            drawRect(ScenePalette.getValue(key), Offset(0f, y * cell), Size(size.width, cell + 0.5f))
         }
-        drawArt(Church, CHURCH_X, GROUND - Church.size + 1, cell)
+        if (night) {
+            NightStars.forEach { (sx, sy) -> drawRect(Color.White, Offset(sx * cell, sy * cell), Size(cell, cell)) }
+            drawArt(Moon, 8, 2, cell)
+        }
+        drawArt(if (night) ChurchNight else Church, CHURCH_X, GROUND - Church.size + 1, cell)
 
         // 一格一格往前走，看起來像像素遊戲
         val x = walk.value.toInt()

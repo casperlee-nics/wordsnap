@@ -73,6 +73,7 @@ import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelRed
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.floor
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -120,6 +121,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var result by remember { mutableStateOf<Boolean?>(null) }
     var finished by remember { mutableStateOf(false) }
     var died by remember { mutableStateOf(false) }
+    var fallen by remember { mutableStateOf(false) }
     // 魔王出場動畫播完了才開始出題
     var introDone by remember { mutableStateOf(!isBoss) }
     // 玩家被打掉的 HP、道具讓怪物多扣的血
@@ -265,7 +267,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
         ) {
-            if (died) {
+            // 被打倒：先在戰場上倒下，再接著被夥伴拖棺材去教堂
+            if (died && fallen) {
                 FuneralScene(onEnd = { endShown = true })
             } else {
                 BattleField(
@@ -287,6 +290,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     intro = !introDone,
                     onIntroEnd = { introDone = true },
                     itemUse = itemUse,
+                    falling = died,
+                    onFallEnd = { fallen = true },
                 )
             }
 
@@ -467,6 +472,8 @@ private fun BattleField(
     intro: Boolean,
     onIntroEnd: () -> Unit,
     itemUse: ItemUse?,
+    falling: Boolean = false,
+    onFallEnd: () -> Unit = {},
 ) {
     val artW = Cell * monster.art.first().length
     val artH = Cell * monster.art.size
@@ -600,6 +607,22 @@ private fun BattleField(
             itemAnim.snapTo(0f)
         }
 
+        // 倒下：搖晃一下 → 一格一格往後倒 → 躺在地上變灰
+        val fall = remember { Animatable(0f) }
+        val fallCallback by rememberUpdatedState(onFallEnd)
+        LaunchedEffect(falling) {
+            if (!falling) return@LaunchedEffect
+            fall.animateTo(1f, tween(1800, easing = LinearEasing))
+            fallCallback()
+        }
+        val f = fall.value
+        val fallWobble = if (f in 0.01f..0.3f) (if ((f * 30).toInt() % 2 == 0) -3f else 3f) else 0f
+        val fallAngle = when {
+            f < 0.3f -> 0f
+            f < 0.7f -> -90f * floor((f - 0.3f) / 0.4f * 4f) / 4f
+            else -> -90f
+        }
+
         val p = ko.value
         val effect = (p / 0.5f).coerceIn(0f, 1f)
         val fly = ((p - 0.5f) / 0.5f).coerceIn(0f, 1f)
@@ -623,9 +646,15 @@ private fun BattleField(
                             size = HeroSize,
                             tier = tier,
                             modifier = Modifier.graphicsLayer {
-                                translationX = heroShake.value.dp.toPx() + heroLunge.value.dp.toPx()
-                                // 被打中時一閃一閃
-                                alpha = if (heroFlash.value > 0f && (heroFlash.value * 10).toInt() % 2 == 0) 0.25f else 1f
+                                translationX = heroShake.value.dp.toPx() + heroLunge.value.dp.toPx() + fallWobble.dp.toPx()
+                                // 被打中時一閃一閃；倒下後變淡
+                                alpha = when {
+                                    f >= 0.7f -> 0.6f
+                                    heroFlash.value > 0f && (heroFlash.value * 10).toInt() % 2 == 0 -> 0.25f
+                                    else -> 1f
+                                }
+                                transformOrigin = TransformOrigin(0.5f, 1f)
+                                rotationZ = fallAngle
                             },
                         )
                     }

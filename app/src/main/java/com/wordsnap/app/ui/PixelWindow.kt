@@ -3,6 +3,8 @@ package com.wordsnap.app.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -34,6 +37,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -44,6 +49,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -152,7 +159,7 @@ private fun WindowTitle(title: String) {
     }
 }
 
-// 深色底上的小點點花紋，外面一圈金色、隔一格、裡面一圈淡金色
+// 深色底上的小點點花紋，外面只有一圈金色（不要框內框）
 private fun DrawScope.drawHeaderPanel() {
     val px = 2.dp.toPx()
     var y = px * 3
@@ -165,7 +172,6 @@ private fun DrawScope.drawHeaderPanel() {
         y += px * 6
     }
     drawRect(PixelGold, Offset(px, px), Size(size.width - px * 2, size.height - px * 2), style = Stroke(px))
-    drawRect(WindowGoldLight, Offset(px * 4, px * 4), Size(size.width - px * 8, size.height - px * 8), style = Stroke(px))
 }
 
 // 像素視窗外框，主畫面選單也用這個
@@ -258,4 +264,60 @@ fun PixelOutlinedButton(
 
 private val WindowTitleDark = Color(0xFF302848)
 private val WindowTitleDot = Color(0xFF483868)
-private val WindowGoldLight = Color(0xFFF8F0A0)
+
+// 復古按鈕（主畫面選單、單字簿下方工具列）：復古的黃褐色像素方塊，左上亮邊、右下暗邊加上影子，看起來微微浮起；按下去會往下沉
+@Composable
+fun RetroButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    textStyle: TextStyle = MaterialTheme.typography.titleMedium,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val lift = if (pressed) 0.dp else 3.dp
+    Box(
+        modifier
+            .height(48.dp)
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+            .drawBehind {
+                val px = 3.dp.toPx()
+                val up = lift.toPx()
+                val w = size.width - 3.dp.toPx()
+                val h = size.height - 3.dp.toPx()
+                // 影子：往右下偏一點的深褐色方塊
+                if (up > 0f) {
+                    drawRect(ButtonShadow, Offset(px * 2, px * 2), Size(w - px, h - px))
+                }
+                val top = 3.dp.toPx() - up
+                val left = 3.dp.toPx() - up
+                // 缺角的黑框
+                drawRect(PixelInk, Offset(left + px, top), Size(w - px * 2, h))
+                drawRect(PixelInk, Offset(left, top + px), Size(w, h - px * 2))
+                // 黃褐色本體
+                drawRect(ButtonBody, Offset(left + px, top + px), Size(w - px * 2, h - px * 2))
+                // 左上亮邊、右下暗邊
+                drawRect(ButtonLight, Offset(left + px, top + px), Size(w - px * 2, px))
+                drawRect(ButtonLight, Offset(left + px, top + px), Size(px, h - px * 2))
+                drawRect(ButtonDark, Offset(left + px, top + h - px * 2), Size(w - px * 2, px))
+                drawRect(ButtonDark, Offset(left + w - px * 2, top + px), Size(px, h - px * 2))
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            color = ButtonText,
+            style = textStyle,
+            maxLines = 1,
+            modifier = Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift),
+        )
+    }
+}
+
+private val ButtonBody = Color(0xFFC89858)
+private val ButtonLight = Color(0xFFF0D098)
+private val ButtonDark = Color(0xFF8C5C28)
+private val ButtonShadow = Color(0xFF4A3018)
+private val ButtonText = Color(0xFF3A2410)

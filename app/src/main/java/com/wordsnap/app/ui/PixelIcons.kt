@@ -301,23 +301,54 @@ val IconHelp = listOf(
     "................",
 )
 
-// 主畫面右下角：插在草地上、寫著問號的小木牌
+// 主畫面右下角：插在草地上、寫著問號的小木牌（有木紋和裂縫）
 val IconHelpSign = listOf(
+    "....................",
+    ".KKKKKKKKKKKKKKKKKK.",
+    "KLMMMMLLLLLLLLLDLLLK",
+    "KLLLLLLLQQQQLLMDMLLK",
+    "KMDMLLLQQLLQQLDLLLLK",
+    "KLLLLLLLLLLQQLDMMMLK",
+    "KLLLLLLLLLQQLLMDDMLK",
+    "KLLLLLLLLQQLLLLLLLLK",
+    "KLMDMLLLLQQLLLLLLLLK",
+    "KLLLLLLLLLLLLLLMMMMK",
+    "KLLDLLLLLQQLLMMMMLLK",
+    "KLMDDMMLLQQLLLLLLLLK",
+    "KLLLDLLLLLMMDMMLLLLK",
+    ".KKKKKKKKKKKKKKKKKK.",
+    "........KPPK........",
+    "........KPPK........",
+    "........KPPK........",
+    ".......KKPPKK.......",
+)
+
+val SignPalette = mapOf(
+    'K' to PixelInk,
+    'L' to Color(0xFFE8C088),
+    'M' to Color(0xFFC89058),
+    'D' to Color(0xFF7A4C20),
+    'Q' to Color(0xFF4A2810),
+    'P' to Color(0xFF704020),
+)
+
+// 單字簿：發音（藍色的播放三角形）
+val IconPlayWord = listOf(
     "................",
-    ".KKKKKKKKKKKKKK.",
-    "KSSSSSSSSSSSSSSK",
-    "KSSSSSHHHHSSSSSK",
-    "KSSSSHHSSHHSSSSK",
-    "KSSSSSSSSHHSSSSK",
-    "KSSSSSSSHHSSSSSK",
-    "KSSSSSSHHSSSSSSK",
-    "KSSSSSSSSSSSSSSK",
-    "KSSSSSSHHSSSSSSK",
-    ".KKKKKKKKKKKKKK.",
-    "......KHHK......",
-    "......KHHK......",
-    "......KHHK......",
-    ".....KKHHKK.....",
+    "................",
+    "....KK..........",
+    "....KLKK........",
+    "....KLLLKK......",
+    "....KLBBLLKK....",
+    "....KLBBBBLLKK..",
+    "....KLBBBBBBBLK.",
+    "....KLBBBBBBBLK.",
+    "....KLBBBBLLKK..",
+    "....KLBBLLKK....",
+    "....KLLLKK......",
+    "....KLKK........",
+    "....KK..........",
+    "................",
     "................",
 )
 
