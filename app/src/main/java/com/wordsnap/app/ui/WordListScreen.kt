@@ -1,14 +1,15 @@
 package com.wordsnap.app.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
@@ -22,7 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,13 +35,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wordsnap.app.R
 import com.wordsnap.app.data.Word
-import com.wordsnap.app.ui.theme.pixelTopBarColors
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.translate.ModelStatus
+import com.wordsnap.app.ui.theme.PixelInk
 
 // 單字本主畫面：列出所有單字，右下角可拍照或手動新增，點單字可編輯
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,18 +87,37 @@ fun WordListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
+            // 羊皮紙紋路的標題列：左邊人物（點了打開選單），右邊冒險日誌按鈕
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .parchment()
+                    .windowInsetsPadding(TopAppBarDefaults.windowInsets),
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, top = 2.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     // 點人物打開選單：人物能力、道具欄、回到主畫面
-                    Box {
+                    Box(Modifier.weight(1f)) {
                         Row(
-                            Modifier.clickable { showMenu = true },
+                            Modifier.clickable { showMenu = true }.padding(2.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             PixelAvatar(Avatar.from(profile?.avatar), size = 48.dp, tier = avatarTier(levelInfo(profile?.exp ?: 0).level))
-                            Column(Modifier.padding(start = 8.dp)) {
-                                Text(profile?.name ?: "", maxLines = 1)
-                                Text("Lv ${levelInfo(profile?.exp ?: 0).level}", style = MaterialTheme.typography.labelSmall)
+                            Column(Modifier.padding(start = 6.dp)) {
+                                Text(
+                                    profile?.name ?: "",
+                                    color = PixelInk,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    "Lv ${levelInfo(profile?.exp ?: 0).level}",
+                                    color = PixelInk,
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
                             }
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
@@ -105,9 +126,7 @@ fun WordListScreen(
                             DropdownMenuItem(text = { Text("回到主畫面") }, onClick = { showMenu = false; onHome() })
                         }
                     }
-                },
-                // 右上角切換單字簿
-                actions = {
+                    // 右上角切換冒險日誌
                     BookPicker(
                         books = books,
                         selectedId = selectedBookId,
@@ -118,9 +137,8 @@ fun WordListScreen(
                         onTopBar = true,
                         onDelete = vm::deleteBook,
                     )
-                },
-                colors = pixelTopBarColors(),
-            )
+                }
+            }
         },
         // 下方一排按鈕：朗讀、複習、加單字、戰鬥；放在底部不會蓋住最後一個單字
         bottomBar = {
@@ -175,7 +193,7 @@ fun WordListScreen(
                             },
                             trailingContent = {
                                 Row {
-                                    PixelIconPlain(IconPlayWord, "發音", onClick = { speaker.speak(word.text) }, size = 44.dp)
+                                    PixelIconPlain(IconPlayWord, "發音", onClick = { speaker.speak(word.text) }, size = 44.dp, palette = DarkWoodPalette)
                                     PixelIconPlain(IconTrash, "刪除", onClick = { vm.delete(word) }, size = 44.dp)
                                 }
                             },

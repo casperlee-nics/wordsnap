@@ -1,10 +1,13 @@
 package com.wordsnap.app.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,12 +19,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.data.Book
 import com.wordsnap.app.ui.theme.PixelRed
-import com.wordsnap.app.ui.theme.pixelTopBarButtonColors
 
 // 選單字簿的下拉選單；selectedId 為 null 代表「全部」
 @Composable
@@ -33,7 +35,7 @@ fun BookPicker(
     label: String,
     allowAll: Boolean,
     modifier: Modifier = Modifier,
-    // 放在深藍色標題列上時用白字的文字按鈕
+    // 放在單字簿標題列上時，用復古按鈕加上打開清單的捲軸按鈕
     onTopBar: Boolean = false,
     // 有傳進來才會在每一本後面顯示垃圾桶；只剩一本時不能刪
     onDelete: ((Book) -> Unit)? = null,
@@ -45,13 +47,15 @@ fun BookPicker(
 
     Box(modifier) {
         if (onTopBar) {
-            TextButton(onClick = { expanded = true }, colors = pixelTopBarButtonColors()) {
-                Text(
-                    "$label$current ▼",
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.widthIn(max = 150.dp),
+            // 冒險日誌名稱做成復古按鈕，右邊再一顆捲軸按鈕打開清單（兩個都能打開）
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                RetroButton(
+                    "$label$current",
+                    onClick = { expanded = true },
+                    modifier = Modifier.widthIn(max = 170.dp),
+                    textStyle = MaterialTheme.typography.labelLarge,
                 )
+                RetroIconButton(IconBookList, "選擇冒險日誌", onClick = { expanded = true })
             }
         } else {
             PixelOutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }

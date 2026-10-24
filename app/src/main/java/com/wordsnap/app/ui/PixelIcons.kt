@@ -332,24 +332,52 @@ val SignPalette = mapOf(
     'P' to Color(0xFF704020),
 )
 
-// 單字簿：發音（藍色的播放三角形）
+// 單字簿：發音（深色木紋的播放三角形）
 val IconPlayWord = listOf(
     "................",
     "................",
     "....KK..........",
-    "....KLKK........",
-    "....KLLLKK......",
-    "....KLBBLLKK....",
-    "....KLBBBBLLKK..",
-    "....KLBBBBBBBLK.",
-    "....KLBBBBBBBLK.",
-    "....KLBBBBLLKK..",
-    "....KLBBLLKK....",
-    "....KLLLKK......",
-    "....KLKK........",
+    "....KHKK........",
+    "....KHMHKK......",
+    "....KHmMMHKK....",
+    "....KHMMmMMHKK..",
+    "....KHmMMMmMHHK.",
+    "....KHMMmMMMHHK.",
+    "....KHMmMMHHKK..",
+    "....KHMMHHKK....",
+    "....KHHHKK......",
+    "....KHKK........",
     "....KK..........",
     "................",
     "................",
+)
+
+// 深色木頭的顏色：H 深褐、M 中褐、m 木紋
+val DarkWoodPalette = mapOf(
+    'K' to PixelInk,
+    'H' to Color(0xFF5A3418),
+    'M' to Color(0xFF8C5A30),
+    'm' to Color(0xFF6E4422),
+)
+
+// 單字簿右上角：打開冒險日誌清單（捲軸加向下的箭頭）
+val IconBookList = listOf(
+    "................",
+    "..KKKKKKKKKKKK..",
+    ".KSSSSSSSSSSSSK.",
+    "..KKKKKKKKKKKK..",
+    "...KWWWWWWWWK...",
+    "...KWKKKKKKWK...",
+    "...KWWWWWWWWK...",
+    "...KWKKKKKWWK...",
+    "...KWWWWWWWWK...",
+    "..KKKKKKKKKKKK..",
+    ".KSSSSSSSSSSSSK.",
+    "..KKKKKKKKKKKK..",
+    "...KKKKKKKKKK...",
+    "....KYYYYYYK....",
+    ".....KYYYYK.....",
+    "......KKKK......",
 )
 
 // 記錄管理：改名字（鉛筆）

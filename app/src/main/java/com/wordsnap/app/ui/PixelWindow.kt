@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -50,6 +51,8 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,9 +74,9 @@ fun PixelHeader(title: String, onBack: () -> Unit, backDescription: String = "�
             .background(WindowTitleDark)
             .windowInsetsPadding(TopAppBarDefaults.windowInsets),
     ) {
-        Canvas(Modifier.matchParentSize()) { drawHeaderPanel() }
+        Canvas(Modifier.matchParentSize()) { drawHeaderBevel() }
         Row(
-            Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 8.dp),
+            Modifier.fillMaxWidth().height(54.dp).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(38.dp)) {
@@ -173,6 +176,40 @@ private fun DrawScope.drawHeaderPanel() {
     }
     drawRect(PixelGold, Offset(px, px), Size(size.width - px * 2, size.height - px * 2), style = Stroke(px))
 }
+
+// 戰鬥、朗讀、複習的標題列：點點花紋＋粗的立體金框（左上亮、右下暗，像浮起來的金屬邊），只有一層
+private fun DrawScope.drawHeaderBevel() {
+    val dot = 2.dp.toPx()
+    var y = dot * 3
+    while (y < size.height) {
+        var x = dot * 3 + if (((y / (dot * 6)).toInt()) % 2 == 0) 0f else dot * 3
+        while (x < size.width) {
+            drawRect(WindowTitleDot, Offset(x, y), Size(dot, dot))
+            x += dot * 6
+        }
+        y += dot * 6
+    }
+    val px = 3.dp.toPx()
+    val w = size.width
+    val h = size.height
+    // 最外圈黑線
+    drawRect(PixelInk, Offset.Zero, Size(w, h), style = Stroke(px * 2))
+    // 金色粗邊：上、左亮金，下、右暗金
+    drawRect(BevelLight, Offset(px, px), Size(w - px * 2, px))
+    drawRect(BevelLight, Offset(px, px), Size(px, h - px * 2))
+    drawRect(BevelDark, Offset(px, h - px * 2), Size(w - px * 2, px))
+    drawRect(BevelDark, Offset(w - px * 2, px), Size(px, h - px * 2))
+    drawRect(PixelGold, Offset(px * 2, px * 2), Size(w - px * 4, px))
+    drawRect(PixelGold, Offset(px * 2, px * 2), Size(px, h - px * 4))
+    drawRect(BevelMid, Offset(px * 2, h - px * 3), Size(w - px * 4, px))
+    drawRect(BevelMid, Offset(w - px * 3, px * 2), Size(px, h - px * 4))
+    // 內側一條黑線，讓金邊浮起來
+    drawRect(PixelInk, Offset(px * 3, px * 3), Size(w - px * 6, h - px * 6), style = Stroke(1.dp.toPx()))
+}
+
+private val BevelLight = Color(0xFFFFE890)
+private val BevelMid = Color(0xFFC88820)
+private val BevelDark = Color(0xFF805010)
 
 // 像素視窗外框，主畫面選單也用這個
 fun Modifier.pixelWindowFrame(): Modifier = pixelFrame(PixelPaper)
@@ -274,6 +311,39 @@ fun RetroButton(
     enabled: Boolean = true,
     textStyle: TextStyle = MaterialTheme.typography.titleMedium,
 ) {
+    RetroButtonFrame(onClick, modifier, enabled) { lift ->
+        Text(
+            label,
+            color = ButtonText,
+            style = textStyle,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).padding(horizontal = 12.dp),
+        )
+    }
+}
+
+// 只有像素圖示的復古按鈕（例如打開冒險日誌清單）
+@Composable
+fun RetroIconButton(
+    icon: List<String>,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    palette: Map<Char, Color> = ColorIconPalette,
+) {
+    RetroButtonFrame(onClick, modifier.width(48.dp).semantics { this.contentDescription = contentDescription }, true) { lift ->
+        PixelArt(icon, palette, Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).size(30.dp))
+    }
+}
+
+@Composable
+private fun RetroButtonFrame(
+    onClick: () -> Unit,
+    modifier: Modifier,
+    enabled: Boolean,
+    content: @Composable (lift: Dp) -> Unit,
+) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val lift = if (pressed) 0.dp else 3.dp
@@ -306,15 +376,37 @@ fun RetroButton(
             },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            label,
-            color = ButtonText,
-            style = textStyle,
-            maxLines = 1,
-            modifier = Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift),
-        )
+        content(lift)
     }
 }
+
+// 羊皮紙紋路：米黃底、深淺斑點和幾條纖維紋，底下一條黑線
+fun Modifier.parchment(): Modifier = drawBehind {
+    drawRect(ParchmentBase)
+    val px = 2.dp.toPx()
+    val cols = (size.width / px).toInt()
+    val rows = (size.height / px).toInt()
+    // 固定的亂數，每次畫出來的紋路都一樣
+    val random = java.util.Random(7)
+    repeat(cols * rows / 14) {
+        val x = random.nextInt(cols.coerceAtLeast(1)) * px
+        val y = random.nextInt(rows.coerceAtLeast(1)) * px
+        drawRect(if (random.nextBoolean()) ParchmentDark else ParchmentLight, Offset(x, y), Size(px, px))
+    }
+    repeat(rows / 6 + 1) {
+        val y = random.nextInt(rows.coerceAtLeast(1)) * px
+        val x = random.nextInt(cols.coerceAtLeast(1)) * px
+        drawRect(ParchmentFiber, Offset(x, y), Size(px * (8 + random.nextInt(16)), px))
+    }
+    drawRect(ParchmentEdge, Offset(0f, size.height - px * 3), Size(size.width, px * 2))
+    drawRect(PixelInk, Offset(0f, size.height - px), Size(size.width, px))
+}
+
+private val ParchmentBase = Color(0xFFEAD7A8)
+private val ParchmentLight = Color(0xFFF6E8C4)
+private val ParchmentDark = Color(0xFFD2B67C)
+private val ParchmentFiber = Color(0xFFDCC48E)
+private val ParchmentEdge = Color(0xFFB8945A)
 
 private val ButtonBody = Color(0xFFC89858)
 private val ButtonLight = Color(0xFFF0D098)
