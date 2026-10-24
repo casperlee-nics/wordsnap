@@ -1,13 +1,12 @@
 package com.wordsnap.app.ui
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,12 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,58 +25,59 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
-import com.wordsnap.app.ui.theme.PixelGold
-import com.wordsnap.app.ui.theme.PixelInk
-import com.wordsnap.app.ui.theme.PixelShape
+import com.wordsnap.app.i18n.tr
+import com.wordsnap.app.ui.theme.PixelWhite
 
 // 第一次開啟：先輸入暱稱，再選一個像素人物
 @Composable
 fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
     var name by remember { mutableStateOf("") }
     var pickingAvatar by remember { mutableStateOf(false) }
-    var avatar by remember { mutableStateOf(Avatar.Man) }
+    var avatar by remember { mutableStateOf(Avatar.Hero) }
+    // 輸入暱稱和選角色時播放有希望感的音樂
+    val context = LocalContext.current
+    val musicOn = remember { isMusicOn(context) }
+    LoopingMusic(R.raw.hope_bgm, enabled = musicOn, volume = 0.5f)
 
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
             // 可以上下捲動，鍵盤跳出來時輸入框會自動捲到看得見的位置
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp),
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+            // 從上面開始排，輸入框和說明文字比較靠上
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
         ) {
             if (!pickingAvatar) {
-                Box(
-                    Modifier.size(144.dp).border(3.dp, PixelInk, PixelShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Surface(color = PixelGold, shape = PixelShape, modifier = Modifier.fillMaxSize().padding(3.dp)) {
-                        Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null)
-                    }
-                }
-                Text("像素單字", style = MaterialTheme.typography.displaySmall)
-                Text("冒險者，請輸入你的暱稱", style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(
+                // 上面是纏著藤蔓的木牌標題，下面是攤開的魔法書
+                WoodSignTitle(tr(R.string.title_logo))
+                MagicBook(Modifier.width(100.dp))
+                // 在羊皮書卷上寫暱稱，右邊蓋章確認（按鈕在旁邊，鍵盤跳出來也不會被擋住）
+                ScrollNameInput(
                     value = name,
                     onValueChange = { name = it.take(12) },
-                    label = { Text("暱稱") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = tr(R.string.nickname_hint),
+                    onConfirm = { pickingAvatar = true },
                 )
-                Button(
-                    onClick = { pickingAvatar = true },
-                    enabled = name.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("下一步 →") }
+                Text(tr(R.string.nickname_prompt), style = MaterialTheme.typography.titleMedium)
             } else {
-                PixelAvatar(avatar, size = 120.dp)
-                Text("${name.trim()}，選一個你的角色", style = MaterialTheme.typography.titleMedium)
-                AvatarPicker(selected = avatar, onSelect = { avatar = it })
-                Button(onClick = { onStart(name, avatar) }, modifier = Modifier.fillMaxWidth()) {
-                    Text("開始冒險 →")
+                // 名字寫在藍色緞帶橫幅上（人物圖縮小一點，整頁不會變長）
+                NameRibbon(name.trim())
+                // 左邊是選中的人物，右邊的古書卷寫著這個職業的故事
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.pixelFrame(PixelWhite, unit = 2.dp).padding(10.dp)) {
+                        PixelAvatar(avatar, size = 84.dp)
+                    }
+                    StoryScroll(
+                        title = avatar.race.label,
+                        story = avatar.story,
+                        modifier = Modifier.weight(1f).padding(start = 12.dp),
+                    )
                 }
-                TextButton(onClick = { pickingAvatar = false }) { Text("← 改暱稱") }
+                AvatarPicker(selected = avatar, onSelect = { avatar = it })
+                AdventureButton(tr(R.string.start_adventure), onClick = { onStart(name, avatar) })
             }
         }
     }
@@ -89,20 +86,26 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
 // 像素人物，一排放不下就往下排，選中的有粗框
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AvatarPicker(selected: Avatar, onSelect: (Avatar) -> Unit, showLabels: Boolean = true) {
+fun AvatarPicker(selected: Avatar, onSelect: (Avatar) -> Unit, showLabels: Boolean = true, exclude: Avatar? = null) {
     FlowRow(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Avatar.entries.forEach { item ->
+        Avatar.entries.filter { it != exclude }.forEach { item ->
             val isSelected = item == selected
             Column(
                 Modifier
                     .width(72.dp)
-                    .border(if (isSelected) 3.dp else 1.dp, if (isSelected) PixelInk else PixelGray, PixelShape)
+                    .then(
+                        if (isSelected) {
+                            Modifier.pixelFrame(PixelWhite, unit = 2.dp)
+                        } else {
+                            Modifier.pixelFrame(MaterialTheme.colorScheme.background, accent = PixelGray, unit = 2.dp)
+                        },
+                    )
                     .clickable { onSelect(item) }
-                    .padding(6.dp),
+                    .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PixelAvatar(item, size = 48.dp)

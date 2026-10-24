@@ -1,4 +1,517 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  像素單字的所有介面文字（預設：繁體中文）。
+  日文放在 values-ja/strings.xml、韓文放在 values-ko/strings.xml，name 要一模一樣，只翻譯內容。
+  %1$s、%1$d 是程式會填進去的文字或數字，翻譯時要保留（位置可以換）；%% 是百分比符號。
+  string-array 的項目數量和順序不能變。
+-->
 <resources>
     <!-- 暫定名稱，上架前再決定 -->
     <string name="app_name">像素單字</string>
+
+    <!-- 共用 -->
+    <string name="cancel">取消</string>
+    <string name="delete">刪除</string>
+    <string name="delete_named">刪除 %1$s</string>
+    <string name="confirm">確定</string>
+    <string name="close">關閉</string>
+    <string name="back">返回</string>
+    <string name="back_to_book">回單字本</string>
+    <string name="no_meaning">（還沒有中文意思）</string>
+    <string name="great">太好了！</string>
+    <string name="save">儲存</string>
+    <string name="retry">重試</string>
+    <string name="title_logo">像素單字</string>
+    <string name="default_book">我的冒險日誌</string>
+
+    <!-- 主畫面 -->
+    <string name="menu_new">新冒險</string>
+    <string name="menu_continue">繼續冒險</string>
+    <string name="menu_manage">記錄管理</string>
+    <string name="menu_settings">遊戲設定</string>
+    <string name="help_button">遊戲說明</string>
+
+    <!-- 遊戲設定 -->
+    <string name="settings_title">遊戲設定</string>
+    <string name="settings_language">語言</string>
+    <string name="settings_installing">正在下載字典… %1$d%%</string>
+    <string name="settings_pack_missing">這個語言的字典還沒準備好，單字的解釋會先用線上翻譯。要切換嗎？</string>
+    <string name="settings_volume">音量</string>
+    <string name="settings_volume_off">關</string>
+    <string name="settings_volume_low">小聲</string>
+    <string name="settings_volume_high">大聲</string>
+    <string name="settings_volume_hint">只調整背景音樂和音效，念單字的聲音不受影響</string>
+    <string name="settings_text_size">文字大小</string>
+    <string name="settings_text_small">小</string>
+    <string name="settings_text_large">大</string>
+    <string name="settings_text_hint">「大」會把輸入的字和講解文字放大 1.2 倍，按鈕上的字不變</string>
+
+    <!-- 道具 -->
+    <string name="item_small_potion">小回復劑</string>
+    <string name="item_small_potion_effect">回復 1/5 的 HP</string>
+    <string name="item_smart_pill">聰明藥</string>
+    <string name="item_smart_pill_effect">這題直接顯示答案，算答對</string>
+    <string name="item_big_potion">大回復劑</string>
+    <string name="item_big_potion_effect">回復一半的 HP</string>
+    <string name="item_riot">村民暴動</string>
+    <string name="item_riot_effect">村民衝過怪物，怪物多扣 1/4 的血</string>
+    <string name="item_elixir">聖靈藥</string>
+    <string name="item_elixir_effect">HP 全部回滿</string>
+    <string name="item_angel">天使召喚</string>
+    <string name="item_angel_effect">天使從天而降，怪物損血一半</string>
+    <string name="item_shield">防護盾</string>
+    <string name="item_shield_effect">3 回合內答錯，被攻擊也不會扣血</string>
+    <string name="item_confusion">混亂藥劑</string>
+    <string name="item_confusion_effect">3 回合內答錯，怪物反而會攻擊自己</string>
+    <string name="item_catapult">召喚投石車</string>
+    <string name="item_catapult_effect">投石車丟大石頭，怪物扣 1/3 的血</string>
+    <string name="item_bag">道具袋</string>
+    <string name="item_shelf">道具欄</string>
+    <string name="item_bag_empty">道具袋是空的。把怪物打飛時有機會打開寶箱拿到道具！</string>
+
+    <!-- 冒險日誌（單字簿）選單 -->
+    <string name="book_all">全部</string>
+    <string name="book_choose">選擇單字簿</string>
+    <string name="book_new">新增冒險日誌</string>
+    <string name="book_delete_title">刪除「%1$s」？</string>
+    <string name="book_delete_message">這本冒險日誌裡的單字和複習進度都會一起刪除，無法復原。</string>
+    <string name="book_name_hint">例如：課本、多益</string>
+
+    <!-- 朗讀模式 -->
+    <string name="listen_title">朗讀模式</string>
+    <string name="listen_empty">這本單字簿還沒有單字</string>
+    <string name="listen_progress">第 %1$d / %2$d 個</string>
+    <string name="listen_paused">已暫停</string>
+    <string name="listen_prev">上一個</string>
+    <string name="listen_pause">暫停</string>
+    <string name="listen_resume">繼續</string>
+    <string name="listen_next">下一個</string>
+    <string name="listen_hint">關掉螢幕也會繼續念；若太久沒操作，手機可能會自動暫停</string>
+
+    <!-- 複習 -->
+    <string name="review_title">複習（剩 %1$d 張）</string>
+    <string name="review_title_practice">練習（剩 %1$d 張）</string>
+    <string name="review_done">今天的單字都複習完了！</string>
+    <string name="review_done_practice">整本都練習完了！</string>
+    <string name="review_remembered">這次記住了 %1$d 個字</string>
+    <string name="speak_again">再念一次</string>
+    <string name="review_forgot">不記得</string>
+    <string name="review_remember">記得</string>
+    <string name="review_practice_hint">今天的字都記住了，隨機再練一次</string>
+
+    <!-- 寶箱 -->
+    <string name="chest_found">發現寶箱！</string>
+    <string name="chest_got">獲得「%1$s」！</string>
+
+    <!-- 新冒險（暱稱、選職業） -->
+    <string name="nickname_hint">寫下你的暱稱</string>
+    <string name="nickname_prompt">冒險者，請輸入你的暱稱</string>
+    <string name="start_adventure">開始冒險</string>
+
+    <!-- 繼續冒險、記錄管理 -->
+    <string name="saves_empty">還沒有存檔，請先開始新冒險</string>
+    <string name="rename">改名字</string>
+    <string name="saves_delete">刪除紀錄</string>
+    <string name="saves_go">出發</string>
+    <string name="saves_delete_title">刪除 %1$s 的紀錄？</string>
+    <string name="saves_delete_message">%1$s 的所有單字簿、單字、道具和複習進度都會刪除，無法復原。</string>
+    <string name="rename_hint">寫下新的名字</string>
+
+    <!-- 冒險者名字 -->
+    <string name="name_blank">名字不能是空白</string>
+    <string name="name_taken">已經有叫「%1$s」的冒險者了</string>
+
+    <!-- 人物能力、轉職 -->
+    <string name="hero_title">人物能力</string>
+    <string name="quoted">「%1$s」</string>
+    <string name="hero_class_level">職業：%1$s　Lv %2$d</string>
+    <string name="hero_remembered">已記住的單字：%1$d 個</string>
+    <string name="hero_exp">經驗值 %1$d / %2$d</string>
+    <string name="stat_str">力量</string>
+    <string name="stat_vit">體力</string>
+    <string name="stat_int">智慧</string>
+    <string name="stat_luk">運氣</string>
+    <string name="hero_finisher">必殺技：%1$s</string>
+    <string name="hero_next_title">Lv %1$d 可獲得稱號「%2$s」</string>
+    <string name="class_change">轉職</string>
+    <string name="class_change_message">要轉成哪一種職業？轉職後等級會從 Lv %1$d 降到 Lv %2$d。</string>
+    <string name="class_change_to">轉職成%1$s</string>
+
+    <!-- 職業故事、選職業 -->
+    <string name="story_hero">出身王國邊境的年輕人，拿起祖傳的長劍，立誓打倒奪走文字的魔王，讓王國再次響起讀書聲。</string>
+    <string name="story_mage">在古老塔樓裡研讀咒語的學徒。相信每個單字都是一道咒文，念得越準，魔法就越強。</string>
+    <string name="story_archer">守護森林的精靈射手，聽得見遠方的低語。用一支支箭，把躲在書頁裡的怪物射出來。</string>
+    <string name="story_goblin">愛搗蛋又機靈的哥布林，偷來一本字典後竟然愛上學習，決定改邪歸正去冒險。</string>
+    <string name="story_dwarf">住在山腳下的鐵匠戰士，意志比鐵還硬。把單字一個個敲進腦袋，像打造最堅固的盔甲。</string>
+    <string name="story_cat">看起來懶洋洋的貓族，好奇心卻比誰都強。哪裡有新單字，就會踮著腳尖悄悄靠近。</string>
+    <string name="story_dragon">從火山蛋裡孵出來的小龍，翅膀還不夠大，吐出的火焰卻能燒光一整頁的怪物。</string>
+    <string name="story_demon">離開魔王軍的魔族劍士，為了贖罪踏上旅程，用黑暗的力量守護光明。</string>
+    <string name="story_robot">在古代遺跡裡醒來的機械兵，記憶一片空白。每學會一個單字，系統就升級一次。</string>
+    <string name="class_pick_suffix">，選擇你的職業</string>
+
+    <!-- 遊戲說明 -->
+    <string name="help_title">遊戲說明</string>
+    <string name="help_start_title">開始冒險</string>
+    <string name="help_start">按「新冒險」輸入暱稱、選一個職業。每個冒險者有自己的單字簿、等級和道具，之後用「繼續冒險」接著玩；「記錄管理」可以改名字或刪除紀錄。</string>
+    <string name="help_collect_title">收集單字怪物</string>
+    <string name="help_collect">在單字簿按「加單字」：手動輸入、相機找出隱藏怪物、相簿新增怪物，或讀取古書（PDF、Excel、TXT 檔）上的怪物。辨識出來的單字和片語點一下就能收進單字簿，中文解釋會自動填好。</string>
+    <string name="help_review_title">複習與朗讀</string>
+    <string name="help_review">「複習」用翻卡的方式練習，記得就按燈泡、不記得按問號，記住的字會隔幾天再出現。「朗讀」會自動依序念出英文和中文解釋。每天晚上 8 點會提醒你複習。</string>
+    <string name="help_battle_title">戰鬥</string>
+    <string name="help_battle">一本單字簿記住 15 個字（或整本都記住）就能戰鬥。聽發音拼出單字，答對攻擊怪物、答錯被打掉 HP。最後把怪物的血打光就能打倒牠；HP 歸零會被拖回教堂。每場 5～15 題，答對 2 次的字就不再出題。</string>
+    <string name="help_level_title">等級、轉職與道具</string>
+    <string name="help_level">戰鬥拿到經驗值會升級，每 10 級換一個稱號，頭像和必殺技也會變強。超過 10 級可以在「人物能力」轉職成別的職業，但會降 10 級。戰鬥勝利有機會開到寶箱，道具在戰鬥中從道具袋使用。</string>
+    <string name="help_boss_title">魔王</string>
+    <string name="help_boss">每記住 50 個字會出現一隻中魔王，每記住 100 個字會出現一隻大魔王，打倒魔王可以拿到更多經驗值。</string>
+    <string name="help_tips_title">小技巧</string>
+    <string name="help_tips">主畫面的「遊戲設定」可以切換語言、調整背景音樂（關／小／大，不影響念單字的聲音）和文字大小。</string>
+    <string name="help_about_title">關於</string>
+    <string name="help_about">《像素單字》由 好玩製造所 Make It Fun Studio 製作。謝謝你一起來冒險！</string>
+    <string name="help_version">軟體版本：v%1$s</string>
+
+    <!-- 單字簿 -->
+    <string name="menu_home">回到主畫面</string>
+    <string name="action_review">複習</string>
+    <string name="action_review_count">複習 %1$d</string>
+    <string name="action_listen">朗讀</string>
+    <string name="action_add">加單字</string>
+    <string name="action_battle">戰鬥</string>
+    <string name="word_count">共 %1$d 個字</string>
+    <string name="book_exhausted">這本的單字都在戰鬥答對 %1$d 次了，加新單字就能再拿到完整的經驗值和寶箱</string>
+    <string name="book_empty">還沒有單字，按下方「加單字」新增第一個</string>
+    <string name="pronounce">發音</string>
+    <string name="practice_battle">練習戰</string>
+    <string name="practice_battle_message">這本的單字都已經在戰鬥中答對 %1$d 次了。還是可以繼續練習，但經驗值只有 1/4，也不會掉寶箱。</string>
+    <string name="practice_start">開始練習</string>
+    <string name="word_add_title">新增單字</string>
+    <string name="word_edit_title">編輯單字</string>
+    <string name="word_field_english">英文單字</string>
+    <string name="word_field_english_hint">例如：apple</string>
+    <string name="word_field_meaning">中文意思</string>
+    <string name="word_field_meaning_hint">空白會自動翻譯</string>
+    <string name="meaning_waiting">（等待翻譯檔下載…）</string>
+    <string name="meaning_failed">（無法自動翻譯，點一下自己填寫）</string>
+    <string name="meaning_translating">（翻譯中，或點一下自己填寫）</string>
+    <string name="translator_downloading">第一次使用，正在下載翻譯檔（約 30 MB），完成後會自動翻譯</string>
+    <string name="translator_failed">翻譯檔下載失敗，請確認網路後重試</string>
+    <string name="add_manual">手動輸入單字怪物</string>
+    <string name="add_camera">相機找出隱藏怪物</string>
+    <string name="add_gallery">相簿新增怪物</string>
+    <string name="add_document">讀取古書上的怪物</string>
+
+    <!-- 捕捉怪物（拍照、相簿、古書） -->
+    <string name="scan_reading_page">正在翻閱古書：第 %1$d / %2$d 頁</string>
+    <string name="scan_read_failed">讀取失敗：%1$s</string>
+    <string name="scan_ocr_failed">辨識失敗：%1$s</string>
+    <string name="scan_title">捕捉怪物</string>
+    <string name="scan_again_camera">再拍一張</string>
+    <string name="scan_again_gallery">換一張圖</string>
+    <string name="scan_again_document">換一本古書</string>
+    <string name="scan_intro">拍一張課本或文章的照片，或打開一本古書（PDF、Excel、TXT），我會幫你找出隱藏的單字怪物。</string>
+    <string name="scan_none">沒有找到英文單字，換一張清楚一點的照片試試。</string>
+    <string name="scan_pick">要新增的怪物</string>
+    <string name="scan_select_all">全選</string>
+    <string name="scan_select_none">全不選</string>
+    <string name="scan_skipped">已略過 %1$d 個常見字（如 the、and、is）</string>
+    <string name="scan_owned">%1$s（已有）</string>
+    <string name="scan_unclear_hide">收起看不清楚的字 ▲</string>
+    <string name="scan_unclear_show">還有 %1$d 個看不清楚的字（字典查不到）▼</string>
+    <string name="scan_save_to">存到：</string>
+    <string name="scan_add">加入單字本（%1$d）</string>
+    <string name="scan_aim_title">怪物出現了！</string>
+    <string name="scan_aim">請將鏡頭對準怪物</string>
+    <string name="scan_ready">準備好了</string>
+
+    <!-- 讀取檔案的錯誤 -->
+    <string name="file_open_failed">打不開這個檔案</string>
+    <string name="file_old_excel">舊版 Excel（.xls）請先另存成 .xlsx 或 CSV</string>
+    <string name="file_excel_empty">這個 Excel 檔裡沒有找到文字</string>
+
+    <!-- 每日複習提醒 -->
+    <string name="reminder_channel">每日複習提醒</string>
+    <string name="reminder_title">該複習囉！</string>
+    <string name="reminder_text">今天有 %1$d 個字要複習</string>
+
+    <!-- 戰鬥 -->
+    <string name="battle_title">戰鬥：%1$s</string>
+    <string name="battle_flee">逃跑</string>
+    <string name="boss_big">大魔王</string>
+    <string name="boss_mid">中魔王</string>
+    <string name="battle_boss_appears">%1$s「%2$s」出現了！</string>
+    <string name="battle_no_words">這本單字簿還沒有可以出題的單字（至少 3 個字母、已記住）</string>
+    <string name="battle_hero_down">%1$s 被打倒了…</string>
+    <string name="battle_dragged">同伴把你拖回了教堂</string>
+    <string name="battle_death_count">這是你第 %1$d 次倒下</string>
+    <string name="battle_finisher">%1$s！</string>
+    <string name="battle_knocked">擊倒了 %1$s！</string>
+    <string name="battle_still_standing">%1$s 還站著！</string>
+    <string name="battle_still_standing_hint">把怪物的血打光才能把牠打飛，下次再來</string>
+    <string name="battle_watch_out">小心！</string>
+    <string name="battle_items">道具</string>
+    <string name="battle_next">下一回</string>
+    <string name="battle_attack">攻擊</string>
+    <string name="battle_hit">命中！</string>
+    <string name="battle_hurt">被怪物攻擊了！</string>
+    <string name="result_down">被打倒了…</string>
+    <string name="result_perfect">完美勝利！</string>
+    <string name="result_win">勝利！</string>
+    <string name="result_lose">還要再練練</string>
+    <string name="result_down_message">被 %1$s 打倒了，在教堂休息一下再來吧（第 %2$d 次倒下）</string>
+    <string name="result_knocked">把 %1$s 打飛了！</string>
+    <string name="result_standing">%1$s 還站著，把牠的血打光才能打飛</string>
+    <string name="result_score">答對 %1$d / %2$d（%3$d 題以上通過）</string>
+    <string name="result_exp">得到經驗值 +%1$d</string>
+    <string name="result_exp_boss">得到經驗值 +%1$d（魔王加倍）</string>
+    <string name="result_practice">練習戰：經驗值只有 1/4，不會掉寶箱</string>
+    <string name="result_chest">打開寶箱，獲得「%1$s」！</string>
+    <string name="result_level_up">升級！Lv %1$d → Lv %2$d</string>
+    <string name="new_title">獲得新稱號「%1$s」！</string>
+    <string name="result_boss_down">★ 打倒了%1$s「%2$s」！</string>
+    <string name="result_boss_hint">要通過這場戰鬥才算打倒魔王，下次牠還會出現</string>
+    <string name="result_book_cleared">★ 這本單字簿戰鬥通過</string>
+    <string name="result_forgotten">這些字已經答錯兩次，改回「沒記住」，記得去複習：%1$s</string>
+    <string name="list_separator">、</string>
+    <string name="levelup_evolve">外觀進化了！學會新招式「%1$s」！</string>
+    <string name="spell_hint">聽發音，拼出咒語</string>
+    <string name="spell_label">咒語</string>
+
+    <!-- 頭像名稱 -->
+    <string name="avatar_hero">勇者</string>
+    <string name="avatar_mage">魔法師</string>
+    <string name="avatar_archer">精靈弓手</string>
+    <string name="avatar_goblin">哥布林</string>
+    <string name="avatar_dwarf">矮人</string>
+    <string name="avatar_cat">貓咪</string>
+    <string name="avatar_dragon">龍</string>
+    <string name="avatar_demon">魔族</string>
+    <string name="avatar_robot">機器人</string>
+
+    <!-- 職業名稱 -->
+    <string name="race_hero">人類・勇者</string>
+    <string name="race_mage">人類・魔法師</string>
+    <string name="race_archer">精靈・弓手</string>
+    <string name="race_goblin">哥布林</string>
+    <string name="race_dwarf">矮人</string>
+    <string name="race_cat">貓族</string>
+    <string name="race_dragon">龍族</string>
+    <string name="race_machine">機械族</string>
+    <string name="race_demon">魔族</string>
+
+    <!-- 每個職業 6 階的稱號（Lv 1、10、20、30、40、50），以及 6 階的必殺技 -->
+    <string-array name="moves_slash">
+        <item>斬擊</item>
+        <item>十字斬</item>
+        <item>旋風斬</item>
+        <item>聖光斬</item>
+        <item>天空裂斬</item>
+        <item>勇者之劍</item>
+    </string-array>
+    <string-array name="moves_magic">
+        <item>火花術</item>
+        <item>冰霜術</item>
+        <item>雷電術</item>
+        <item>流星術</item>
+        <item>星辰爆裂</item>
+        <item>終焉魔法</item>
+    </string-array>
+    <string-array name="moves_arrow">
+        <item>單發箭</item>
+        <item>二連箭</item>
+        <item>疾風箭</item>
+        <item>月光箭雨</item>
+        <item>森林之怒</item>
+        <item>精靈王之箭</item>
+    </string-array>
+    <string-array name="moves_bomb">
+        <item>小炸彈</item>
+        <item>連環炸彈</item>
+        <item>火藥桶</item>
+        <item>大爆炸</item>
+        <item>毒霧炸彈</item>
+        <item>混沌爆破</item>
+    </string-array>
+    <string-array name="moves_smash">
+        <item>斧頭劈</item>
+        <item>重斧擊</item>
+        <item>大地裂</item>
+        <item>岩崩斧</item>
+        <item>山崩地裂</item>
+        <item>大地之怒</item>
+    </string-array>
+    <string-array name="moves_claw">
+        <item>貓貓拳</item>
+        <item>貓爪擊</item>
+        <item>三連爪</item>
+        <item>疾風爪</item>
+        <item>貓咪亂舞</item>
+        <item>萌萌貓娘拳</item>
+    </string-array>
+    <string-array name="moves_fire">
+        <item>火花</item>
+        <item>火焰吐息</item>
+        <item>烈焰</item>
+        <item>灼熱風暴</item>
+        <item>地獄火</item>
+        <item>神龍烈焰</item>
+    </string-array>
+    <string-array name="moves_laser">
+        <item>電擊</item>
+        <item>雷射光束</item>
+        <item>雙重雷射</item>
+        <item>電漿砲</item>
+        <item>超級光束</item>
+        <item>終極機神砲</item>
+    </string-array>
+    <string-array name="moves_darkfire">
+        <item>暗影球</item>
+        <item>黑炎彈</item>
+        <item>冥獄火</item>
+        <item>魔劍閃</item>
+        <item>黑暗風暴</item>
+        <item>魔界審判</item>
+    </string-array>
+    <string-array name="titles_hero">
+        <item>見習勇者</item>
+        <item>勇者</item>
+        <item>王國勇者</item>
+        <item>聖光勇者</item>
+        <item>傳說勇者</item>
+        <item>救世勇者</item>
+    </string-array>
+    <string-array name="titles_mage">
+        <item>魔法學徒</item>
+        <item>見習魔法師</item>
+        <item>魔法師</item>
+        <item>大魔法師</item>
+        <item>魔導賢者</item>
+        <item>星辰魔女</item>
+    </string-array>
+    <string-array name="titles_archer">
+        <item>森林見習弓手</item>
+        <item>精靈弓手</item>
+        <item>疾風射手</item>
+        <item>月光神射手</item>
+        <item>森林守護者</item>
+        <item>精靈王</item>
+    </string-array>
+    <string-array name="titles_goblin">
+        <item>小嘍囉</item>
+        <item>盜賊</item>
+        <item>突襲隊長</item>
+        <item>哥布林頭目</item>
+        <item>哥布林王</item>
+        <item>混沌之王</item>
+    </string-array>
+    <string-array name="titles_dwarf">
+        <item>礦工</item>
+        <item>斧手</item>
+        <item>鐵匠戰士</item>
+        <item>重裝衛士</item>
+        <item>山之領主</item>
+        <item>大地之王</item>
+    </string-array>
+    <string-array name="titles_cat">
+        <item>幼仔貓</item>
+        <item>成年貓</item>
+        <item>貓族老大</item>
+        <item>貓守護神</item>
+        <item>傲嬌的家貓</item>
+        <item>萌萌貓娘</item>
+    </string-array>
+    <string-array name="titles_dragon">
+        <item>幼龍</item>
+        <item>飛龍</item>
+        <item>火焰龍</item>
+        <item>古龍</item>
+        <item>龍王</item>
+        <item>神龍</item>
+    </string-array>
+    <string-array name="titles_machine">
+        <item>試作機</item>
+        <item>戰鬥機兵</item>
+        <item>強化機兵</item>
+        <item>鋼鐵守衛</item>
+        <item>超級機甲</item>
+        <item>終極機神</item>
+    </string-array>
+    <string-array name="titles_demon">
+        <item>小惡魔</item>
+        <item>魔族戰士</item>
+        <item>魔劍士</item>
+        <item>魔將軍</item>
+        <item>魔王子</item>
+        <item>魔界之王</item>
+    </string-array>
+
+    <!-- 怪物名稱 -->
+    <string name="monster_slime">史萊姆</string>
+    <string name="monster_bat">蝙蝠</string>
+    <string name="monster_ghost">幽靈</string>
+    <string name="monster_mushroom">蘑菇怪</string>
+    <string name="monster_skeleton">骷髏兵</string>
+    <string name="monster_golem">岩石魔像</string>
+    <string name="monster_eyeball">眼球怪</string>
+    <string name="monster_fire_spirit">火焰精</string>
+    <string name="monster_ice_crystal">冰晶怪</string>
+    <string name="monster_pumpkin">南瓜怪</string>
+    <string name="monster_cactus">仙人掌怪</string>
+    <string name="monster_octopus">大章魚</string>
+    <string name="monster_wolf">灰狼</string>
+    <string name="monster_mimic">寶箱怪</string>
+    <string name="monster_imp">小惡魔</string>
+    <string name="monster_cyclops">獨眼巨人</string>
+    <string name="monster_scorpion">沙漠蠍</string>
+    <string name="monster_treant">樹人</string>
+    <string name="monster_wyvern">飛龍</string>
+    <string name="monster_demon_lord">魔王</string>
+    <string name="monster_viper">毒蛇</string>
+    <string name="monster_spider">大蜘蛛</string>
+    <string name="monster_zombie">殭屍</string>
+    <string name="monster_mummy">木乃伊</string>
+    <string name="monster_crab">巨鉗蟹</string>
+    <string name="monster_maneater">食人花</string>
+    <string name="monster_gargoyle">石像鬼</string>
+    <string name="monster_crow">烏鴉</string>
+    <string name="monster_jellyfish">水母</string>
+    <string name="monster_killer_bee">殺人蜂</string>
+    <string name="monster_poison_frog">毒蛙</string>
+    <string name="monster_will_o_wisp">鬼火</string>
+    <string name="monster_hedgehog">刺蝟</string>
+    <string name="monster_mole">地底鼴鼠</string>
+    <string name="monster_vampire">吸血鬼伯爵</string>
+    <string name="monster_minotaur">牛頭人</string>
+    <string name="monster_yeti">雪怪</string>
+    <string name="monster_medusa">美杜莎</string>
+    <string name="monster_reaper">死神</string>
+    <string name="monster_hydra">九頭蛇</string>
+    <string name="monster_inferno_troll">炎獄巨魔</string>
+    <string name="monster_dark_knight_king">黑暗騎士王</string>
+    <string name="monster_sheep">綿羊怪</string>
+    <string name="monster_rock_turtle">岩龜</string>
+    <string name="monster_snail">蝸牛怪</string>
+    <string name="monster_thunder_beetle">雷角甲蟲</string>
+    <string name="monster_bookworm">書蟲</string>
+    <string name="monster_fire_fox">火狐</string>
+    <string name="monster_ice_penguin">冰企鵝</string>
+    <string name="monster_ghost_lantern">鬼燈籠</string>
+    <string name="monster_acorn_soldier">橡實兵</string>
+    <string name="monster_clockwork_mouse">發條鼠</string>
+    <string name="monster_griffin">獅鷲</string>
+    <string name="monster_sea_serpent">海蛇</string>
+    <string name="monster_skeleton_mage">骷髏法師</string>
+    <string name="monster_iron_bear">鐵甲熊</string>
+    <string name="monster_ink_giant">墨水巨靈</string>
+    <string name="monster_frost_giant">冰霜巨人</string>
+    <string name="monster_kraken">深海巨妖</string>
+    <string name="monster_chaos_wizard_king">混沌巫師王</string>
+    <string name="monster_mech_titan">機械泰坦</string>
+    <string name="monster_word_devourer">文字吞噬者</string>
+    <string name="monster_lava_slime">熔岩史萊姆</string>
+    <string name="monster_metal_slime">金屬史萊姆</string>
+    <string name="monster_vampire_bat">吸血蝙蝠</string>
+    <string name="monster_shadow_ghost">暗影幽靈</string>
+    <string name="monster_poison_mushroom">毒蘑菇</string>
+    <string name="monster_golden_skeleton">黃金骷髏</string>
+    <string name="monster_snow_wolf">雪原狼</string>
+    <string name="monster_black_scorpion">黑蠍</string>
 </resources>

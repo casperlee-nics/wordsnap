@@ -20,4 +20,8 @@ data class Word(
     val bookId: Long? = null,
     // 上次在戰鬥模式考過的時間，null 代表還沒考過
     val testedAt: Long? = null,
+    // 戰鬥模式累計答錯幾次，錯滿兩次就變回「沒記住」
+    @ColumnInfo(defaultValue = "0") val wrongCount: Int = 0,
+    // 戰鬥模式答對幾次，答對兩次就不再出題（變回「沒記住」時歸零）
+    @ColumnInfo(defaultValue = "0") val testCount: Int = 0,
 )

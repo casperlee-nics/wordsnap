@@ -1,11 +1,16 @@
 package com.wordsnap.app.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -13,8 +18,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.unit.dp
+import com.wordsnap.app.R
 import com.wordsnap.app.data.Book
+import com.wordsnap.app.i18n.tr
+import com.wordsnap.app.ui.theme.PixelGold
+import com.wordsnap.app.ui.theme.PixelInk
+import com.wordsnap.app.ui.theme.PixelPaper
+import com.wordsnap.app.ui.theme.PixelRed
 
 // 選單字簿的下拉選單；selectedId 為 null 代表「全部」
 @Composable
@@ -26,22 +41,71 @@ fun BookPicker(
     label: String,
     allowAll: Boolean,
     modifier: Modifier = Modifier,
+    // 放在單字簿標題列上時，用復古按鈕加上打開清單的捲軸按鈕
+    onTopBar: Boolean = false,
+    // 有傳進來才會在每一本後面顯示垃圾桶；只剩一本時不能刪
+    onDelete: ((Book) -> Unit)? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var creating by remember { mutableStateOf(false) }
-    val current = books.firstOrNull { it.id == selectedId }?.let(::bookLabel) ?: if (allowAll) "全部" else "選擇單字簿"
+    var deleting by remember { mutableStateOf<Book?>(null) }
+    val current = books.firstOrNull { it.id == selectedId }?.let(::bookLabel) ?: tr(if (allowAll) R.string.book_all else R.string.book_choose)
 
     Box(modifier) {
-        OutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        if (onTopBar) {
+            // 冒險日誌名稱和下拉捲軸放在同一個復古按鈕框裡
+            RetroButtonWithIcon(
+                "$label$current",
+                IconBookList,
+                onClick = { expanded = true },
+                modifier = Modifier.widthIn(max = 180.dp),
+                // 比一般按鈕矮一點，不會壓到標題列的外框
+                height = 40.dp,
+                iconSize = 22.dp,
+            )
+        } else {
+            PixelOutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }
+        }
+        // 下拉清單也是羊皮紙底＋木紋細框，和整個遊戲的風格一樣
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            shape = RectangleShape,
+            containerColor = Color.Transparent,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+            modifier = Modifier.woodFrame(PixelPaper).padding(horizontal = 6.dp),
+        ) {
             if (allowAll) {
-                DropdownMenuItem(text = { Text("全部") }, onClick = { onSelect(null); expanded = false })
+                BookMenuRow(tr(R.string.book_all), chosen = selectedId == null, onClick = { onSelect(null); expanded = false })
             }
             books.forEach { book ->
-                DropdownMenuItem(text = { Text(bookLabel(book)) }, onClick = { onSelect(book.id); expanded = false })
+                BookMenuRow(
+                    bookLabel(book),
+                    chosen = book.id == selectedId,
+                    onClick = { onSelect(book.id); expanded = false },
+                    onDelete = if (onDelete != null && books.size > 1) {
+                        { deleting = book; expanded = false }
+                    } else {
+                        null
+                    },
+                )
             }
-            DropdownMenuItem(text = { Text("+ 新增單字簿") }, onClick = { creating = true; expanded = false })
+            Box(Modifier.padding(horizontal = 4.dp, vertical = 4.dp).fillMaxWidth().height(2.dp).background(MenuDivider))
+            BookMenuRow(tr(R.string.book_new), icon = IconPencil, onClick = { creating = true; expanded = false })
         }
+    }
+
+    deleting?.let { book ->
+        PixelAlertDialog(
+            onDismissRequest = { deleting = null },
+            title = { Text(tr(R.string.book_delete_title, book.name)) },
+            text = { Text(tr(R.string.book_delete_message)) },
+            confirmButton = {
+                TextButton(onClick = { onDelete?.invoke(book); deleting = null }) { Text(tr(R.string.delete), color = PixelRed) }
+            },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(tr(R.string.cancel)) } },
+        )
     }
 
     if (creating) {
@@ -58,21 +122,49 @@ fun BookPicker(
 @Composable
 private fun NewBookDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit) {
     var name by remember { mutableStateOf("") }
-    AlertDialog(
+    PixelAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("新增單字簿") },
+        title = { Text(tr(R.string.book_new)) },
         text = {
-            OutlinedTextField(
+            // 和新冒險一樣：寫在羊皮書卷上，右邊蓋章確認
+            ScrollNameInput(
                 value = name,
                 onValueChange = { name = it.take(16) },
-                label = { Text("名稱，例如：課本、多益") },
-                singleLine = true,
+                placeholder = tr(R.string.book_name_hint),
+                onConfirm = { onCreate(name.trim()) },
             )
         },
-        confirmButton = { TextButton(onClick = { onCreate(name) }, enabled = name.isNotBlank()) { Text("建立") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        // 點視窗外面就能關掉，不需要「取消」
+        confirmButton = {},
     )
 }
+
+// 下拉清單的一列：目前這本底下有淡淡的金色；右邊可以放像素垃圾桶
+@Composable
+private fun BookMenuRow(
+    text: String,
+    onClick: () -> Unit,
+    chosen: Boolean = false,
+    icon: List<String>? = null,
+    onDelete: (() -> Unit)? = null,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(if (chosen) PixelGold.copy(alpha = 0.35f) else Color.Transparent)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) PixelArt(icon, ColorIconPalette, Modifier.padding(end = 8.dp).size(24.dp))
+        Text(text, color = PixelInk, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f, fill = false))
+        if (onDelete != null) {
+            PixelIconPlain(IconTrash, tr(R.string.delete_named, text), onClick = onDelete, size = 32.dp)
+        }
+    }
+}
+
+private val MenuDivider = Color(0x40202030)
 
 // 通過戰鬥考試的單字簿前面加一顆星
 private fun bookLabel(book: Book) = if (book.clearedAt != null) "★${book.name}" else book.name

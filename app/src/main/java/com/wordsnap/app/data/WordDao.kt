@@ -46,6 +46,32 @@ interface WordDao {
     @Query("UPDATE words SET testedAt = :time WHERE id IN (:ids)")
     suspend fun markTested(ids: List<Long>, time: Long)
 
+    // 戰鬥答對一次加一，答對兩次就不再出題
+    @Query("UPDATE words SET testCount = testCount + 1 WHERE id IN (:ids)")
+    suspend fun addCorrect(ids: List<Long>)
+
+    // v0.72 修正：v0.71 把「考過」也算進去了，全部重新算
+    @Query("UPDATE words SET testCount = 0")
+    suspend fun resetTestCounts()
+
+    // 戰鬥模式答錯的字加一次錯誤
+    @Query("UPDATE words SET wrongCount = wrongCount + 1 WHERE id IN (:ids)")
+    suspend fun addWrong(ids: List<Long>)
+
+    // 錯滿兩次的字變回「沒記住」，馬上要複習
+    @Query("UPDATE words SET box = 0, dueAt = :now, wrongCount = 0, testCount = 0 WHERE wrongCount >= 2 AND id IN (:ids)")
+    suspend fun forgetOftenWrong(ids: List<Long>, now: Long)
+
+    // v0.71 精簡舊的字典解釋用
+    @Query("SELECT * FROM words WHERE meaning != ''")
+    suspend fun getWithMeaning(): List<Word>
+
+    @Query("UPDATE words SET meaning = :meaning WHERE id = :id")
+    suspend fun setMeaning(id: Long, meaning: String)
+
+    @Query("DELETE FROM words WHERE bookId = :bookId")
+    suspend fun deleteForBook(bookId: Long)
+
     @Query("DELETE FROM words WHERE profileId = :profileId")
     suspend fun deleteForProfile(profileId: Long)
 }
