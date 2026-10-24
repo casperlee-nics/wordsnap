@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 像素單字：日本語 -->
+<resources>
+    <string name="app_name">ピクセル単語</string>
+
+    <!-- 共通 -->
+    <string name="cancel">キャンセル</string>
+    <string name="delete">削除</string>
+    <string name="delete_named">%1$s を削除</string>
+    <string name="confirm">OK</string>
+    <string name="close">閉じる</string>
+    <string name="back">戻る</string>
+    <string name="back_to_book">単語帳に戻る</string>
+    <string name="no_meaning">（まだ意味がありません）</string>
+    <string name="great">やったね！</string>
+    <string name="save">保存</string>
+    <string name="retry">再試行</string>
+    <string name="title_logo">ピクセル単語</string>
+    <string name="default_book">ぼうけんの書</string>
+
+    <!-- メイン画面 -->
+    <string name="menu_new">はじめから</string>
+    <string name="menu_continue">つづきから</string>
+    <string name="menu_manage">記録の管理</string>
+    <string name="menu_settings">ゲーム設定</string>
+    <string name="help_button">遊び方</string>
+
+    <!-- ゲーム設定 -->
+    <string name="settings_title">ゲーム設定</string>
+    <string name="settings_language">言語</string>
+    <string name="settings_installing">辞書をダウンロード中… %1$d%%</string>
+    <string name="settings_pack_missing">この言語の辞書はまだ準備できていません。単語の意味はしばらくオンライン翻訳を使います。切り替えますか？</string>
+    <string name="settings_volume">音量</string>
+    <string name="settings_volume_off">オフ</string>
+    <string name="settings_volume_low">小</string>
+    <string name="settings_volume_high">大</string>
+    <string name="settings_volume_hint">BGM と効果音だけを調整します。単語の読み上げの音量は変わりません</string>
+    <string name="settings_text_size">文字の大きさ</string>
+    <string name="settings_text_small">小</string>
+    <string name="settings_text_large">大</string>
+    <string name="settings_text_hint">「大」にすると入力する文字と説明の文字が 1.2 倍になります。ボタンの文字は変わりません</string>
+
+    <!-- アイテム -->
+    <string name="item_small_potion">小回復薬</string>
+    <string name="item_small_potion_effect">HP を 1/5 回復</string>
+    <string name="item_smart_pill">かしこい薬</string>
+    <string name="item_smart_pill_effect">この問題の答えが表示され、正解になる</string>
+    <string name="item_big_potion">大回復薬</string>
+    <string name="item_big_potion_effect">HP を半分回復</string>
+    <string name="item_riot">村人の反乱</string>
+    <string name="item_riot_effect">村人が怪物に突撃し、さらに 1/4 のダメージ</string>
+    <string name="item_elixir">聖なる霊薬</string>
+    <string name="item_elixir_effect">HP を全回復</string>
+    <string name="item_angel">天使召喚</string>
+    <string name="item_angel_effect">天使が舞い降りて、怪物の HP を半分にする</string>
+    <string name="item_shield">守りの盾</string>
+    <string name="item_shield_effect">3 ターンの間、間違えて攻撃されてもダメージを受けない</string>
+    <string name="item_confusion">混乱の薬</string>
+    <string name="item_confusion_effect">3 ターンの間、間違えると怪物が自分を攻撃する</string>
+    <string name="item_catapult">投石機召喚</string>
+    <string name="item_catapult_effect">投石機が大岩を投げ、怪物に 1/3 のダメージ</string>
+    <string name="item_bag">アイテム袋</string>
+    <string name="item_shelf">アイテム一覧</string>
+    <string name="item_bag_empty">アイテム袋は空っぽです。怪物を倒すと宝箱からアイテムが手に入ることがあります！</string>
+
+    <!-- ぼうけんの書（単語帳）メニュー -->
+    <string name="book_all">すべて</string>
+    <string name="book_choose">単語帳を選ぶ</string>
+    <string name="book_new">ぼうけんの書を追加</string>
+    <string name="book_delete_title">「%1$s」を削除しますか？</string>
+    <string name="book_delete_message">このぼうけんの書の単語と復習の記録もすべて削除されます。元に戻せません。</string>
+    <string name="book_name_hint">例：教科書、TOEIC</string>
+
+    <!-- 読み上げモード -->
+    <string name="listen_title">読み上げモード</string>
+    <string name="listen_empty">この単語帳にはまだ単語がありません</string>
+    <string name="listen_progress">%1$d / %2$d 個目</string>
+    <string name="listen_paused">一時停止中</string>
+    <string name="listen_prev">前へ</string>
+    <string name="listen_pause">一時停止</string>
+    <string name="listen_resume">再開</string>
+    <string name="listen_next">次へ</string>
+    <string name="listen_hint">画面を消しても読み上げは続きます。長い間操作しないと、スマホが自動で止めることがあります</string>
+
+    <!-- 復習 -->
+    <string name="review_title">復習（残り %1$d 枚）</string>
+    <string name="review_title_practice">練習（残り %1$d 枚）</string>
+    <string name="review_done">今日の単語はすべて復習しました！</string>
+    <string name="review_done_practice">1 冊全部練習しました！</string>
+    <string name="review_remembered">今回覚えた単語：%1$d 個</string>
+    <string name="speak_again">もう一度読む</string>
+    <string name="review_forgot">覚えてない</string>
+    <string name="review_remember">覚えた</string>
+    <string name="review_practice_hint">今日の単語は全部覚えました。ランダムにもう一度練習します</string>
+
+    <!-- 宝箱 -->
+    <string name="chest_found">宝箱を見つけた！</string>
+    <string name="chest_got">「%1$s」を手に入れた！</string>
+
+    <!-- はじめから（名前、職業） -->
+    <string name="nickname_hint">名前を書いてね</string>
+    <string name="nickname_prompt">冒険者よ、名前を入力してください</string>
+    <string name="start_adventure">冒険に出る</string>
+
+    <!-- つづきから、記録の管理 -->
+    <string name="saves_empty">セーブデータがありません。「はじめから」で冒険を始めましょう</string>
+    <string name="rename">名前を変える</string>
+    <string name="saves_delete">記録を削除</string>
+    <string name="saves_go">出発</string>
+    <string name="saves_delete_title">%1$s の記録を削除しますか？</string>
+    <string name="saves_delete_message">%1$s の単語帳、単語、アイテム、復習の記録がすべて削除されます。元に戻せません。</string>
+    <string name="rename_hint">新しい名前を書いてね</string>
+
+    <!-- 冒険者の名前 -->
+    <string name="name_blank">名前を入力してください</string>
+    <string name="name_taken">「%1$s」という冒険者はもういます</string>
+
+    <!-- ステータス、転職 -->
+    <string name="hero_title">ステータス</string>
+    <string name="quoted">「%1$s」</string>
+    <string name="hero_class_level">職業：%1$s　Lv %2$d</string>
+    <string name="hero_remembered">覚えた単語：%1$d 個</string>
+    <string name="hero_exp">経験値 %1$d / %2$d</string>
+    <string name="stat_str">ちから</string>
+    <string name="stat_vit">たいりょく</string>
+    <string name="stat_int">かしこさ</string>
+    <string name="stat_luk">うんのよさ</string>
+    <string name="hero_finisher">必殺技：%1$s</string>
+    <string name="hero_next_title">Lv %1$d で称号「%2$s」を獲得</string>
+    <string name="class_change">転職</string>
+    <string name="class_change_message">どの職業に転職しますか？転職するとレベルが Lv %1$d から Lv %2$d に下がります。</string>
+    <string name="class_change_to">%1$s に転職</string>
+
+    <!-- 職業の物語、職業選択 -->
+    <string name="story_hero">王国の辺境で生まれた若者。先祖伝来の長剣を手に、文字を奪った魔王を倒し、王国に再び読書の声を響かせると誓った。</string>
+    <string name="story_mage">古い塔で呪文を学ぶ見習い。どの単語もひとつの呪文だと信じていて、正しく唱えるほど魔法は強くなる。</string>
+    <string name="story_archer">森を守るエルフの射手。遠くのささやきも聞き逃さない。一本一本の矢で、本のページに隠れた怪物を射抜く。</string>
+    <string name="story_goblin">いたずら好きで抜け目のないゴブリン。盗んだ辞書を読むうちに勉強が好きになり、心を入れ替えて冒険に出た。</string>
+    <string name="story_dwarf">山のふもとに住む鍛冶屋の戦士。その意志は鉄より固い。単語を一つずつ頭に打ち込み、最強のよろいを鍛え上げる。</string>
+    <string name="story_cat">のんびりして見えるネコ族だが、好奇心は誰よりも強い。新しい単語があると、つま先立ちでそっと近づいていく。</string>
+    <string name="story_dragon">火山の卵からかえった子どものドラゴン。翼はまだ小さいけれど、吐く炎はページ中の怪物を焼きつくす。</string>
+    <string name="story_demon">魔王軍を抜けた魔族の剣士。罪をつぐなう旅に出て、闇の力で光を守る。</string>
+    <string name="story_robot">古代遺跡で目覚めた機械兵。記憶はまっさら。単語を一つ覚えるたびに、システムがアップグレードされる。</string>
+    <string name="class_pick_suffix">、職業を選んでください</string>
+
+    <!-- 遊び方 -->
+    <string name="help_title">遊び方</string>
+    <string name="help_start_title">冒険を始める</string>
+    <string name="help_start">「はじめから」で名前を入力し、職業を選びます。冒険者ごとに単語帳、レベル、アイテムがあり、続きは「つづきから」で遊べます。「記録の管理」では名前の変更や記録の削除ができます。</string>
+    <string name="help_collect_title">単語モンスターを集める</string>
+    <string name="help_collect">単語帳で「単語を追加」を押します。手入力、カメラで隠れた怪物を探す、アルバムから怪物を追加、古文書（PDF、Excel、TXT ファイル）の怪物を読み込む、の 4 つの方法があります。見つかった単語や熟語をタップすると単語帳に入り、日本語の意味も自動で入ります。</string>
+    <string name="help_review_title">復習と読み上げ</string>
+    <string name="help_review">「復習」はカードをめくって練習します。覚えていたら電球、覚えていなければハテナを押してください。覚えた単語は数日後にまた出てきます。「読み上げ」は英語と日本語の意味を順番に自動で読み上げます。毎晩 8 時に復習のお知らせが届きます。</string>
+    <string name="help_battle_title">バトル</string>
+    <string name="help_battle">1 冊の単語帳で 15 個覚える（または 1 冊全部覚える）とバトルできます。発音を聞いて単語のつづりを入力し、正解なら怪物を攻撃、間違えると HP が減ります。怪物の HP をゼロにすれば倒せます。自分の HP がゼロになると教会に運ばれます。1 回のバトルは 5～15 問で、2 回正解した単語はもう出題されません。</string>
+    <string name="help_level_title">レベル、転職、アイテム</string>
+    <string name="help_level">バトルで経験値を得るとレベルが上がり、10 レベルごとに称号が変わって、見た目と必殺技も強くなります。Lv 10 を超えると「ステータス」で別の職業に転職できますが、レベルが 10 下がります。バトルに勝つと宝箱が出ることがあり、アイテムはバトル中にアイテム袋から使えます。</string>
+    <string name="help_boss_title">魔王</string>
+    <string name="help_boss">単語を 50 個覚えるごとに中ボス、100 個覚えるごとに大魔王が現れます。魔王を倒すとたくさんの経験値がもらえます。</string>
+    <string name="help_tips_title">ヒント</string>
+    <string name="help_tips">メイン画面の「ゲーム設定」で、言語の切り替え、BGM の音量（オフ／小／大、単語の読み上げには影響しません）、文字の大きさを変えられます。</string>
+    <string name="help_about_title">このアプリについて</string>
+    <string name="help_about">『ピクセル単語』は Make It Fun Studio が制作しました。一緒に冒険してくれてありがとう！日本語辞書の一部は EJDict-hand（CC0）のデータを使用しています。</string>
+    <string name="help_version">バージョン：v%1$s</string>
+
+    <!-- 単語帳 -->
+    <string name="menu_home">メイン画面に戻る</string>
+    <string name="action_review">復習</string>
+    <string name="action_review_count">復習 %1$d</string>
+    <string name="action_listen">読み上げ</string>
+    <string name="action_add">単語を追加</string>
+    <string name="action_battle">バトル</string>
+    <string name="word_count">全 %1$d 語</string>
+    <string name="book_exhausted">この単語帳の単語はすべてバトルで %1$d 回正解しました。新しい単語を追加すると、また経験値と宝箱がすべてもらえます</string>
+    <string name="book_empty">まだ単語がありません。下の「単語を追加」から最初の単語を入れましょう</string>
+    <string name="pronounce">発音</string>
+    <string name="practice_battle">練習バトル</string>
+    <string name="practice_battle_message">この単語帳の単語はすべてバトルで %1$d 回正解しています。練習は続けられますが、経験値は 1/4 になり、宝箱も出ません。</string>
+    <string name="practice_start">練習を始める</string>
+    <string name="word_add_title">単語を追加</string>
+    <string name="word_edit_title">単語を編集</string>
+    <string name="word_field_english">英単語</string>
+    <string name="word_field_english_hint">例：apple</string>
+    <string name="word_field_meaning">日本語の意味</string>
+    <string name="word_field_meaning_hint">空欄なら自動で翻訳します</string>
+    <string name="meaning_waiting">（翻訳データのダウンロード待ち…）</string>
+    <string name="meaning_failed">（自動翻訳できませんでした。タップして入力してください）</string>
+    <string name="meaning_translating">（翻訳中です。タップして自分で入力することもできます）</string>
+    <string name="translator_downloading">初めて使うので翻訳データ（約 30 MB）をダウンロードしています。終わると自動で翻訳します</string>
+    <string name="translator_failed">翻訳データのダウンロードに失敗しました。ネットワークを確認してもう一度お試しください</string>
+    <string name="add_manual">単語モンスターを手入力</string>
+    <string name="add_camera">カメラで隠れた怪物を探す</string>
+    <string name="add_gallery">アルバムから怪物を追加</string>
+    <string name="add_document">古文書の怪物を読み込む</string>
+
+    <!-- 怪物をつかまえる（カメラ、アルバム、古文書） -->
+    <string name="scan_reading_page">古文書を読んでいます：%1$d / %2$d ページ</string>
+    <string name="scan_read_failed">読み込みに失敗しました：%1$s</string>
+    <string name="scan_ocr_failed">文字認識に失敗しました：%1$s</string>
+    <string name="scan_title">怪物をつかまえる</string>
+    <string name="scan_again_camera">もう一枚撮る</string>
+    <string name="scan_again_gallery">別の画像にする</string>
+    <string name="scan_again_document">別の古文書にする</string>
+    <string name="scan_intro">教科書や文章の写真を撮るか、古文書（PDF、Excel、TXT）を開くと、隠れた単語モンスターを見つけます。</string>
+    <string name="scan_none">英単語が見つかりませんでした。もっとはっきりした写真で試してください。</string>
+    <string name="scan_pick">追加する怪物</string>
+    <string name="scan_select_all">すべて選択</string>
+    <string name="scan_select_none">すべて解除</string>
+    <string name="scan_skipped">よく使う単語 %1$d 個をスキップしました（the、and、is など）</string>
+    <string name="scan_owned">%1$s（登録済み）</string>
+    <string name="scan_unclear_hide">読み取りにくい単語をたたむ ▲</string>
+    <string name="scan_unclear_show">読み取りにくい単語があと %1$d 個（辞書にない）▼</string>
+    <string name="scan_save_to">保存先：</string>
+    <string name="scan_add">単語帳に追加（%1$d）</string>
+    <string name="scan_aim_title">怪物があらわれた！</string>
+    <string name="scan_aim">カメラを怪物に向けてください</string>
+    <string name="scan_ready">準備OK</string>
+
+    <!-- ファイル読み込みのエラー -->
+    <string name="file_open_failed">このファイルを開けません</string>
+    <string name="file_old_excel">古い Excel（.xls）は .xlsx か CSV で保存し直してください</string>
+    <string name="file_excel_empty">この Excel ファイルには文字が見つかりませんでした</string>
+
+    <!-- 毎日の復習リマインダー -->
+    <string name="reminder_channel">毎日の復習リマインダー</string>
+    <string name="reminder_title">復習の時間だよ！</string>
+    <string name="reminder_text">今日は %1$d 個の単語を復習しよう</string>
+
+    <!-- バトル -->
+    <string name="battle_title">バトル：%1$s</string>
+    <string name="battle_flee">にげる</string>
+    <string name="boss_big">大魔王</string>
+    <string name="boss_mid">中ボス</string>
+    <string name="battle_boss_appears">%1$s「%2$s」があらわれた！</string>
+    <string name="battle_no_words">この単語帳にはまだ出題できる単語がありません（3 文字以上で、覚えた単語）</string>
+    <string name="battle_hero_down">%1$s はたおれてしまった…</string>
+    <string name="battle_dragged">仲間があなたを教会まで運んだ</string>
+    <string name="battle_death_count">たおれたのは %1$d 回目です</string>
+    <string name="battle_finisher">%1$s！</string>
+    <string name="battle_knocked">%1$s をたおした！</string>
+    <string name="battle_still_standing">%1$s はまだ立っている！</string>
+    <string name="battle_still_standing_hint">怪物の HP をゼロにしないと吹き飛ばせない。また挑戦しよう</string>
+    <string name="battle_watch_out">あぶない！</string>
+    <string name="battle_items">アイテム</string>
+    <string name="battle_next">次のターン</string>
+    <string name="battle_attack">こうげき</string>
+    <string name="battle_hit">命中！</string>
+    <string name="battle_hurt">怪物のこうげき！</string>
+    <string name="result_down">たおれてしまった…</string>
+    <string name="result_perfect">パーフェクト勝利！</string>
+    <string name="result_win">勝利！</string>
+    <string name="result_lose">もう少し練習しよう</string>
+    <string name="result_down_message">%1$s にたおされた。教会で休んでからまた来よう（%2$d 回目）</string>
+    <string name="result_knocked">%1$s を吹き飛ばした！</string>
+    <string name="result_standing">%1$s はまだ立っている。HP をゼロにすれば吹き飛ばせる</string>
+    <string name="result_score">正解 %1$d / %2$d（%3$d 問以上で合格）</string>
+    <string name="result_exp">経験値 +%1$d</string>
+    <string name="result_exp_boss">経験値 +%1$d（魔王ボーナス 2 倍）</string>
+    <string name="result_practice">練習バトル：経験値は 1/4、宝箱は出ません</string>
+    <string name="result_chest">宝箱を開けて「%1$s」を手に入れた！</string>
+    <string name="result_level_up">レベルアップ！Lv %1$d → Lv %2$d</string>
+    <string name="new_title">新しい称号「%1$s」を手に入れた！</string>
+    <string name="result_boss_down">★ %1$s「%2$s」をたおした！</string>
+    <string name="result_boss_hint">このバトルに合格しないと魔王をたおしたことにならない。次もまたあらわれる</string>
+    <string name="result_book_cleared">★ この単語帳のバトルに合格</string>
+    <string name="result_forgotten">この単語は 2 回間違えたので「覚えてない」に戻しました。復習しよう：%1$s</string>
+    <string name="list_separator">、</string>
+    <string name="levelup_evolve">見た目が進化した！新しい技「%1$s」を覚えた！</string>
+    <string name="spell_hint">発音を聞いて、呪文をつづろう</string>
+    <string name="spell_label">呪文</string>
+
+    <!-- 見た目の名前 -->
+    <string name="avatar_hero">勇者</string>
+    <string name="avatar_mage">魔法使い</string>
+    <string name="avatar_archer">エルフの弓使い</string>
+    <string name="avatar_goblin">ゴブリン</string>
+    <string name="avatar_dwarf">ドワーフ</string>
+    <string name="avatar_cat">ネコ</string>
+    <string name="avatar_dragon">ドラゴン</string>
+    <string name="avatar_demon">魔族</string>
+    <string name="avatar_robot">ロボット</string>
+
+    <!-- 職業の名前 -->
+    <string name="race_hero">人間・勇者</string>
+    <string name="race_mage">人間・魔法使い</string>
+    <string name="race_archer">エルフ・弓使い</string>
+    <string name="race_goblin">ゴブリン</string>
+    <string name="race_dwarf">ドワーフ</string>
+    <string name="race_cat">ネコ族</string>
+    <string name="race_dragon">竜族</string>
+    <string name="race_machine">機械族</string>
+    <string name="race_demon">魔族</string>
+
+    <!-- 職業ごとの 6 段階の称号（Lv 1、10、20、30、40、50）と 6 段階の必殺技 -->
+    <string-array name="moves_slash">
+        <item>斬撃</item>
+        <item>十字斬り</item>
+        <item>旋風斬り</item>
+        <item>聖光斬り</item>
+        <item>天空裂斬</item>
+        <item>勇者の剣</item>
+    </string-array>
+    <string-array name="moves_magic">
+        <item>火花の術</item>
+        <item>氷結の術</item>
+        <item>雷撃の術</item>
+        <item>流星の術</item>
+        <item>スターバースト</item>
+        <item>終焉の魔法</item>
+    </string-array>
+    <string-array name="moves_arrow">
+        <item>一の矢</item>
+        <item>二連射</item>
+        <item>疾風の矢</item>
+        <item>月光の矢の雨</item>
+        <item>森の怒り</item>
+        <item>エルフ王の矢</item>
+    </string-array>
+    <string-array name="moves_bomb">
+        <item>小型爆弾</item>
+        <item>連鎖爆弾</item>
+        <item>火薬だる</item>
+        <item>大爆発</item>
+        <item>毒霧爆弾</item>
+        <item>カオス爆破</item>
+    </string-array>
+    <string-array name="moves_smash">
+        <item>斧割り</item>
+        <item>重斧撃</item>
+        <item>大地割り</item>
+        <item>岩崩しの斧</item>
+        <item>山崩し</item>
+        <item>大地の怒り</item>
+    </string-array>
+    <string-array name="moves_claw">
+        <item>ネコパンチ</item>
+        <item>ネコひっかき</item>
+        <item>三連ひっかき</item>
+        <item>疾風の爪</item>
+        <item>ネコの乱舞</item>
+        <item>もえもえネコ娘パンチ</item>
+    </string-array>
+    <string-array name="moves_fire">
+        <item>火の粉</item>
+        <item>炎の息</item>
+        <item>烈火</item>
+        <item>灼熱の嵐</item>
+        <item>地獄の炎</item>
+        <item>神竜の業火</item>
+    </string-array>
+    <string-array name="moves_laser">
+        <item>電撃</item>
+        <item>レーザービーム</item>
+        <item>ダブルレーザー</item>
+        <item>プラズマ砲</item>
+        <item>スーパービーム</item>
+        <item>究極機神砲</item>
+    </string-array>
+    <string-array name="moves_darkfire">
+        <item>シャドウボール</item>
+        <item>黒炎弾</item>
+        <item>冥獄の炎</item>
+        <item>魔剣一閃</item>
+        <item>暗黒の嵐</item>
+        <item>魔界の審判</item>
+    </string-array>
+    <string-array name="titles_hero">
+        <item>見習い勇者</item>
+        <item>勇者</item>
+        <item>王国の勇者</item>
+        <item>聖光の勇者</item>
+        <item>伝説の勇者</item>
+        <item>救世の勇者</item>
+    </string-array>
+    <string-array name="titles_mage">
+        <item>魔法の弟子</item>
+        <item>見習い魔法使い</item>
+        <item>魔法使い</item>
+        <item>大魔法使い</item>
+        <item>魔導賢者</item>
+        <item>星の魔女</item>
+    </string-array>
+    <string-array name="titles_archer">
+        <item>森の見習い弓使い</item>
+        <item>エルフの弓使い</item>
+        <item>疾風の射手</item>
+        <item>月光の名射手</item>
+        <item>森の守護者</item>
+        <item>エルフの王</item>
+    </string-array>
+    <string-array name="titles_goblin">
+        <item>下っぱ</item>
+        <item>盗賊</item>
+        <item>奇襲隊長</item>
+        <item>ゴブリンの親分</item>
+        <item>ゴブリン王</item>
+        <item>混沌の王</item>
+    </string-array>
+    <string-array name="titles_dwarf">
+        <item>鉱夫</item>
+        <item>斧使い</item>
+        <item>鍛冶屋の戦士</item>
+        <item>重装の衛士</item>
+        <item>山の領主</item>
+        <item>大地の王</item>
+    </string-array>
+    <string-array name="titles_cat">
+        <item>子ネコ</item>
+        <item>おとなネコ</item>
+        <item>ネコのボス</item>
+        <item>ネコの守り神</item>
+        <item>ツンデレ家ネコ</item>
+        <item>もえもえネコ娘</item>
+    </string-array>
+    <string-array name="titles_dragon">
+        <item>幼竜</item>
+        <item>飛竜</item>
+        <item>炎竜</item>
+        <item>古竜</item>
+        <item>竜王</item>
+        <item>神竜</item>
+    </string-array>
+    <string-array name="titles_machine">
+        <item>試作機</item>
+        <item>戦闘機兵</item>
+        <item>強化機兵</item>
+        <item>鋼鉄の守護者</item>
+        <item>スーパー機甲</item>
+        <item>究極機神</item>
+    </string-array>
+    <string-array name="titles_demon">
+        <item>小悪魔</item>
+        <item>魔族の戦士</item>
+        <item>魔剣士</item>
+        <item>魔将軍</item>
+        <item>魔王子</item>
+        <item>魔界の王</item>
+    </string-array>
+
+    <!-- 怪物の名前 -->
+    <string name="monster_slime">スライム</string>
+    <string name="monster_bat">コウモリ</string>
+    <string name="monster_ghost">ゴースト</string>
+    <string name="monster_mushroom">キノコお化け</string>
+    <string name="monster_skeleton">ガイコツ兵</string>
+    <string name="monster_golem">岩のゴーレム</string>
+    <string name="monster_eyeball">目玉お化け</string>
+    <string name="monster_fire_spirit">炎の精</string>
+    <string name="monster_ice_crystal">氷の結晶</string>
+    <string name="monster_pumpkin">カボチャお化け</string>
+    <string name="monster_cactus">サボテンお化け</string>
+    <string name="monster_octopus">大ダコ</string>
+    <string name="monster_wolf">灰色オオカミ</string>
+    <string name="monster_mimic">宝箱お化け</string>
+    <string name="monster_imp">小悪魔</string>
+    <string name="monster_cyclops">サイクロプス</string>
+    <string name="monster_scorpion">砂漠サソリ</string>
+    <string name="monster_treant">木の巨人</string>
+    <string name="monster_wyvern">ワイバーン</string>
+    <string name="monster_demon_lord">魔王</string>
+    <string name="monster_viper">毒ヘビ</string>
+    <string name="monster_spider">大グモ</string>
+    <string name="monster_zombie">ゾンビ</string>
+    <string name="monster_mummy">ミイラ</string>
+    <string name="monster_crab">大バサミガニ</string>
+    <string name="monster_maneater">人食い花</string>
+    <string name="monster_gargoyle">ガーゴイル</string>
+    <string name="monster_crow">カラス</string>
+    <string name="monster_jellyfish">クラゲ</string>
+    <string name="monster_killer_bee">殺人バチ</string>
+    <string name="monster_poison_frog">毒ガエル</string>
+    <string name="monster_will_o_wisp">鬼火</string>
+    <string name="monster_hedgehog">ハリネズミ</string>
+    <string name="monster_mole">地底モグラ</string>
+    <string name="monster_vampire">吸血鬼伯爵</string>
+    <string name="monster_minotaur">ミノタウロス</string>
+    <string name="monster_yeti">雪男</string>
+    <string name="monster_medusa">メドゥーサ</string>
+    <string name="monster_reaper">死神</string>
+    <string name="monster_hydra">ヒドラ</string>
+    <string name="monster_inferno_troll">炎獄トロール</string>
+    <string name="monster_dark_knight_king">暗黒騎士王</string>
+    <string name="monster_sheep">ヒツジお化け</string>
+    <string name="monster_rock_turtle">岩ガメ</string>
+    <string name="monster_snail">カタツムリお化け</string>
+    <string name="monster_thunder_beetle">雷角カブト</string>
+    <string name="monster_bookworm">本の虫</string>
+    <string name="monster_fire_fox">炎ギツネ</string>
+    <string name="monster_ice_penguin">氷ペンギン</string>
+    <string name="monster_ghost_lantern">お化けちょうちん</string>
+    <string name="monster_acorn_soldier">ドングリ兵</string>
+    <string name="monster_clockwork_mouse">ゼンマイネズミ</string>
+    <string name="monster_griffin">グリフォン</string>
+    <string name="monster_sea_serpent">シーサーペント</string>
+    <string name="monster_skeleton_mage">ガイコツ魔導士</string>
+    <string name="monster_iron_bear">鉄甲グマ</string>
+    <string name="monster_ink_giant">インクの巨人</string>
+    <string name="monster_frost_giant">氷の巨人</string>
+    <string name="monster_kraken">クラーケン</string>
+    <string name="monster_chaos_wizard_king">混沌の魔導王</string>
+    <string name="monster_mech_titan">機械タイタン</string>
+    <string name="monster_word_devourer">文字を喰らう者</string>
+    <string name="monster_lava_slime">溶岩スライム</string>
+    <string name="monster_metal_slime">はがねスライム</string>
+    <string name="monster_vampire_bat">吸血コウモリ</string>
+    <string name="monster_shadow_ghost">影のゴースト</string>
+    <string name="monster_poison_mushroom">毒キノコ</string>
+    <string name="monster_golden_skeleton">黄金ガイコツ</string>
+    <string name="monster_snow_wolf">雪原オオカミ</string>
+    <string name="monster_black_scorpion">黒サソリ</string>
+</resources>

@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 像素單字：한국어 -->
+<resources>
+    <string name="app_name">픽셀 단어</string>
+
+    <!-- 공통 -->
+    <string name="cancel">취소</string>
+    <string name="delete">삭제</string>
+    <string name="delete_named">%1$s 삭제</string>
+    <string name="confirm">확인</string>
+    <string name="close">닫기</string>
+    <string name="back">돌아가기</string>
+    <string name="back_to_book">단어장으로</string>
+    <string name="no_meaning">(아직 뜻이 없어요)</string>
+    <string name="great">잘했어요!</string>
+    <string name="save">저장</string>
+    <string name="retry">다시 시도</string>
+    <string name="title_logo">픽셀 단어</string>
+    <string name="default_book">나의 모험 일지</string>
+
+    <!-- 메인 화면 -->
+    <string name="menu_new">새 모험</string>
+    <string name="menu_continue">이어서 모험</string>
+    <string name="menu_manage">기록 관리</string>
+    <string name="menu_settings">게임 설정</string>
+    <string name="help_button">게임 설명</string>
+
+    <!-- 게임 설정 -->
+    <string name="settings_title">게임 설정</string>
+    <string name="settings_language">언어</string>
+    <string name="settings_installing">사전 다운로드 중… %1$d%%</string>
+    <string name="settings_pack_missing">이 언어의 사전이 아직 준비되지 않았어요. 단어 뜻은 당분간 온라인 번역을 사용해요. 바꿀까요?</string>
+    <string name="settings_volume">음량</string>
+    <string name="settings_volume_off">끄기</string>
+    <string name="settings_volume_low">작게</string>
+    <string name="settings_volume_high">크게</string>
+    <string name="settings_volume_hint">배경 음악과 효과음만 조절해요. 단어를 읽어 주는 소리는 바뀌지 않아요</string>
+    <string name="settings_text_size">글자 크기</string>
+    <string name="settings_text_small">작게</string>
+    <string name="settings_text_large">크게</string>
+    <string name="settings_text_hint">\'크게\'를 고르면 입력하는 글자와 설명 글자가 1.2배 커져요. 버튼 글자는 그대로예요</string>
+
+    <!-- 아이템 -->
+    <string name="item_small_potion">소형 회복약</string>
+    <string name="item_small_potion_effect">HP를 1/5 회복</string>
+    <string name="item_smart_pill">똑똑해지는 약</string>
+    <string name="item_smart_pill_effect">이번 문제의 정답이 바로 보이고, 정답으로 처리</string>
+    <string name="item_big_potion">대형 회복약</string>
+    <string name="item_big_potion_effect">HP를 절반 회복</string>
+    <string name="item_riot">마을 사람들의 반란</string>
+    <string name="item_riot_effect">마을 사람들이 몬스터에게 돌진해 HP를 1/4 더 깎음</string>
+    <string name="item_elixir">성령의 약</string>
+    <string name="item_elixir_effect">HP를 모두 회복</string>
+    <string name="item_angel">천사 소환</string>
+    <string name="item_angel_effect">천사가 내려와 몬스터의 HP를 절반으로</string>
+    <string name="item_shield">수호 방패</string>
+    <string name="item_shield_effect">3턴 동안 틀려서 공격받아도 HP가 줄지 않음</string>
+    <string name="item_confusion">혼란의 물약</string>
+    <string name="item_confusion_effect">3턴 동안 틀리면 몬스터가 오히려 자기 자신을 공격</string>
+    <string name="item_catapult">투석기 소환</string>
+    <string name="item_catapult_effect">투석기가 큰 바위를 던져 몬스터 HP를 1/3 깎음</string>
+    <string name="item_bag">아이템 가방</string>
+    <string name="item_shelf">아이템 목록</string>
+    <string name="item_bag_empty">아이템 가방이 비어 있어요. 몬스터를 물리치면 보물 상자에서 아이템을 얻을 수도 있어요!</string>
+
+    <!-- 모험 일지(단어장) 메뉴 -->
+    <string name="book_all">전체</string>
+    <string name="book_choose">단어장 선택</string>
+    <string name="book_new">모험 일지 추가</string>
+    <string name="book_delete_title">\'%1$s\'을(를) 삭제할까요?</string>
+    <string name="book_delete_message">이 모험 일지의 단어와 복습 기록이 모두 삭제되며 되돌릴 수 없어요.</string>
+    <string name="book_name_hint">예: 교과서, 토익</string>
+
+    <!-- 읽기 모드 -->
+    <string name="listen_title">읽기 모드</string>
+    <string name="listen_empty">이 단어장에는 아직 단어가 없어요</string>
+    <string name="listen_progress">%1$d / %2$d번째</string>
+    <string name="listen_paused">일시 정지됨</string>
+    <string name="listen_prev">이전</string>
+    <string name="listen_pause">일시 정지</string>
+    <string name="listen_resume">계속</string>
+    <string name="listen_next">다음</string>
+    <string name="listen_hint">화면을 꺼도 계속 읽어 줘요. 오랫동안 조작하지 않으면 휴대폰이 자동으로 멈출 수 있어요</string>
+
+    <!-- 복습 -->
+    <string name="review_title">복습 (%1$d장 남음)</string>
+    <string name="review_title_practice">연습 (%1$d장 남음)</string>
+    <string name="review_done">오늘의 단어를 모두 복습했어요!</string>
+    <string name="review_done_practice">단어장 전체를 연습했어요!</string>
+    <string name="review_remembered">이번에 외운 단어: %1$d개</string>
+    <string name="speak_again">다시 듣기</string>
+    <string name="review_forgot">모르겠어요</string>
+    <string name="review_remember">알아요</string>
+    <string name="review_practice_hint">오늘의 단어를 다 외웠어요. 랜덤으로 한 번 더 연습해요</string>
+
+    <!-- 보물 상자 -->
+    <string name="chest_found">보물 상자 발견!</string>
+    <string name="chest_got">\'%1$s\' 획득!</string>
+
+    <!-- 새 모험(이름, 직업 선택) -->
+    <string name="nickname_hint">이름을 적어 주세요</string>
+    <string name="nickname_prompt">모험가여, 이름을 입력하세요</string>
+    <string name="start_adventure">모험 시작</string>
+
+    <!-- 이어서 모험, 기록 관리 -->
+    <string name="saves_empty">저장된 기록이 없어요. 먼저 새 모험을 시작하세요</string>
+    <string name="rename">이름 바꾸기</string>
+    <string name="saves_delete">기록 삭제</string>
+    <string name="saves_go">출발</string>
+    <string name="saves_delete_title">%1$s의 기록을 삭제할까요?</string>
+    <string name="saves_delete_message">%1$s의 단어장, 단어, 아이템, 복습 기록이 모두 삭제되며 되돌릴 수 없어요.</string>
+    <string name="rename_hint">새 이름을 적어 주세요</string>
+
+    <!-- 모험가 이름 -->
+    <string name="name_blank">이름을 비워 둘 수 없어요</string>
+    <string name="name_taken">\'%1$s\'(이)라는 모험가가 이미 있어요</string>
+
+    <!-- 능력치, 전직 -->
+    <string name="hero_title">능력치</string>
+    <string name="quoted">\'%1$s\'</string>
+    <string name="hero_class_level">직업: %1$s　Lv %2$d</string>
+    <string name="hero_remembered">외운 단어: %1$d개</string>
+    <string name="hero_exp">경험치 %1$d / %2$d</string>
+    <string name="stat_str">힘</string>
+    <string name="stat_vit">체력</string>
+    <string name="stat_int">지혜</string>
+    <string name="stat_luk">행운</string>
+    <string name="hero_finisher">필살기: %1$s</string>
+    <string name="hero_next_title">Lv %1$d에 칭호 \'%2$s\' 획득</string>
+    <string name="class_change">전직</string>
+    <string name="class_change_message">어떤 직업으로 전직할까요? 전직하면 레벨이 Lv %1$d에서 Lv %2$d로 내려가요.</string>
+    <string name="class_change_to">%1$s(으)로 전직</string>
+
+    <!-- 직업 이야기, 직업 선택 -->
+    <string name="story_hero">왕국 변방에서 태어난 젊은이. 조상 대대로 내려온 장검을 들고, 글자를 빼앗은 마왕을 쓰러뜨려 왕국에 다시 책 읽는 소리가 울려 퍼지게 하겠다고 맹세했다.</string>
+    <string name="story_mage">오래된 탑에서 주문을 공부하는 견습생. 모든 단어가 하나의 주문이라고 믿으며, 정확하게 읊을수록 마법은 더 강해진다.</string>
+    <string name="story_archer">숲을 지키는 엘프 궁수. 먼 곳의 속삭임도 들을 수 있다. 화살 하나하나로 책장 속에 숨은 몬스터를 쏘아 맞힌다.</string>
+    <string name="story_goblin">장난을 좋아하고 꾀가 많은 고블린. 훔친 사전을 읽다가 공부에 빠져, 마음을 고쳐먹고 모험을 떠났다.</string>
+    <string name="story_dwarf">산기슭에 사는 대장장이 전사. 의지는 쇠보다 단단하다. 단어를 하나씩 머릿속에 두드려 넣어 가장 튼튼한 갑옷을 만든다.</string>
+    <string name="story_cat">느긋해 보이는 고양이족이지만 호기심은 누구보다 강하다. 새 단어가 있으면 발끝을 세우고 살금살금 다가간다.</string>
+    <string name="story_dragon">화산의 알에서 태어난 아기 용. 날개는 아직 작지만, 내뿜는 불꽃은 한 페이지의 몬스터를 모두 태워 버린다.</string>
+    <string name="story_demon">마왕군을 떠난 마족 검사. 속죄의 여행을 떠나 어둠의 힘으로 빛을 지킨다.</string>
+    <string name="story_robot">고대 유적에서 깨어난 기계 병사. 기억은 텅 비어 있다. 단어를 하나 배울 때마다 시스템이 업그레이드된다.</string>
+    <string name="class_pick_suffix">, 직업을 선택하세요</string>
+
+    <!-- 게임 설명 -->
+    <string name="help_title">게임 설명</string>
+    <string name="help_start_title">모험 시작하기</string>
+    <string name="help_start">\'새 모험\'을 눌러 이름을 입력하고 직업을 고르세요. 모험가마다 단어장, 레벨, 아이템이 따로 있고, 나중에 \'이어서 모험\'으로 계속할 수 있어요. \'기록 관리\'에서는 이름을 바꾸거나 기록을 삭제할 수 있어요.</string>
+    <string name="help_collect_title">단어 몬스터 모으기</string>
+    <string name="help_collect">단어장에서 \'단어 추가\'를 누르세요. 직접 입력, 카메라로 숨은 몬스터 찾기, 앨범에서 몬스터 추가, 고문서(PDF, Excel, TXT 파일)의 몬스터 읽기 중에서 고를 수 있어요. 찾아낸 단어와 숙어를 누르면 단어장에 들어가고, 한국어 뜻도 자동으로 채워져요.</string>
+    <string name="help_review_title">복습과 읽기</string>
+    <string name="help_review">\'복습\'은 카드를 넘기며 연습해요. 기억나면 전구, 기억나지 않으면 물음표를 누르세요. 외운 단어는 며칠 뒤에 다시 나와요. \'읽기\'는 영어와 한국어 뜻을 차례대로 자동으로 읽어 줘요. 매일 저녁 8시에 복습 알림이 와요.</string>
+    <string name="help_battle_title">전투</string>
+    <string name="help_battle">단어장 하나에서 15개를 외우면(또는 단어장 전체를 외우면) 전투할 수 있어요. 발음을 듣고 단어 철자를 입력해서, 맞히면 몬스터를 공격하고 틀리면 HP가 줄어요. 몬스터의 HP를 0으로 만들면 물리칠 수 있고, 내 HP가 0이 되면 교회로 끌려가요. 한 번의 전투는 5~15문제이고, 두 번 맞힌 단어는 더 이상 나오지 않아요.</string>
+    <string name="help_level_title">레벨, 전직, 아이템</string>
+    <string name="help_level">전투에서 경험치를 얻으면 레벨이 올라요. 10레벨마다 칭호가 바뀌고 모습과 필살기도 강해져요. 10레벨이 넘으면 \'능력치\'에서 다른 직업으로 전직할 수 있지만 레벨이 10 내려가요. 전투에서 이기면 보물 상자가 나올 수 있고, 아이템은 전투 중에 아이템 가방에서 사용해요.</string>
+    <string name="help_boss_title">마왕</string>
+    <string name="help_boss">단어를 50개 외울 때마다 중간 보스가, 100개 외울 때마다 대마왕이 나타나요. 마왕을 물리치면 더 많은 경험치를 얻을 수 있어요.</string>
+    <string name="help_tips_title">작은 팁</string>
+    <string name="help_tips">메인 화면의 \'게임 설정\'에서 언어 변경, 배경 음악 음량(끄기/작게/크게, 단어 읽기 소리에는 영향 없음), 글자 크기를 바꿀 수 있어요.</string>
+    <string name="help_about_title">정보</string>
+    <string name="help_about">《픽셀 단어》는 Make It Fun Studio가 만들었어요. 함께 모험해 줘서 고마워요!</string>
+    <string name="help_version">버전: v%1$s</string>
+
+    <!-- 단어장 -->
+    <string name="menu_home">메인 화면으로</string>
+    <string name="action_review">복습</string>
+    <string name="action_review_count">복습 %1$d</string>
+    <string name="action_listen">읽기</string>
+    <string name="action_add">단어 추가</string>
+    <string name="action_battle">전투</string>
+    <string name="word_count">총 %1$d개</string>
+    <string name="book_exhausted">이 단어장의 단어는 모두 전투에서 %1$d번 맞혔어요. 새 단어를 추가하면 경험치와 보물 상자를 다시 온전히 받을 수 있어요</string>
+    <string name="book_empty">아직 단어가 없어요. 아래 \'단어 추가\'를 눌러 첫 단어를 넣어 보세요</string>
+    <string name="pronounce">발음</string>
+    <string name="practice_battle">연습 전투</string>
+    <string name="practice_battle_message">이 단어장의 단어는 모두 전투에서 %1$d번 맞혔어요. 계속 연습할 수 있지만 경험치는 1/4만 받고 보물 상자도 나오지 않아요.</string>
+    <string name="practice_start">연습 시작</string>
+    <string name="word_add_title">단어 추가</string>
+    <string name="word_edit_title">단어 편집</string>
+    <string name="word_field_english">영어 단어</string>
+    <string name="word_field_english_hint">예: apple</string>
+    <string name="word_field_meaning">한국어 뜻</string>
+    <string name="word_field_meaning_hint">비워 두면 자동으로 번역해요</string>
+    <string name="meaning_waiting">(번역 파일 다운로드를 기다리는 중…)</string>
+    <string name="meaning_failed">(자동 번역에 실패했어요. 눌러서 직접 입력하세요)</string>
+    <string name="meaning_translating">(번역 중이에요. 눌러서 직접 입력할 수도 있어요)</string>
+    <string name="translator_downloading">처음 사용해서 번역 파일(약 30MB)을 다운로드하고 있어요. 끝나면 자동으로 번역해요</string>
+    <string name="translator_failed">번역 파일 다운로드에 실패했어요. 네트워크를 확인하고 다시 시도하세요</string>
+    <string name="add_manual">단어 몬스터 직접 입력</string>
+    <string name="add_camera">카메라로 숨은 몬스터 찾기</string>
+    <string name="add_gallery">앨범에서 몬스터 추가</string>
+    <string name="add_document">고문서의 몬스터 읽기</string>
+
+    <!-- 몬스터 포획(카메라, 앨범, 고문서) -->
+    <string name="scan_reading_page">고문서를 읽는 중: %1$d / %2$d쪽</string>
+    <string name="scan_read_failed">읽기 실패: %1$s</string>
+    <string name="scan_ocr_failed">인식 실패: %1$s</string>
+    <string name="scan_title">몬스터 포획</string>
+    <string name="scan_again_camera">다시 찍기</string>
+    <string name="scan_again_gallery">다른 사진 고르기</string>
+    <string name="scan_again_document">다른 고문서 고르기</string>
+    <string name="scan_intro">교과서나 글의 사진을 찍거나 고문서(PDF, Excel, TXT)를 열면 숨어 있는 단어 몬스터를 찾아 줄게요.</string>
+    <string name="scan_none">영어 단어를 찾지 못했어요. 더 선명한 사진으로 다시 해 보세요.</string>
+    <string name="scan_pick">추가할 몬스터</string>
+    <string name="scan_select_all">모두 선택</string>
+    <string name="scan_select_none">모두 해제</string>
+    <string name="scan_skipped">자주 쓰는 단어 %1$d개는 건너뛰었어요(the, and, is 등)</string>
+    <string name="scan_owned">%1$s (이미 있음)</string>
+    <string name="scan_unclear_hide">잘 안 보이는 단어 접기 ▲</string>
+    <string name="scan_unclear_show">잘 안 보이는 단어 %1$d개 더 보기(사전에 없음) ▼</string>
+    <string name="scan_save_to">저장 위치:</string>
+    <string name="scan_add">단어장에 추가 (%1$d)</string>
+    <string name="scan_aim_title">몬스터가 나타났다!</string>
+    <string name="scan_aim">카메라를 몬스터에게 맞춰 주세요</string>
+    <string name="scan_ready">준비 완료</string>
+
+    <!-- 파일 읽기 오류 -->
+    <string name="file_open_failed">이 파일을 열 수 없어요</string>
+    <string name="file_old_excel">예전 Excel(.xls)은 먼저 .xlsx나 CSV로 다시 저장해 주세요</string>
+    <string name="file_excel_empty">이 Excel 파일에서 글자를 찾지 못했어요</string>
+
+    <!-- 매일 복습 알림 -->
+    <string name="reminder_channel">매일 복습 알림</string>
+    <string name="reminder_title">복습할 시간이에요!</string>
+    <string name="reminder_text">오늘 복습할 단어가 %1$d개 있어요</string>
+
+    <!-- 전투 -->
+    <string name="battle_title">전투: %1$s</string>
+    <string name="battle_flee">도망</string>
+    <string name="boss_big">대마왕</string>
+    <string name="boss_mid">중간 보스</string>
+    <string name="battle_boss_appears">%1$s \'%2$s\' 등장!</string>
+    <string name="battle_no_words">이 단어장에는 아직 문제로 낼 단어가 없어요(3글자 이상, 외운 단어)</string>
+    <string name="battle_hero_down">%1$s 쓰러짐…</string>
+    <string name="battle_dragged">동료들이 당신을 교회로 끌고 갔다</string>
+    <string name="battle_death_count">%1$d번째로 쓰러졌어요</string>
+    <string name="battle_finisher">%1$s!</string>
+    <string name="battle_knocked">%1$s 처치!</string>
+    <string name="battle_still_standing">%1$s 아직 버티고 있다!</string>
+    <string name="battle_still_standing_hint">몬스터의 HP를 0으로 만들어야 날려 버릴 수 있어요. 다음에 다시 도전!</string>
+    <string name="battle_watch_out">조심해!</string>
+    <string name="battle_items">아이템</string>
+    <string name="battle_next">다음 턴</string>
+    <string name="battle_attack">공격</string>
+    <string name="battle_hit">명중!</string>
+    <string name="battle_hurt">몬스터의 공격!</string>
+    <string name="result_down">쓰러졌다…</string>
+    <string name="result_perfect">완벽한 승리!</string>
+    <string name="result_win">승리!</string>
+    <string name="result_lose">조금 더 연습해요</string>
+    <string name="result_down_message">%1$s에게 당했어요. 교회에서 잠시 쉬고 다시 와요(%2$d번째 쓰러짐)</string>
+    <string name="result_knocked">%1$s 날려 버렸다!</string>
+    <string name="result_standing">%1$s 아직 버티고 있어요. HP를 0으로 만들어야 날려 버릴 수 있어요</string>
+    <string name="result_score">정답 %1$d / %2$d (%3$d문제 이상 통과)</string>
+    <string name="result_exp">경험치 +%1$d</string>
+    <string name="result_exp_boss">경험치 +%1$d (마왕 보너스 2배)</string>
+    <string name="result_practice">연습 전투: 경험치 1/4, 보물 상자 없음</string>
+    <string name="result_chest">보물 상자를 열어 \'%1$s\' 획득!</string>
+    <string name="result_level_up">레벨 업! Lv %1$d → Lv %2$d</string>
+    <string name="new_title">새 칭호 \'%1$s\' 획득!</string>
+    <string name="result_boss_down">★ %1$s \'%2$s\' 처치!</string>
+    <string name="result_boss_hint">이 전투를 통과해야 마왕을 물리친 것으로 인정돼요. 다음에 또 나타나요</string>
+    <string name="result_book_cleared">★ 이 단어장의 전투 통과</string>
+    <string name="result_forgotten">이 단어들은 두 번 틀려서 \'모르겠어요\'로 되돌렸어요. 꼭 복습하세요: %1$s</string>
+    <string name="list_separator">, </string>
+    <string name="levelup_evolve">모습이 진화했다! 새 기술 \'%1$s\'을(를) 배웠다!</string>
+    <string name="spell_hint">발음을 듣고 주문의 철자를 입력하세요</string>
+    <string name="spell_label">주문</string>
+
+    <!-- 캐릭터 이름 -->
+    <string name="avatar_hero">용사</string>
+    <string name="avatar_mage">마법사</string>
+    <string name="avatar_archer">엘프 궁수</string>
+    <string name="avatar_goblin">고블린</string>
+    <string name="avatar_dwarf">드워프</string>
+    <string name="avatar_cat">고양이</string>
+    <string name="avatar_dragon">용</string>
+    <string name="avatar_demon">마족</string>
+    <string name="avatar_robot">로봇</string>
+
+    <!-- 직업 이름 -->
+    <string name="race_hero">인간・용사</string>
+    <string name="race_mage">인간・마법사</string>
+    <string name="race_archer">엘프・궁수</string>
+    <string name="race_goblin">고블린</string>
+    <string name="race_dwarf">드워프</string>
+    <string name="race_cat">고양이족</string>
+    <string name="race_dragon">용족</string>
+    <string name="race_machine">기계족</string>
+    <string name="race_demon">마족</string>
+
+    <!-- 직업별 6단계 칭호(Lv 1, 10, 20, 30, 40, 50)와 6단계 필살기 -->
+    <string-array name="moves_slash">
+        <item>베기</item>
+        <item>십자 베기</item>
+        <item>회오리 베기</item>
+        <item>성광 베기</item>
+        <item>천공 가르기</item>
+        <item>용사의 검</item>
+    </string-array>
+    <string-array name="moves_magic">
+        <item>불꽃 마법</item>
+        <item>서리 마법</item>
+        <item>번개 마법</item>
+        <item>유성 마법</item>
+        <item>별빛 폭발</item>
+        <item>종언의 마법</item>
+    </string-array>
+    <string-array name="moves_arrow">
+        <item>한 발 쏘기</item>
+        <item>2연발 화살</item>
+        <item>질풍의 화살</item>
+        <item>달빛 화살비</item>
+        <item>숲의 분노</item>
+        <item>엘프 왕의 화살</item>
+    </string-array>
+    <string-array name="moves_bomb">
+        <item>작은 폭탄</item>
+        <item>연쇄 폭탄</item>
+        <item>화약통</item>
+        <item>대폭발</item>
+        <item>독안개 폭탄</item>
+        <item>혼돈 폭파</item>
+    </string-array>
+    <string-array name="moves_smash">
+        <item>도끼 찍기</item>
+        <item>무거운 도끼질</item>
+        <item>대지 가르기</item>
+        <item>바위 깨기 도끼</item>
+        <item>산사태</item>
+        <item>대지의 분노</item>
+    </string-array>
+    <string-array name="moves_claw">
+        <item>냥냥 펀치</item>
+        <item>고양이 할퀴기</item>
+        <item>3연속 할퀴기</item>
+        <item>질풍 발톱</item>
+        <item>고양이 난무</item>
+        <item>깜찍 고양이 소녀 펀치</item>
+    </string-array>
+    <string-array name="moves_fire">
+        <item>불티</item>
+        <item>화염 숨결</item>
+        <item>맹렬한 불꽃</item>
+        <item>작열의 폭풍</item>
+        <item>지옥불</item>
+        <item>신룡의 업화</item>
+    </string-array>
+    <string-array name="moves_laser">
+        <item>전기 충격</item>
+        <item>레이저 빔</item>
+        <item>더블 레이저</item>
+        <item>플라스마포</item>
+        <item>슈퍼 빔</item>
+        <item>궁극 기신포</item>
+    </string-array>
+    <string-array name="moves_darkfire">
+        <item>그림자 구슬</item>
+        <item>흑염탄</item>
+        <item>명계의 불꽃</item>
+        <item>마검 일섬</item>
+        <item>암흑 폭풍</item>
+        <item>마계의 심판</item>
+    </string-array>
+    <string-array name="titles_hero">
+        <item>견습 용사</item>
+        <item>용사</item>
+        <item>왕국의 용사</item>
+        <item>성광의 용사</item>
+        <item>전설의 용사</item>
+        <item>구세의 용사</item>
+    </string-array>
+    <string-array name="titles_mage">
+        <item>마법 제자</item>
+        <item>견습 마법사</item>
+        <item>마법사</item>
+        <item>대마법사</item>
+        <item>마도 현자</item>
+        <item>별의 마녀</item>
+    </string-array>
+    <string-array name="titles_archer">
+        <item>숲의 견습 궁수</item>
+        <item>엘프 궁수</item>
+        <item>질풍의 사수</item>
+        <item>달빛의 명사수</item>
+        <item>숲의 수호자</item>
+        <item>엘프 왕</item>
+    </string-array>
+    <string-array name="titles_goblin">
+        <item>졸개</item>
+        <item>도적</item>
+        <item>기습 대장</item>
+        <item>고블린 두목</item>
+        <item>고블린 왕</item>
+        <item>혼돈의 왕</item>
+    </string-array>
+    <string-array name="titles_dwarf">
+        <item>광부</item>
+        <item>도끼병</item>
+        <item>대장장이 전사</item>
+        <item>중장 수비병</item>
+        <item>산의 영주</item>
+        <item>대지의 왕</item>
+    </string-array>
+    <string-array name="titles_cat">
+        <item>아기 고양이</item>
+        <item>어른 고양이</item>
+        <item>고양이 대장</item>
+        <item>고양이 수호신</item>
+        <item>새침한 집고양이</item>
+        <item>깜찍 고양이 소녀</item>
+    </string-array>
+    <string-array name="titles_dragon">
+        <item>아기 용</item>
+        <item>비룡</item>
+        <item>화염룡</item>
+        <item>고룡</item>
+        <item>용왕</item>
+        <item>신룡</item>
+    </string-array>
+    <string-array name="titles_machine">
+        <item>시제기</item>
+        <item>전투 기계병</item>
+        <item>강화 기계병</item>
+        <item>강철 수호자</item>
+        <item>슈퍼 기갑</item>
+        <item>궁극 기신</item>
+    </string-array>
+    <string-array name="titles_demon">
+        <item>꼬마 악마</item>
+        <item>마족 전사</item>
+        <item>마검사</item>
+        <item>마장군</item>
+        <item>마왕자</item>
+        <item>마계의 왕</item>
+    </string-array>
+
+    <!-- 몬스터 이름 -->
+    <string name="monster_slime">슬라임</string>
+    <string name="monster_bat">박쥐</string>
+    <string name="monster_ghost">유령</string>
+    <string name="monster_mushroom">버섯 괴물</string>
+    <string name="monster_skeleton">해골 병사</string>
+    <string name="monster_golem">바위 골렘</string>
+    <string name="monster_eyeball">눈알 괴물</string>
+    <string name="monster_fire_spirit">불의 정령</string>
+    <string name="monster_ice_crystal">얼음 결정 괴물</string>
+    <string name="monster_pumpkin">호박 괴물</string>
+    <string name="monster_cactus">선인장 괴물</string>
+    <string name="monster_octopus">거대 문어</string>
+    <string name="monster_wolf">회색 늑대</string>
+    <string name="monster_mimic">미믹</string>
+    <string name="monster_imp">꼬마 악마</string>
+    <string name="monster_cyclops">외눈 거인</string>
+    <string name="monster_scorpion">사막 전갈</string>
+    <string name="monster_treant">나무 거인</string>
+    <string name="monster_wyvern">와이번</string>
+    <string name="monster_demon_lord">마왕</string>
+    <string name="monster_viper">독사</string>
+    <string name="monster_spider">거대 거미</string>
+    <string name="monster_zombie">좀비</string>
+    <string name="monster_mummy">미라</string>
+    <string name="monster_crab">거대 집게 게</string>
+    <string name="monster_maneater">식인 꽃</string>
+    <string name="monster_gargoyle">가고일</string>
+    <string name="monster_crow">까마귀</string>
+    <string name="monster_jellyfish">해파리</string>
+    <string name="monster_killer_bee">살인벌</string>
+    <string name="monster_poison_frog">독개구리</string>
+    <string name="monster_will_o_wisp">도깨비불</string>
+    <string name="monster_hedgehog">고슴도치</string>
+    <string name="monster_mole">땅속 두더지</string>
+    <string name="monster_vampire">흡혈귀 백작</string>
+    <string name="monster_minotaur">미노타우로스</string>
+    <string name="monster_yeti">설인</string>
+    <string name="monster_medusa">메두사</string>
+    <string name="monster_reaper">사신</string>
+    <string name="monster_hydra">히드라</string>
+    <string name="monster_inferno_troll">염옥 트롤</string>
+    <string name="monster_dark_knight_king">암흑 기사왕</string>
+    <string name="monster_sheep">양 괴물</string>
+    <string name="monster_rock_turtle">바위 거북</string>
+    <string name="monster_snail">달팽이 괴물</string>
+    <string name="monster_thunder_beetle">번개뿔 딱정벌레</string>
+    <string name="monster_bookworm">책벌레</string>
+    <string name="monster_fire_fox">불여우</string>
+    <string name="monster_ice_penguin">얼음 펭귄</string>
+    <string name="monster_ghost_lantern">유령 등롱</string>
+    <string name="monster_acorn_soldier">도토리 병사</string>
+    <string name="monster_clockwork_mouse">태엽 쥐</string>
+    <string name="monster_griffin">그리핀</string>
+    <string name="monster_sea_serpent">바다뱀</string>
+    <string name="monster_skeleton_mage">해골 마법사</string>
+    <string name="monster_iron_bear">철갑 곰</string>
+    <string name="monster_ink_giant">잉크 거인</string>
+    <string name="monster_frost_giant">서리 거인</string>
+    <string name="monster_kraken">크라켄</string>
+    <string name="monster_chaos_wizard_king">혼돈의 마법사왕</string>
+    <string name="monster_mech_titan">기계 타이탄</string>
+    <string name="monster_word_devourer">글자를 삼키는 자</string>
+    <string name="monster_lava_slime">용암 슬라임</string>
+    <string name="monster_metal_slime">강철 슬라임</string>
+    <string name="monster_vampire_bat">흡혈 박쥐</string>
+    <string name="monster_shadow_ghost">그림자 유령</string>
+    <string name="monster_poison_mushroom">독버섯</string>
+    <string name="monster_golden_skeleton">황금 해골</string>
+    <string name="monster_snow_wolf">설원 늑대</string>
+    <string name="monster_black_scorpion">검은 전갈</string>
+</resources>

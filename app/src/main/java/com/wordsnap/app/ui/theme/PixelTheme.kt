@@ -10,12 +10,16 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
+import com.wordsnap.app.i18n.AppLanguage
+import com.wordsnap.app.i18n.appLanguage
 
 // 像素風配色：參考早期掌機遊戲的選單——羊皮紙底、深藍標題列、黑色粗框
 val PixelInk = Color(0xFF202030)
@@ -51,12 +55,14 @@ private val colors = lightColorScheme(
     error = PixelRed,
 )
 
-// 俐方體 11 號（Cubic 11）：免費、可商用的繁體中文像素字型
+// 俐方體 11 號（Cubic 11）：免費、可商用的繁體中文像素字型，日文假名也有
 private val PixelFont = FontFamily(Font(R.font.cubic_11))
 
-private fun TextStyle.pixel() = copy(fontFamily = PixelFont)
+// 韓文用 Galmuri11（SIL OFL 1.1）：和俐方體 11 號一樣大小的韓文像素字型
+private val KoreanPixelFont = FontFamily(Font(R.font.galmuri_11))
 
-private val typography = Typography().run {
+private fun typographyFor(font: FontFamily) = Typography().run {
+    fun TextStyle.pixel() = copy(fontFamily = font)
     copy(
         displayLarge = displayLarge.pixel(), displayMedium = displayMedium.pixel(), displaySmall = displaySmall.pixel(),
         headlineLarge = headlineLarge.pixel(), headlineMedium = headlineMedium.pixel(), headlineSmall = headlineSmall.pixel(),
@@ -79,9 +85,14 @@ private val shapes = Shapes(
 // 遊戲對話框那種黑色粗框
 val PixelBorder = BorderStroke(3.dp, PixelInk)
 
+private val typography = typographyFor(PixelFont)
+private val koreanTypography = typographyFor(KoreanPixelFont)
+
 @Composable
 fun PixelTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = colors, typography = typography, shapes = shapes, content = content)
+    val context = LocalContext.current
+    val korean = remember { appLanguage(context) == AppLanguage.Korean }
+    MaterialTheme(colorScheme = colors, typography = if (korean) koreanTypography else typography, shapes = shapes, content = content)
 }
 
 // 深藍標題列，文字和圖示是白色
