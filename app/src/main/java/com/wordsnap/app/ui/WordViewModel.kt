@@ -14,7 +14,9 @@ import com.wordsnap.app.data.AppDatabase
 import com.wordsnap.app.data.Book
 import com.wordsnap.app.data.Profile
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.i18n.appLanguage
 import com.wordsnap.app.i18n.tr
+import com.wordsnap.app.translate.DictionaryPacks
 import com.wordsnap.app.translate.ModelStatus
 import com.wordsnap.app.translate.WordDictionary
 import com.wordsnap.app.translate.WordTranslator
@@ -253,6 +255,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 prefs.edit().putBoolean(KEY_TESTCOUNT_RESET, true).apply()
             }
             cleanupMeaningsOnce()
+            // 目前的語言是日文、韓文，字典包有新版（或還沒裝）就先裝好，才查得到解釋
+            DictionaryPacks.install(getApplication(), appLanguage(getApplication()))
             fillMissingMeaningsNow()
         }
     }
