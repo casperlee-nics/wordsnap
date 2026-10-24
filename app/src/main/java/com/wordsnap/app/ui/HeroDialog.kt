@@ -54,10 +54,7 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit, onClass
                 }
                 // 超過 10 級才出現轉職按鈕
                 if (onClassChange != null && info.level >= CLASS_CHANGE_MIN_LEVEL) {
-                    PixelIconButton(
-                        IconClassChange, "轉職", onClick = { changingClass = true },
-                        size = 52.dp, palette = ColorIconPalette,
-                    )
+                    PixelIconPlain(IconClassChange, "轉職", onClick = { changingClass = true }, size = 52.dp)
                 }
             }
         },

@@ -56,7 +56,7 @@ fun SaveSlotScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (managing) "記錄管理" else "讀取遊戲") },
+                title = { Text(if (managing) "記錄管理" else "繼續冒險") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -68,7 +68,7 @@ fun SaveSlotScreen(
     ) { padding ->
         if (profiles.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("還沒有存檔，請先開始新遊戲")
+                Text("還沒有存檔，請先開始新冒險")
             }
         } else {
             LazyColumn(
@@ -90,14 +90,8 @@ fun SaveSlotScreen(
                             if (managing) {
                                 // 右邊：改名字（鉛筆）、刪除紀錄（垃圾桶）
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    PixelIconButton(
-                                        IconPencil, "改名字", onClick = { renaming = profile },
-                                        size = 48.dp, palette = ColorIconPalette,
-                                    )
-                                    PixelIconButton(
-                                        IconTrash, "刪除紀錄", onClick = { confirm = profile },
-                                        size = 48.dp, palette = ColorIconPalette,
-                                    )
+                                    PixelIconPlain(IconPencil, "改名字", onClick = { renaming = profile })
+                                    PixelIconPlain(IconTrash, "刪除紀錄", onClick = { confirm = profile })
                                 }
                             } else {
                                 Text("→", color = MaterialTheme.colorScheme.primary)

@@ -119,13 +119,13 @@ fun ScanScreen(
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
         val uri = photoUri
-        if (ok && uri != null) startScan(uri)
+        if (ok && uri != null) startScan(uri) else if (found == null) onBack()
     }
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) startScan(uri)
+        if (uri != null) startScan(uri) else if (found == null) onBack()
     }
     val pickPdf = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) startPdf(uri)
+        if (uri != null) startPdf(uri) else if (found == null) onBack()
     }
     fun openGallery() = pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     fun openPdf() = pickPdf.launch(arrayOf("application/pdf"))
@@ -163,10 +163,23 @@ fun ScanScreen(
             Modifier.fillMaxSize().padding(padding).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { showAimHint = true }) { Text("拍照") }
-                PixelOutlinedButton(onClick = ::openGallery) { Text("相簿") }
-                PixelOutlinedButton(onClick = ::openPdf) { Text("古書 PDF") }
+            // 找完之後可以用同一種方式再找一次（取消就回到加單字選單）
+            if (found != null && !scanning) {
+                PixelOutlinedButton(onClick = {
+                    when (source) {
+                        ScanSource.Camera -> showAimHint = true
+                        ScanSource.Gallery -> openGallery()
+                        ScanSource.Pdf -> openPdf()
+                    }
+                }) {
+                    Text(
+                        when (source) {
+                            ScanSource.Camera -> "再拍一張"
+                            ScanSource.Gallery -> "換一張圖"
+                            ScanSource.Pdf -> "換一本古書"
+                        },
+                    )
+                }
             }
 
             when {

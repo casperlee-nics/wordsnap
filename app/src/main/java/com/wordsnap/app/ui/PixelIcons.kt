@@ -301,6 +301,26 @@ val IconHelp = listOf(
     "................",
 )
 
+// 主畫面右下角：插在草地上、寫著問號的小木牌
+val IconHelpSign = listOf(
+    "................",
+    ".KKKKKKKKKKKKKK.",
+    "KSSSSSSSSSSSSSSK",
+    "KSSSSSHHHHSSSSSK",
+    "KSSSSHHSSHHSSSSK",
+    "KSSSSSSSSHHSSSSK",
+    "KSSSSSSSHHSSSSSK",
+    "KSSSSSSHHSSSSSSK",
+    "KSSSSSSSSSSSSSSK",
+    "KSSSSSSHHSSSSSSK",
+    ".KKKKKKKKKKKKKK.",
+    "......KHHK......",
+    "......KHHK......",
+    "......KHHK......",
+    ".....KKHHKK.....",
+    "................",
+)
+
 // 記錄管理：改名字（鉛筆）
 val IconPencil = listOf(
     "................",
@@ -340,6 +360,26 @@ val IconTrash = listOf(
     "................",
     "................",
 )
+
+// 沒有外框的像素圖示按鈕，放在已經有外框的卡片或視窗裡（不要框中框）
+@Composable
+fun PixelIconPlain(
+    icon: List<String>,
+    contentDescription: String,
+    onClick: () -> Unit,
+    size: Dp = 48.dp,
+    palette: Map<Char, Color> = ColorIconPalette,
+) {
+    Box(
+        Modifier
+            .size(size)
+            .semantics { this.contentDescription = contentDescription }
+            .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        PixelArt(icon, palette, Modifier.padding(size / 10))
+    }
+}
 
 // 方形的像素按鈕，只有圖示沒有文字
 @Composable

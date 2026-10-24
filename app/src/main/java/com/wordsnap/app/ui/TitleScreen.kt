@@ -1,22 +1,17 @@
 package com.wordsnap.app.ui
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.Canvas
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,25 +19,35 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
 import com.wordsnap.app.ui.theme.PixelGold
@@ -136,13 +141,9 @@ fun TitleScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text("像素單字", style = MaterialTheme.typography.headlineMedium)
-                        Button(onClick = onNewGame, modifier = Modifier.fillMaxWidth()) { Text("新遊戲") }
-                        PixelOutlinedButton(onClick = onLoadGame, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
-                            Text("讀取遊戲")
-                        }
-                        PixelOutlinedButton(onClick = onManageSaves, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
-                            Text("記錄管理")
-                        }
+                        TitleMenuButton("新冒險", onNewGame)
+                        TitleMenuButton("繼續冒險", onLoadGame, enabled = hasSaves)
+                        TitleMenuButton("記錄管理", onManageSaves, enabled = hasSaves)
                         // 背景音樂音量：關、小、大（念單字的聲音不受影響）
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("♪ 音樂：", style = MaterialTheme.typography.bodyMedium)
@@ -170,11 +171,63 @@ fun TitleScreen(
 
         // 右下角的問號：遊戲說明
         Box(Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 20.dp)) {
-            PixelIconButton(IconHelp, "遊戲說明", onClick = { showHelp = true }, size = 48.dp, palette = ColorIconPalette)
+            // 插在草地上的小木牌，比較融入背景
+            PixelIconPlain(IconHelpSign, "遊戲說明", onClick = { showHelp = true }, size = 56.dp)
         }
     }
     if (showHelp) HelpDialog(onDismiss = { showHelp = false })
 }
+
+// 主畫面選單按鈕：復古的黃褐色像素方塊，左上亮邊、右下暗邊加上影子，看起來微微浮起；按下去會往下沉
+@Composable
+private fun TitleMenuButton(label: String, onClick: () -> Unit, enabled: Boolean = true) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val lift = if (pressed) 0.dp else 3.dp
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+            .drawBehind {
+                val px = 3.dp.toPx()
+                val up = lift.toPx()
+                val w = size.width - 3.dp.toPx()
+                val h = size.height - 3.dp.toPx()
+                // 影子：往右下偏一點的深褐色方塊
+                if (up > 0f) {
+                    drawRect(ButtonShadow, Offset(px * 2, px * 2), Size(w - px, h - px))
+                }
+                val top = 3.dp.toPx() - up
+                val left = 3.dp.toPx() - up
+                // 缺角的黑框
+                drawRect(PixelInk, Offset(left + px, top), Size(w - px * 2, h))
+                drawRect(PixelInk, Offset(left, top + px), Size(w, h - px * 2))
+                // 黃褐色本體
+                drawRect(ButtonBody, Offset(left + px, top + px), Size(w - px * 2, h - px * 2))
+                // 左上亮邊、右下暗邊
+                drawRect(ButtonLight, Offset(left + px, top + px), Size(w - px * 2, px))
+                drawRect(ButtonLight, Offset(left + px, top + px), Size(px, h - px * 2))
+                drawRect(ButtonDark, Offset(left + px, top + h - px * 2), Size(w - px * 2, px))
+                drawRect(ButtonDark, Offset(left + w - px * 2, top + px), Size(px, h - px * 2))
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            color = ButtonText,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift),
+        )
+    }
+}
+
+private val ButtonBody = Color(0xFFC89858)
+private val ButtonLight = Color(0xFFF0D098)
+private val ButtonDark = Color(0xFF8C5C28)
+private val ButtonShadow = Color(0xFF4A3018)
+private val ButtonText = Color(0xFF3A2410)
 
 // 夜晚城堡在天空圖（64 x 36 格）裡的位置
 private const val CastleLeft = 22

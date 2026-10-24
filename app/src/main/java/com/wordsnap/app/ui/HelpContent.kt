@@ -14,8 +14,8 @@ private class HelpSection(val title: String, val body: String)
 private val HelpSections = listOf(
     HelpSection(
         "開始冒險",
-        "按「新遊戲」輸入暱稱、選一個職業。每個冒險者有自己的單字簿、等級和道具，" +
-            "之後用「讀取遊戲」接著玩；「記錄管理」可以改名字或刪除紀錄。",
+        "按「新冒險」輸入暱稱、選一個職業。每個冒險者有自己的單字簿、等級和道具，" +
+            "之後用「繼續冒險」接著玩；「記錄管理」可以改名字或刪除紀錄。",
     ),
     HelpSection(
         "收集單字怪物",

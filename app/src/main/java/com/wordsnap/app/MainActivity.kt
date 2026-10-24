@@ -77,6 +77,12 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
     var battleBookId by rememberSaveable { mutableLongStateOf(-1L) }
     var scanSource by rememberSaveable { mutableStateOf(ScanSource.Camera) }
     val backToList = { screen = Screen.List }
+    // 從拍照／相簿／古書返回時，回到單字簿並重新打開加單字的四個選項
+    var reopenAddChoice by rememberSaveable { mutableStateOf(false) }
+    val backFromScan = {
+        reopenAddChoice = true
+        screen = Screen.List
+    }
     val backToTitle = { screen = Screen.Title }
     val allWords by vm.allWords.collectAsState()
     val books by vm.books.collectAsState()
@@ -87,7 +93,8 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
     when (screen) {
         Screen.Title -> Unit
         Screen.NewGame, Screen.Load, Screen.Delete, Screen.List -> BackHandler(onBack = backToTitle)
-        Screen.Scan, Screen.Review, Screen.Listen, Screen.Battle -> BackHandler(onBack = backToList)
+        Screen.Scan -> BackHandler(onBack = backFromScan)
+        Screen.Review, Screen.Listen, Screen.Battle -> BackHandler(onBack = backToList)
     }
     if (inGame) AskNotificationPermission()
 
@@ -131,6 +138,8 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
                 screen = Screen.Battle
             },
             onHome = backToTitle,
+            startWithAddChoice = reopenAddChoice,
+            onAddChoiceShown = { reopenAddChoice = false },
         )
         Screen.Scan -> ScanScreen(
             existing = allWords.map { it.text.lowercase() }.toSet(),
@@ -141,7 +150,7 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
                 vm.addAll(picked, bookId)
                 screen = Screen.List
             },
-            onBack = backToList,
+            onBack = backFromScan,
             source = scanSource,
         )
         Screen.Review -> ReviewScreen(vm, onBack = backToList)

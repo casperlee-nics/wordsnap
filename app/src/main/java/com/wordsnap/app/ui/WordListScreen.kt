@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +59,9 @@ fun WordListScreen(
     onListen: () -> Unit,
     onBattle: (Long) -> Unit,
     onHome: () -> Unit,
+    // 從拍照／相簿／古書返回時，一進來就打開加單字選單
+    startWithAddChoice: Boolean = false,
+    onAddChoiceShown: () -> Unit = {},
 ) {
     val words by vm.words.collectAsState()
     val books by vm.books.collectAsState()
@@ -75,7 +80,8 @@ fun WordListScreen(
     val dueCount = words.count { it.dueAt <= now }
     var showAdd by remember { mutableStateOf(false) }
     // 按「加單字」先選手動輸入或拍照
-    var choosingAdd by remember { mutableStateOf(false) }
+    var choosingAdd by remember { mutableStateOf(startWithAddChoice) }
+    LaunchedEffect(Unit) { if (startWithAddChoice) onAddChoiceShown() }
     // 單字簿頁面播放清淡的背景音樂，念單字時調小聲
     val context = LocalContext.current
     val musicOn = remember { isMusicOn(context) }
@@ -351,7 +357,7 @@ private fun AddChoice(icon: List<String>, text: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        PixelIconButton(icon, text, onClick = onClick, size = 72.dp, palette = ColorIconPalette)
+        PixelArt(icon, ColorIconPalette, Modifier.size(56.dp))
         Text(text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
     }
 }
