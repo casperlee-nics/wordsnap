@@ -77,6 +77,11 @@ fun TitleScreen(
     var princessShow by remember { mutableIntStateOf(0) }
     var princessOn by remember { mutableStateOf(false) }
     val princess = remember { Animatable(0f) }
+    // 草地的小彩蛋：連點三次，白天長出花花草草、晚上冒出眼睛發光的怪物
+    var grassTaps by remember { mutableIntStateOf(0) }
+    var lastGrassTap by remember { mutableStateOf(0L) }
+    var grassShow by remember { mutableIntStateOf(0) }
+    var grassOn by remember { mutableStateOf(false) }
     OneShotSound(R.raw.royal_fanfare, play = princessOn, volume = 0.7f)
     LaunchedEffect(princessShow) {
         if (princessShow == 0) return@LaunchedEffect
@@ -119,7 +124,25 @@ fun TitleScreen(
                 }
             }
             Box(Modifier.weight(1f))
-            PixelArt(if (night) TitleGroundNight else TitleGround, ScenePalette, Modifier.fillMaxWidth())
+            Box {
+                PixelArt(if (night) TitleGroundNight else TitleGround, ScenePalette, Modifier.fillMaxWidth())
+                if (grassOn) GrassSurprise(night, grassShow, onDone = { grassOn = false }, Modifier.matchParentSize())
+                // 看不見的按鈕蓋在草地上：連點三次觸發彩蛋
+                Box(
+                    Modifier
+                        .matchParentSize()
+                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                            val now = System.currentTimeMillis()
+                            grassTaps = if (now - lastGrassTap < GRASS_TAP_GAP_MS) grassTaps + 1 else 1
+                            lastGrassTap = now
+                            if (grassTaps >= 3 && !grassOn) {
+                                grassTaps = 0
+                                grassShow++
+                                grassOn = true
+                            }
+                        },
+                )
+            }
         }
 
         // 選單放在草地中間，不會擋到上方的城堡
@@ -173,6 +196,9 @@ fun TitleScreen(
     }
     if (showHelp) HelpDialog(onDismiss = { showHelp = false })
 }
+
+// 連點草地時，兩下之間要在這個時間內才算連續
+private const val GRASS_TAP_GAP_MS = 800L
 
 // 夜晚城堡在天空圖（64 x 36 格）裡的位置
 private const val CastleLeft = 22

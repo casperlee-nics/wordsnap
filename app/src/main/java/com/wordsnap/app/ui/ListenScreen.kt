@@ -59,7 +59,7 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
     }
 
     Scaffold(
-        topBar = { PixelHeader("朗讀模式", onBack) },
+        topBar = { PixelHeader("朗讀模式", onBack, theme = HeaderTheme.Tapestry) },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             PixelArt(scene.art, ScenePalette, Modifier.fillMaxWidth())

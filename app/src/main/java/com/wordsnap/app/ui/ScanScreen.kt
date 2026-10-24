@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.wordsnap.app.data.Book
+import com.wordsnap.app.ocr.DocumentMimeTypes
+import com.wordsnap.app.ocr.DocumentText
 import com.wordsnap.app.ocr.ScanResult
 import com.wordsnap.app.ocr.TextScanner
 import com.wordsnap.app.translate.WordDictionary
@@ -55,7 +57,7 @@ import kotlinx.coroutines.launch
 // 加單字的三種來源
 enum class ScanSource { Camera, Gallery, Pdf }
 
-// 拍照、選圖或讀 PDF → 辨識單字 → 點選要加入的字
+// 拍照、選圖或讀古書（PDF、Excel、TXT）→ 辨識單字 → 點選要加入的字
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ScanScreen(
@@ -65,7 +67,7 @@ fun ScanScreen(
     onCreateBook: (String, (Long) -> Unit) -> Unit,
     onAdd: (Collection<String>, Long?) -> Unit,
     onBack: () -> Unit,
-    // 從「加單字」選了哪一種：相機直接打開相機、相簿打開相簿、古書打開「我的檔案」選 PDF
+    // 從「加單字」選了哪一種：相機直接打開相機、相簿打開相簿、古書打開「我的檔案」選 PDF、Excel 或 TXT
     source: ScanSource = ScanSource.Camera,
 ) {
     val context = LocalContext.current
@@ -94,7 +96,7 @@ fun ScanScreen(
         selected.clear()
         scope.launch {
             try {
-                show(TextScanner.scanPdf(context, uri) { page, pages -> progress = "正在翻閱古書：第 $page / $pages 頁" })
+                show(DocumentText.scan(context, uri) { page, pages -> progress = "正在翻閱古書：第 $page / $pages 頁" })
             } catch (e: Exception) {
                 error = "讀取失敗：${e.message}"
                 scanning = false
@@ -128,7 +130,7 @@ fun ScanScreen(
         if (uri != null) startPdf(uri) else if (found == null) onBack()
     }
     fun openGallery() = pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-    fun openPdf() = pickPdf.launch(arrayOf("application/pdf"))
+    fun openPdf() = pickPdf.launch(DocumentMimeTypes)
     // 一進來就直接打開選的那一種，轉動螢幕不會重複打開
     var sourceOpened by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -188,7 +190,7 @@ fun ScanScreen(
                     progress?.let { Text(it, Modifier.padding(top = 8.dp)) }
                 }
                 error != null -> Text(error!!)
-                found == null -> Text("拍一張課本或文章的照片，或打開一本 PDF 古書，我會幫你找出隱藏的單字怪物。")
+                found == null -> Text("拍一張課本或文章的照片，或打開一本古書（PDF、Excel、TXT），我會幫你找出隱藏的單字怪物。")
                 found!!.none { ' ' in it || !TextScanner.isCommon(it) } -> Text("沒有找到英文單字，換一張清楚一點的照片試試。")
                 else -> {
                     // 濾掉 the、and 這類常見字；已經收錄的字照樣列出但不能選
@@ -214,7 +216,7 @@ fun ScanScreen(
                             Modifier
                                 .fillMaxSize()
                                 .padding(top = 18.dp)
-                                .pixelFrame(MaterialTheme.colorScheme.surface)
+                                .woodFrame(MaterialTheme.colorScheme.surface)
                                 .padding(start = 14.dp, end = 14.dp, top = 18.dp, bottom = 12.dp)
                                 .verticalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),

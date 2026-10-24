@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -95,16 +96,22 @@ fun WordListScreen(
                     .windowInsetsPadding(TopAppBarDefaults.windowInsets),
             ) {
                 Row(
-                    Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, top = 2.dp, bottom = 6.dp),
+                    Modifier.fillMaxWidth().padding(start = 2.dp, end = 8.dp, top = 0.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // 點人物打開選單：人物能力、道具欄、回到主畫面
                     Box(Modifier.weight(1f)) {
                         Row(
-                            Modifier.clickable { showMenu = true }.padding(2.dp),
+                            Modifier.clickable { showMenu = true },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            PixelAvatar(Avatar.from(profile?.avatar), size = 48.dp, tier = avatarTier(levelInfo(profile?.exp ?: 0).level))
+                            // 人物放進一個小肖像框裡，不會和羊皮紙的紋路混在一起
+                            Box(
+                                Modifier.size(54.dp).pixelFrame(PortraitBackground, accent = PortraitWood, unit = 2.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                PixelAvatar(Avatar.from(profile?.avatar), size = 42.dp, tier = avatarTier(levelInfo(profile?.exp ?: 0).level))
+                            }
                             Column(Modifier.padding(start = 6.dp)) {
                                 Text(
                                     profile?.name ?: "",
@@ -279,7 +286,14 @@ private fun WordDialog(
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = text, onValueChange = { text = it }, label = { Text("英文單字") }, singleLine = true)
+                // 英文單字的字比中文大一點，比較好看清楚拼字
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = { Text("英文單字") },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.titleLarge,
+                )
                 OutlinedTextField(value = meaning, onValueChange = { meaning = it }, label = { Text("中文意思（空白會自動翻譯）") }, singleLine = true)
             }
         },
@@ -367,3 +381,7 @@ private fun AddChoice(icon: List<String>, text: String, onClick: () -> Unit) {
         Text(text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
     }
 }
+
+// 單字簿左上角人物肖像框的顏色
+private val PortraitBackground = Color(0xFF9CC8E8)
+private val PortraitWood = Color(0xFF7A4E28)

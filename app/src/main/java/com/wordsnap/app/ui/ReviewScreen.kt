@@ -36,7 +36,7 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
     val scene = remember { ReviewScene.entries.random() }
 
     Scaffold(
-        topBar = { PixelHeader("${if (vm.practiceMode) "練習" else "複習"}（剩 ${vm.reviewQueue.size} 張）", onBack) },
+        topBar = { PixelHeader("${if (vm.practiceMode) "練習" else "複習"}（剩 ${vm.reviewQueue.size} 張）", onBack, theme = HeaderTheme.Banner) },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             PixelArt(scene.art, ScenePalette, Modifier.fillMaxWidth())

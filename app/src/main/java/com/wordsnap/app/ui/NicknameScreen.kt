@@ -16,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -66,18 +65,13 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
                 }
                 Text("像素單字", style = MaterialTheme.typography.displaySmall)
                 Text("冒險者，請輸入你的暱稱", style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(
+                // 在羊皮書卷上寫暱稱，右邊蓋章確認（按鈕在旁邊，鍵盤跳出來也不會被擋住）
+                ScrollNameInput(
                     value = name,
                     onValueChange = { name = it.take(12) },
-                    label = { Text("暱稱") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = "寫下你的暱稱",
+                    onConfirm = { pickingAvatar = true },
                 )
-                Button(
-                    onClick = { pickingAvatar = true },
-                    enabled = name.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("下一步 →") }
             } else {
                 PixelAvatar(avatar, size = 120.dp)
                 Text("${name.trim()}，選一個你的角色", style = MaterialTheme.typography.titleMedium)

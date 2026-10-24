@@ -262,7 +262,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     }
 
     Scaffold(
-        topBar = { PixelHeader("戰鬥：$bookName", onBack, backDescription = "逃跑") },
+        topBar = { PixelHeader("戰鬥：$bookName", onBack, backDescription = "逃跑", theme = HeaderTheme.Stone) },
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),

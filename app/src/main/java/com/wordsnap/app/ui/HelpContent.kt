@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 
-// 遊戲說明的內容：一段一個主題，之後要加公司介紹，在清單最後加一段就好
+// 遊戲說明的內容：一段一個主題，最後一段是公司介紹
 private class HelpSection(val title: String, val body: String)
 
 private val HelpSections = listOf(
@@ -19,7 +19,7 @@ private val HelpSections = listOf(
     ),
     HelpSection(
         "收集單字怪物",
-        "在單字簿按「加單字」：手動輸入、相機找出隱藏怪物、相簿新增怪物，或讀取古書（PDF）上的怪物。" +
+        "在單字簿按「加單字」：手動輸入、相機找出隱藏怪物、相簿新增怪物，或讀取古書（PDF、Excel、TXT 檔）上的怪物。" +
             "辨識出來的單字和片語點一下就能收進單字簿，中文解釋會自動填好。",
     ),
     HelpSection(
@@ -44,8 +44,11 @@ private val HelpSections = listOf(
     ),
     HelpSection(
         "小技巧",
-        "主畫面的「♪ 音樂」可以調整背景音樂（關／小／大），不影響念單字的聲音。" +
-            "主畫面的城堡藏著小彩蛋，白天和晚上都點點看吧！",
+        "主畫面的「♪ 音樂」可以調整背景音樂（關／小／大），不影響念單字的聲音。",
+    ),
+    HelpSection(
+        "關於",
+        "《像素單字》由 好玩製造所 Make It Fun Studio 製作。謝謝你一起來冒險！",
     ),
 )
 

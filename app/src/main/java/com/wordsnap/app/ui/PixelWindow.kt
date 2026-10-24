@@ -63,14 +63,33 @@ import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelPaper
 import com.wordsnap.app.ui.theme.PixelWhite
 
-// 戰鬥、朗讀、複習畫面上方的標題：羊皮紙底、黑字，外面一圈深色木紋框
+// 標題列的底色和文字顏色：每個畫面各有一種中世紀風格的花紋
+enum class HeaderTheme(val text: Color, val draw: DrawScope.() -> Unit) {
+    // 羊皮紙＋黑字
+    Parchment(PixelInk, { drawParchment() }),
+    // 戰鬥：深色石牆＋白字
+    Stone(Color.White, { drawStone() }),
+    // 朗讀：酒紅色掛毯，金色菱格花紋＋米金色字
+    Tapestry(Color(0xFFFFE8A8), { drawTapestry() }),
+    // 複習：森林綠旗幟布，淡色十字紋＋米白字
+    Banner(Color(0xFFF8F0D8), { drawBanner() }),
+    // 記錄管理：深褐皮革，邊緣有一圈縫線＋米黃字
+    Leather(Color(0xFFF8E0A8), { drawLeather() }),
+}
+
+// 戰鬥、朗讀、複習、記錄管理畫面上方的標題：依 theme 換底色，外面一圈深色木紋框
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PixelHeader(title: String, onBack: () -> Unit, backDescription: String = "返回") {
+fun PixelHeader(
+    title: String,
+    onBack: () -> Unit,
+    backDescription: String = "返回",
+    theme: HeaderTheme = HeaderTheme.Parchment,
+) {
     Box(
         Modifier
             .fillMaxWidth()
-            .parchment()
+            .drawBehind { theme.draw(this) }
             .windowInsetsPadding(TopAppBarDefaults.windowInsets),
     ) {
         Canvas(Modifier.matchParentSize()) { drawWoodFrame() }
@@ -79,11 +98,11 @@ fun PixelHeader(title: String, onBack: () -> Unit, backDescription: String = "�
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(38.dp)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDescription, tint = PixelInk)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDescription, tint = theme.text)
             }
             Text(
                 title,
-                color = PixelInk,
+                color = theme.text,
                 style = MaterialTheme.typography.titleLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -201,7 +220,13 @@ fun Modifier.pixelFrame(fill: Color, accent: Color = PixelGold, unit: Dp = 3.dp)
     drawRect(fill, Offset(px * 3, px * 3), Size(w - px * 6, h - px * 6))
 }
 
-// 有像素外框的卡片，取代單線黑框的 Surface
+// 和標題列同一種深色木紋細框，裡面填滿底色（卡片、選字框、外框按鈕都用這個）
+fun Modifier.woodFrame(fill: Color): Modifier = drawBehind {
+    drawRect(fill)
+    drawWoodFrame()
+}
+
+// 有木紋細框的卡片，取代單線黑框的 Surface（unit 留著相容舊的呼叫，木框粗細固定）
 @Composable
 fun PixelSurface(
     modifier: Modifier = Modifier,
@@ -213,7 +238,7 @@ fun PixelSurface(
         shape = RectangleShape,
         color = Color.Transparent,
         contentColor = contentColorFor(color),
-        modifier = modifier.pixelFrame(color, unit = unit),
+        modifier = modifier.woodFrame(color),
         content = content,
     )
 }
@@ -267,7 +292,7 @@ fun PixelOutlinedButton(
         shape = RectangleShape,
         border = null,
         contentPadding = contentPadding,
-        modifier = modifier.alpha(if (enabled) 1f else 0.45f).pixelFrame(PixelWhite, unit = 2.dp),
+        modifier = modifier.alpha(if (enabled) 1f else 0.45f).woodFrame(PixelWhite),
         content = content,
     )
 }
@@ -293,6 +318,34 @@ fun RetroButton(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).padding(horizontal = textPadding),
         )
+    }
+}
+
+// 文字加右邊一個小圖示，同一個復古按鈕框（例如冒險日誌名稱＋下拉捲軸）
+@Composable
+fun RetroButtonWithIcon(
+    label: String,
+    icon: List<String>,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = MaterialTheme.typography.labelLarge,
+    palette: Map<Char, Color> = ColorIconPalette,
+) {
+    RetroButtonFrame(onClick, modifier, true) { lift ->
+        Row(
+            Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).padding(start = 12.dp, end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                label,
+                color = ButtonText,
+                style = textStyle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            PixelArt(icon, palette, Modifier.padding(start = 4.dp).size(26.dp))
+        }
     }
 }
 
@@ -354,7 +407,9 @@ private fun RetroButtonFrame(
 }
 
 // 羊皮紙紋路：米黃底、深淺斑點和幾條纖維紋，底下一條黑線
-fun Modifier.parchment(): Modifier = drawBehind {
+fun Modifier.parchment(): Modifier = drawBehind { drawParchment() }
+
+private fun DrawScope.drawParchment() {
     drawRect(ParchmentBase)
     val px = 2.dp.toPx()
     val cols = (size.width / px).toInt()
@@ -374,6 +429,106 @@ fun Modifier.parchment(): Modifier = drawBehind {
     drawRect(ParchmentEdge, Offset(0f, size.height - px * 3), Size(size.width, px * 2))
     drawRect(PixelInk, Offset(0f, size.height - px), Size(size.width, px))
 }
+
+// 石牆：一排一排錯開的石塊，石塊顏色深淺不一，上緣有一條亮邊
+private fun DrawScope.drawStone() {
+    drawRect(StoneMortar)
+    val px = 2.dp.toPx()
+    val rowH = px * 7
+    val random = java.util.Random(11)
+    var y = 0f
+    var row = 0
+    while (y < size.height) {
+        var x = if (row % 2 == 0) 0f else -px * 6
+        while (x < size.width) {
+            val w = px * (10 + random.nextInt(8))
+            val color = StoneColors[random.nextInt(StoneColors.size)]
+            drawRect(color, Offset(x + px * 0.5f, y + px * 0.5f), Size(w - px, rowH - px))
+            drawRect(StoneLight, Offset(x + px * 0.5f, y + px * 0.5f), Size(w - px, px * 0.75f))
+            // 石頭上的小斑點
+            drawRect(StoneSpeck, Offset(x + px * (2 + random.nextInt(6)), y + px * (2 + random.nextInt(3))), Size(px, px))
+            x += w
+        }
+        y += rowH
+        row++
+    }
+}
+
+// 掛毯：酒紅底，金色小點排成菱格
+private fun DrawScope.drawTapestry() {
+    drawRect(TapestryBase)
+    val px = 2.dp.toPx()
+    val step = px * 6
+    var y = 0f
+    var row = 0
+    while (y < size.height) {
+        var x = if (row % 2 == 0) 0f else step / 2
+        while (x < size.width) {
+            drawRect(TapestryDark, Offset(x, y), Size(px * 2, px * 2))
+            drawRect(TapestryGold, Offset(x + step / 2, y + step / 2), Size(px, px))
+            x += step
+        }
+        y += step / 2
+        row++
+    }
+}
+
+// 旗幟布：森林綠底，淡淡的直條紋和小十字
+private fun DrawScope.drawBanner() {
+    drawRect(BannerBase)
+    val px = 2.dp.toPx()
+    var x = 0f
+    while (x < size.width) {
+        drawRect(BannerStripe, Offset(x, 0f), Size(px, size.height))
+        x += px * 4
+    }
+    var y = px * 4
+    var row = 0
+    while (y < size.height) {
+        var cx = px * (6 + (row % 2) * 8)
+        while (cx < size.width) {
+            drawRect(BannerCross, Offset(cx - px, y), Size(px * 3, px))
+            drawRect(BannerCross, Offset(cx, y - px), Size(px, px * 3))
+            cx += px * 16
+        }
+        y += px * 8
+        row++
+    }
+}
+
+// 皮革：深褐底，深淺斑紋，內側一圈虛線縫線
+private fun DrawScope.drawLeather() {
+    drawRect(LeatherBase)
+    val px = 2.dp.toPx()
+    val random = java.util.Random(5)
+    val cols = (size.width / px).toInt().coerceAtLeast(1)
+    val rows = (size.height / px).toInt().coerceAtLeast(1)
+    repeat(cols * rows / 10) {
+        drawRect(if (random.nextBoolean()) LeatherDark else LeatherLight, Offset(random.nextInt(cols) * px, random.nextInt(rows) * px), Size(px, px))
+    }
+    val inset = px * 5
+    var x = inset
+    while (x < size.width - inset) {
+        drawRect(LeatherStitch, Offset(x, inset), Size(px * 2, px * 0.75f))
+        drawRect(LeatherStitch, Offset(x, size.height - inset), Size(px * 2, px * 0.75f))
+        x += px * 4
+    }
+}
+
+private val StoneMortar = Color(0xFF26282E)
+private val StoneColors = listOf(Color(0xFF50545E), Color(0xFF5A5E68), Color(0xFF464A54), Color(0xFF545864))
+private val StoneLight = Color(0xFF6E727C)
+private val StoneSpeck = Color(0xFF3A3D45)
+private val TapestryBase = Color(0xFF5E1A26)
+private val TapestryDark = Color(0xFF4A121C)
+private val TapestryGold = Color(0xFFB8883A)
+private val BannerBase = Color(0xFF22402C)
+private val BannerStripe = Color(0xFF284A33)
+private val BannerCross = Color(0xFF3E6A4A)
+private val LeatherBase = Color(0xFF5E3A1E)
+private val LeatherDark = Color(0xFF4A2C16)
+private val LeatherLight = Color(0xFF6E4626)
+private val LeatherStitch = Color(0xFFC8A060)
 
 private val ParchmentBase = Color(0xFFEAD7A8)
 private val ParchmentLight = Color(0xFFF6E8C4)

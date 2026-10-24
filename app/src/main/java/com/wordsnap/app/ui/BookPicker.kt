@@ -1,13 +1,10 @@
 package com.wordsnap.app.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,7 +16,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.data.Book
@@ -47,16 +43,13 @@ fun BookPicker(
 
     Box(modifier) {
         if (onTopBar) {
-            // 冒險日誌名稱做成復古按鈕，右邊再一顆捲軸按鈕打開清單（兩個都能打開）
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                RetroButton(
-                    "$label$current",
-                    onClick = { expanded = true },
-                    modifier = Modifier.widthIn(max = 170.dp),
-                    textStyle = MaterialTheme.typography.labelLarge,
-                )
-                RetroIconButton(IconBookList, "選擇冒險日誌", onClick = { expanded = true })
-            }
+            // 冒險日誌名稱和下拉捲軸放在同一個復古按鈕框裡
+            RetroButtonWithIcon(
+                "$label$current",
+                IconBookList,
+                onClick = { expanded = true },
+                modifier = Modifier.widthIn(max = 190.dp),
+            )
         } else {
             PixelOutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }
         }
