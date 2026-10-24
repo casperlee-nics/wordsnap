@@ -330,10 +330,10 @@ private fun BottomActions(
         ) {
             // 和主畫面一樣的復古黃褐色像素按鈕
             val style = MaterialTheme.typography.labelLarge
-            RetroButton("朗讀", onListen, Modifier.weight(1f), textStyle = style)
-            RetroButton(reviewLabel, onReview, Modifier.weight(1f), enabled = reviewEnabled, textStyle = style)
-            RetroButton("加單字", onAdd, Modifier.weight(1f), textStyle = style)
-            RetroButton("戰鬥", onBattle, Modifier.weight(1f), enabled = battleEnabled, textStyle = style)
+            RetroButton("朗讀", onListen, Modifier.weight(1f), textStyle = style, textPadding = 2.dp)
+            RetroButton(reviewLabel, onReview, Modifier.weight(1f), enabled = reviewEnabled, textStyle = style, textPadding = 2.dp)
+            RetroButton("加單字", onAdd, Modifier.weight(1f), textStyle = style, textPadding = 2.dp)
+            RetroButton("戰鬥", onBattle, Modifier.weight(1f), enabled = battleEnabled, textStyle = style, textPadding = 2.dp)
         }
     }
 }

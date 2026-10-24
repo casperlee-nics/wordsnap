@@ -1,7 +1,6 @@
 package com.wordsnap.app.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -64,27 +63,27 @@ import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelPaper
 import com.wordsnap.app.ui.theme.PixelWhite
 
-// 戰鬥、朗讀、複習畫面上方的標題：深色點點底加上像素風的雙線金框，和下方場景連在一起
+// 戰鬥、朗讀、複習畫面上方的標題：羊皮紙底、黑字，外面一圈深色木紋框
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PixelHeader(title: String, onBack: () -> Unit, backDescription: String = "返回") {
     Box(
         Modifier
             .fillMaxWidth()
-            .background(WindowTitleDark)
+            .parchment()
             .windowInsetsPadding(TopAppBarDefaults.windowInsets),
     ) {
-        Canvas(Modifier.matchParentSize()) { drawHeaderBevel() }
+        Canvas(Modifier.matchParentSize()) { drawWoodFrame() }
         Row(
             Modifier.fillMaxWidth().height(54.dp).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(38.dp)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDescription, tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDescription, tint = PixelInk)
             }
             Text(
                 title,
-                color = Color.White,
+                color = PixelInk,
                 style = MaterialTheme.typography.titleLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -131,30 +130,16 @@ fun PixelWindowDialog(
 // 有像素外框的小按鈕，像遊戲選單裡的「▶ 關閉」
 @Composable
 fun PixelWindowButton(label: String, onClick: () -> Unit) {
-    Box(
-        Modifier
-            .clickable(onClick = onClick)
-            .drawBehind {
-                val px = 2.dp.toPx()
-                drawRect(WindowTitleDark, Offset(px, px), Size(size.width - px * 2, size.height - px * 2))
-                drawRect(PixelGold, Offset(px, px), Size(size.width - px * 2, size.height - px * 2), style = Stroke(px))
-            }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        Text("▶ $label", color = Color.White, style = MaterialTheme.typography.bodyMedium)
-    }
+    RetroButton("▶ $label", onClick, textStyle = MaterialTheme.typography.bodyMedium)
 }
 
 @Composable
 private fun WindowTitle(title: String) {
-    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.matchParentSize()) {
-            drawRect(WindowTitleDark)
-            drawHeaderPanel()
-        }
+    // 視窗標題也是羊皮紙底、黑字
+    Box(Modifier.fillMaxWidth().parchment(), contentAlignment = Alignment.Center) {
         Text(
             title,
-            color = Color.White,
+            color = PixelInk,
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp),
@@ -162,54 +147,42 @@ private fun WindowTitle(title: String) {
     }
 }
 
-// 深色底上的小點點花紋，外面只有一圈金色（不要框內框）
-private fun DrawScope.drawHeaderPanel() {
-    val px = 2.dp.toPx()
-    var y = px * 3
-    while (y < size.height) {
-        var x = px * 3 + if (((y / (px * 6)).toInt()) % 2 == 0) 0f else px * 3
-        while (x < size.width) {
-            drawRect(WindowTitleDot, Offset(x, y), Size(px, px))
-            x += px * 6
-        }
-        y += px * 6
-    }
-    drawRect(PixelGold, Offset(px, px), Size(size.width - px * 2, size.height - px * 2), style = Stroke(px))
-}
 
-// 戰鬥、朗讀、複習的標題列：點點花紋＋粗的立體金框（左上亮、右下暗，像浮起來的金屬邊），只有一層
-private fun DrawScope.drawHeaderBevel() {
-    val dot = 2.dp.toPx()
-    var y = dot * 3
-    while (y < size.height) {
-        var x = dot * 3 + if (((y / (dot * 6)).toInt()) % 2 == 0) 0f else dot * 3
-        while (x < size.width) {
-            drawRect(WindowTitleDot, Offset(x, y), Size(dot, dot))
-            x += dot * 6
-        }
-        y += dot * 6
-    }
-    val px = 3.dp.toPx()
+// 標題列的深色木紋框：外圈黑線、木頭本體（左上稍亮、右下稍暗，中間有木紋），內圈細黑線
+private fun DrawScope.drawWoodFrame() {
+    val px = 2.dp.toPx()
     val w = size.width
     val h = size.height
-    // 最外圈黑線
-    drawRect(PixelInk, Offset.Zero, Size(w, h), style = Stroke(px * 2))
-    // 金色粗邊：上、左亮金，下、右暗金
-    drawRect(BevelLight, Offset(px, px), Size(w - px * 2, px))
-    drawRect(BevelLight, Offset(px, px), Size(px, h - px * 2))
-    drawRect(BevelDark, Offset(px, h - px * 2), Size(w - px * 2, px))
-    drawRect(BevelDark, Offset(w - px * 2, px), Size(px, h - px * 2))
-    drawRect(PixelGold, Offset(px * 2, px * 2), Size(w - px * 4, px))
-    drawRect(PixelGold, Offset(px * 2, px * 2), Size(px, h - px * 4))
-    drawRect(BevelMid, Offset(px * 2, h - px * 3), Size(w - px * 4, px))
-    drawRect(BevelMid, Offset(w - px * 3, px * 2), Size(px, h - px * 4))
-    // 內側一條黑線，讓金邊浮起來
-    drawRect(PixelInk, Offset(px * 3, px * 3), Size(w - px * 6, h - px * 6), style = Stroke(1.dp.toPx()))
+    val band = px * 3
+    // 木頭本體
+    drawRect(WoodMid, Offset.Zero, Size(w, band))
+    drawRect(WoodMid, Offset(0f, h - band), Size(w, band))
+    drawRect(WoodMid, Offset.Zero, Size(band, h))
+    drawRect(WoodMid, Offset(w - band, 0f), Size(band, h))
+    // 左上亮、右下暗，看起來有一點立體
+    drawRect(WoodLight, Offset(px, px), Size(w - px * 2, px))
+    drawRect(WoodLight, Offset(px, px), Size(px, h - px * 2))
+    drawRect(WoodDark, Offset(px, h - px * 2), Size(w - px * 2, px))
+    drawRect(WoodDark, Offset(w - px * 2, px), Size(px, h - px * 2))
+    // 木紋：上下兩條邊上斷斷續續的深色短線
+    var x = px * 4
+    var k = 0
+    while (x < w - px * 8) {
+        val len = px * (3 + (k * 7) % 5)
+        drawRect(WoodGrain, Offset(x, if (k % 2 == 0) px else px * 2), Size(len, px * 0.5f + 1f))
+        drawRect(WoodGrain, Offset(x + px * 3, h - band + if (k % 2 == 0) px else px * 1.5f), Size(len, px * 0.5f + 1f))
+        x += len + px * (4 + (k * 3) % 4)
+        k++
+    }
+    // 外圈和內圈黑線
+    drawRect(PixelInk, Offset.Zero, Size(w, h), style = Stroke(px))
+    drawRect(PixelInk, Offset(band, band), Size(w - band * 2, h - band * 2), style = Stroke(1.dp.toPx()))
 }
 
-private val BevelLight = Color(0xFFFFE890)
-private val BevelMid = Color(0xFFC88820)
-private val BevelDark = Color(0xFF805010)
+private val WoodLight = Color(0xFF9C6A3C)
+private val WoodMid = Color(0xFF7A4E28)
+private val WoodDark = Color(0xFF4E3018)
+private val WoodGrain = Color(0xFF5A381C)
 
 // 像素視窗外框，主畫面選單也用這個
 fun Modifier.pixelWindowFrame(): Modifier = pixelFrame(PixelPaper)
@@ -299,8 +272,6 @@ fun PixelOutlinedButton(
     )
 }
 
-private val WindowTitleDark = Color(0xFF302848)
-private val WindowTitleDot = Color(0xFF483868)
 
 // 復古按鈕（主畫面選單、單字簿下方工具列）：復古的黃褐色像素方塊，左上亮邊、右下暗邊加上影子，看起來微微浮起；按下去會往下沉
 @Composable
@@ -310,6 +281,8 @@ fun RetroButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     textStyle: TextStyle = MaterialTheme.typography.titleMedium,
+    // 文字左右留白；下方工具列一排四顆比較窄，要留少一點
+    textPadding: Dp = 12.dp,
 ) {
     RetroButtonFrame(onClick, modifier, enabled) { lift ->
         Text(
@@ -318,7 +291,7 @@ fun RetroButton(
             style = textStyle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).padding(horizontal = 12.dp),
+            modifier = Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).padding(horizontal = textPadding),
         )
     }
 }

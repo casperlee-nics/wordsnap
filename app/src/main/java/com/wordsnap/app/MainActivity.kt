@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wordsnap.app.data.Profile
 import com.wordsnap.app.reminder.ReviewReminder
 import com.wordsnap.app.ui.BattleScreen
+import com.wordsnap.app.ui.CompanySplash
 import com.wordsnap.app.ui.GameFrame
 import com.wordsnap.app.ui.ListenScreen
 import com.wordsnap.app.ui.NicknameScreen
@@ -56,7 +57,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PixelTheme {
-                GameFrame {
+                // 先播公司開場動畫，跑完才進遊戲（轉螢幕不會重播）
+                var splashDone by rememberSaveable { mutableStateOf(false) }
+                if (!splashDone) {
+                    CompanySplash(onDone = { splashDone = true })
+                } else GameFrame {
                     val vm: WordViewModel = viewModel()
                     val profiles by vm.profiles.collectAsState()
                     // 還在讀資料：只畫背景，避免閃一下

@@ -2,7 +2,13 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.79（暫定名稱：像素單字）
+## 目前版本 0.80（暫定名稱：像素單字）
+
+v0.80 的改變：
+- 修正：單字簿下方按鈕的文字留白太多，「加單字」被切掉
+- 戰鬥、朗讀、複習上方，以及人物能力、道具欄、說明等視窗的標題，改成羊皮紙底＋黑字；視窗下方的「▶ 關閉」改成黃褐色按鈕
+- 戰鬥、朗讀、複習上方外框改成深色木紋，比上一版細
+- 打開 App 先播約 1.9 秒的「Make It Fun Studio」開場動畫：笑臉工具箱彈跳落下、星星從箱子裡跳出來、閃光亮起、文字浮上來，再淡出進遊戲（圖在 `res/drawable-nodpi/splash_*.png`，音效 `logo_chime.ogg`）
 
 v0.79 的改變：
 - 戰鬥、朗讀、複習上方標題列改成粗的立體金框（左上亮、右下暗），仍只有一層
@@ -159,7 +165,7 @@ v0.65 的改變：
 
 ## 授權
 
-- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`、`fireworks_sfx.ogg`、`victory_jingle.ogg`、`royal_fanfare.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`、`fireworks_sfx.ogg`、`victory_jingle.ogg`、`royal_fanfare.ogg`、`logo_chime.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
 - 字典 `app/src/main/assets/ecdict.db`：取自 [ECDICT](https://github.com/skywind3000/ECDICT)（MIT License，Copyright (c) 2017 Linwei），挑出常用的 5 萬字，用 [OpenCC](https://github.com/BYVoid/OpenCC)（Apache License 2.0）轉成台灣繁體用語。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 
