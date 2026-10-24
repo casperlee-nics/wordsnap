@@ -11,6 +11,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -27,9 +28,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.ui.theme.PixelInk
 
@@ -255,16 +258,16 @@ private val StoryRodLight = Color(0xFFB07A44)
 
 // ---------- 開始冒險按鈕 ----------
 
-// 深紅色的旗幟按鈕：金色鑲邊，左右各一把小劍；按下去會往下沉
+// 鐵框木門牌按鈕：深色木板、四角包著鉚釘鐵片，左邊插著一面小旗子；按下去會往下沉
 @Composable
 fun AdventureButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val lift = if (pressed) 0.dp else 4.dp
+    val lift = if (pressed) 0.dp else 3.dp
     Box(
         modifier
-            .fillMaxWidth()
-            .height(64.dp)
+            .width(220.dp)
+            .height(54.dp)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
             .drawBehind { drawAdventureButton(lift.toPx()) },
         contentAlignment = Alignment.Center,
@@ -272,46 +275,129 @@ fun AdventureButton(label: String, onClick: () -> Unit, modifier: Modifier = Mod
         Text(
             label,
             color = Color(0xFFFFF0C8),
-            style = MaterialTheme.typography.headlineSmall.copy(
+            style = MaterialTheme.typography.titleLarge.copy(
                 shadow = Shadow(PixelInk, offset = Offset(2f, 2f), blurRadius = 0f),
             ),
-            modifier = Modifier.offset(x = 2.dp - lift / 2, y = 2.dp - lift / 2),
+            modifier = Modifier.offset(x = 10.dp + 1.5.dp - lift / 2, y = 1.5.dp - lift / 2),
         )
     }
 }
 
 private fun DrawScope.drawAdventureButton(up: Float) {
     val px = 3.dp.toPx()
-    val w = size.width - px * 2
-    val h = size.height - px * 2
+    val w = size.width - px
+    val h = size.height - px
     // 影子
-    if (up > 0f) drawRect(Color(0xFF3A1810), Offset(px * 2, px * 2), Size(w, h))
-    val left = px * 2 - up
-    val top = px * 2 - up
+    if (up > 0f) drawRect(AdvShadow, Offset(px, px), Size(w, h))
+    val left = px - up
+    val top = px - up
+    // 缺角黑框、木板
     drawRect(PixelInk, Offset(left + px, top), Size(w - px * 2, h))
     drawRect(PixelInk, Offset(left, top + px), Size(w, h - px * 2))
-    // 金色鑲邊、深紅色布面
-    drawRect(AdvGold, Offset(left + px, top + px), Size(w - px * 2, h - px * 2))
-    drawRect(AdvGoldDark, Offset(left + px * 2, top + h - px * 2), Size(w - px * 3, px))
-    drawRect(AdvRed, Offset(left + px * 2, top + px * 2), Size(w - px * 4, h - px * 4))
-    drawRect(AdvRedLight, Offset(left + px * 2, top + px * 2), Size(w - px * 4, px))
-    drawRect(AdvRedDark, Offset(left + px * 2, top + h - px * 3), Size(w - px * 4, px))
-    // 左右兩把小劍（劍尖朝內）
-    val mid = top + h / 2
-    for ((start, dir) in listOf(left + px * 4 to 1f, left + w - px * 5 to -1f)) {
-        // 握把和護手
-        drawRect(AdvHilt, Offset(start, mid - px * 0.5f), Size(px, px))
-        drawRect(AdvGold, Offset(start + dir * px, mid - px * 1.5f), Size(px, px * 3))
-        // 劍刃
-        for (k in 2..6) drawRect(AdvBlade, Offset(start + dir * k * px, mid - px * 0.5f), Size(px, px))
-        drawRect(Color.White, Offset(start + dir * 2 * px, mid - px * 0.5f), Size(px * 0.5f, px * 0.5f))
+    drawRect(AdvWood, Offset(left + px, top + px), Size(w - px * 2, h - px * 2))
+    drawRect(AdvWoodLight, Offset(left + px, top + px), Size(w - px * 2, px))
+    drawRect(AdvWoodDark, Offset(left + px, top + h - px * 2), Size(w - px * 2, px))
+    // 直的木板縫和木紋
+    var x = left + px * 9
+    while (x < left + w - px * 4) {
+        drawRect(AdvWoodDark, Offset(x, top + px * 2), Size(px * 0.5f, h - px * 4))
+        drawRect(AdvGrain, Offset(x + px * 2, top + h * 0.35f), Size(px * 2.5f, px * 0.5f))
+        drawRect(AdvGrain, Offset(x + px * 4, top + h * 0.65f), Size(px * 2f, px * 0.5f))
+        x += px * 8
+    }
+    // 四角的鐵片和鉚釘
+    for ((cx, cy) in listOf(
+        left + px to top + px,
+        left + w - px * 4 to top + px,
+        left + px to top + h - px * 4,
+        left + w - px * 4 to top + h - px * 4,
+    )) {
+        drawRect(AdvIron, Offset(cx, cy), Size(px * 3, px * 3))
+        drawRect(AdvRivet, Offset(cx + px, cy + px), Size(px, px))
+    }
+    // 左邊的小旗子
+    val fx = left + px * 6
+    val fy = top + h / 2 - px * 3.5f
+    drawRect(PixelInk, Offset(fx - px * 0.3f, fy - px * 0.3f), Size(px * 1.6f, px * 7.6f))
+    drawRect(AdvPole, Offset(fx, fy), Size(px, px * 7))
+    drawRect(PixelInk, Offset(fx + px, fy - px * 0.3f), Size(px * 4.3f, px * 3.6f))
+    drawRect(AdvFlag, Offset(fx + px, fy), Size(px * 4, px * 3))
+    drawRect(AdvFlagLight, Offset(fx + px, fy), Size(px * 4, px))
+}
+
+private val AdvShadow = Color(0xFF2A180A)
+private val AdvWood = Color(0xFF7A4E28)
+private val AdvWoodLight = Color(0xFFA87440)
+private val AdvWoodDark = Color(0xFF4E3018)
+private val AdvGrain = Color(0xFF5E3C1C)
+private val AdvIron = Color(0xFF505868)
+private val AdvRivet = Color(0xFFC8CCD8)
+private val AdvPole = Color(0xFFE0B040)
+private val AdvFlag = Color(0xFFC83040)
+private val AdvFlagLight = Color(0xFFF06060)
+
+// ---------- 選職業頁上方的名字 ----------
+
+// 藍色的緞帶橫幅：中間寫「○○，選擇你的職業」，兩端是剪成燕尾的緞帶尾巴
+@Composable
+fun NameRibbon(name: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .drawBehind { drawRibbon() }
+            .padding(horizontal = 34.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                name,
+                color = RibbonName,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    shadow = Shadow(PixelInk, offset = Offset(2f, 2f), blurRadius = 0f),
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            Text("，選擇你的職業", color = RibbonText, style = MaterialTheme.typography.titleSmall, maxLines = 1)
+        }
     }
 }
 
-private val AdvGold = Color(0xFFE0B040)
-private val AdvGoldDark = Color(0xFF9A7020)
-private val AdvRed = Color(0xFFA8282E)
-private val AdvRedLight = Color(0xFFD04848)
-private val AdvRedDark = Color(0xFF6E161C)
-private val AdvBlade = Color(0xFFD8E0F0)
-private val AdvHilt = Color(0xFF805030)
+private fun DrawScope.drawRibbon() {
+    val px = 3.dp.toPx()
+    val w = size.width
+    val h = size.height
+    val tail = px * 8
+    // 兩端的尾巴：比中間低一點、顏色深一點，末端剪成燕尾
+    val y0 = px * 3
+    val th = h - px * 3
+    for (flip in listOf(false, true)) {
+        fun xs(x: Float) = if (flip) w - x else x
+        fun tailPath(inset: Float) = Path().apply {
+            moveTo(xs(inset), y0 + inset)
+            lineTo(xs(tail), y0 + inset)
+            lineTo(xs(tail), y0 + th - inset)
+            lineTo(xs(inset), y0 + th - inset)
+            lineTo(xs(px * 3 + inset), y0 + th / 2)
+            close()
+        }
+        drawPath(tailPath(0f), PixelInk)
+        drawPath(tailPath(px * 0.8f), RibbonDark)
+    }
+    // 中間的緞帶：金色細邊
+    val left = tail - px * 2
+    val right = w - tail + px * 2
+    drawRect(PixelInk, Offset(left, 0f), Size(right - left, h - px * 3))
+    drawRect(RibbonGold, Offset(left + px * 0.7f, px * 0.7f), Size(right - left - px * 1.4f, h - px * 4.4f))
+    drawRect(RibbonBlue, Offset(left + px * 1.4f, px * 1.4f), Size(right - left - px * 2.8f, h - px * 5.8f))
+    drawRect(RibbonLight, Offset(left + px * 1.4f, px * 1.4f), Size(right - left - px * 2.8f, px))
+}
+
+private val RibbonBlue = Color(0xFF2E4A8A)
+private val RibbonLight = Color(0xFF4A6AB0)
+private val RibbonDark = Color(0xFF1E3260)
+private val RibbonGold = Color(0xFFE0B040)
+private val RibbonName = Color(0xFFFFE070)
+private val RibbonText = Color(0xFFF8F0D8)

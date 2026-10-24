@@ -18,7 +18,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -278,22 +278,34 @@ private fun WordDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // 英文單字的字比中文大一點，比較好看清楚拼字
-                OutlinedTextField(
+            // 兩張羊皮書卷：上面寫英文單字（字比較大），下面寫中文意思
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("英文單字", style = MaterialTheme.typography.labelLarge)
+                ScrollTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text("英文單字") },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.titleLarge,
+                    placeholder = "例如：apple",
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = MaterialTheme.typography.headlineSmall,
+                    height = 64.dp,
+                    keyboardType = KeyboardType.Ascii,
                 )
-                OutlinedTextField(value = meaning, onValueChange = { meaning = it }, label = { Text("中文意思（空白會自動翻譯）") }, singleLine = true)
+                Text("中文意思", style = MaterialTheme.typography.labelLarge)
+                ScrollTextField(
+                    value = meaning,
+                    onValueChange = { meaning = it },
+                    placeholder = "空白會自動翻譯",
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    height = 60.dp,
+                    onDone = { if (text.isNotBlank()) onSave(text, meaning) },
+                )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(text, meaning) }, enabled = text.isNotBlank()) { Text("儲存") }
+            RetroButton("儲存", onClick = { onSave(text, meaning) }, enabled = text.isNotBlank(), textStyle = MaterialTheme.typography.titleSmall)
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = { RetroButton("取消", onClick = onDismiss, textStyle = MaterialTheme.typography.titleSmall) },
     )
 }
 

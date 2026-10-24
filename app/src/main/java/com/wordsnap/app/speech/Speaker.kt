@@ -68,6 +68,10 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
         }
         isReady = status == TextToSpeech.SUCCESS
         ready.complete(status == TextToSpeech.SUCCESS)
+        queued?.let { text ->
+            queued = null
+            if (isReady) speak(text)
+        }
     }
 
     // 不需要網路的聲音裡品質最高的（沒網路也念得出來）；沒有才用需要網路的
@@ -88,9 +92,15 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
         }
     }
 
+    // 語音引擎還沒準備好時先記下來，準備好馬上念（第一次進複習時第一個字才會念出來）
+    @Volatile private var queued: String? = null
+
     // 直接念一個英文單字（會打斷正在念的）
     fun speak(text: String) {
-        if (!isReady) return
+        if (!isReady) {
+            queued = text
+            return
+        }
         useEnglish()
         tts.setSpeechRate(1f)
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "speak-${nextId.incrementAndGet()}")

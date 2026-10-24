@@ -28,9 +28,9 @@ import com.wordsnap.app.R
 import kotlin.math.PI
 import kotlin.math.sin
 
-// 打開 App 時的公司開場動畫（約 2.2 秒）：
+// 打開 App 時的公司開場動畫（約 2.4 秒）：
 // 笑臉工具箱彈跳落下 → 星星從箱子裡跳出來 → 閃光亮起 → 「Make It Fun STUDIO」浮上來 → 整個淡出進遊戲
-private const val SPLASH_MS = 2200
+private const val SPLASH_MS = 2400
 
 @Composable
 fun CompanySplash(onDone: () -> Unit) {
@@ -44,6 +44,8 @@ fun CompanySplash(onDone: () -> Unit) {
     OneShotSound(R.raw.logo_chime, play = true, volume = 0.7f)
 
     val t = clock.value
+    // 快結束、淡出前「啾」一聲
+    OneShotSound(R.raw.chu_sfx, play = t >= 1.9f, volume = 0.8f)
     // 工具箱：0～0.45 秒從上方落下，落地壓扁一下再彈回來
     val drop = phase(t, 0f, 0.3f)
     val squash = when {
@@ -59,8 +61,8 @@ fun CompanySplash(onDone: () -> Unit) {
     val spark = easeOutBack(phase(t, 0.8f, 1.0f))
     // 文字：0.9～1.25 秒浮上來
     val text = phase(t, 0.9f, 1.25f)
-    // 動畫跑完多停 0.3 秒，最後 0.25 秒整個淡出
-    val fade = 1f - phase(t, 1.95f, 2.2f)
+    // 動畫跑完多停 0.5 秒，最後 0.25 秒整個淡出
+    val fade = 1f - phase(t, 2.15f, 2.4f)
 
     Box(
         Modifier.fillMaxSize().background(SplashBackground).graphicsLayer { alpha = fade },

@@ -44,8 +44,8 @@ fun SaveSlotScreen(
     var renaming by remember { mutableStateOf<Profile?>(null) }
     val context = LocalContext.current
     val musicOn = remember { isMusicOn(context) }
-    // 讀取遊戲時播放專屬音樂
-    LoopingMusic(R.raw.load_bgm, enabled = musicOn && !managing, volume = 0.5f)
+    // 讀取遊戲和記錄管理各有自己的音樂
+    LoopingMusic(if (managing) R.raw.manage_bgm else R.raw.load_bgm, enabled = musicOn, volume = 0.5f)
 
     Scaffold(
         topBar = {

@@ -29,8 +29,11 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.ui.theme.PixelInk
 
@@ -45,37 +48,57 @@ fun ScrollNameInput(
 ) {
     val canConfirm = value.isNotBlank()
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            Modifier
-                .weight(1f)
-                .height(76.dp)
-                .drawBehind { drawScroll() }
-                .padding(start = 28.dp, end = 26.dp),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            if (value.isEmpty()) {
-                // 提示字只排一行，太長就縮小字，不會換行
-                Text(
-                    placeholder,
-                    color = ScrollHint,
-                    style = if (placeholder.length > 7) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Clip,
-                )
-            }
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                singleLine = true,
-                textStyle = MaterialTheme.typography.titleLarge.copy(color = PixelInk),
-                cursorBrush = SolidColor(PixelInk),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { if (canConfirm) onConfirm() }),
-                modifier = Modifier.fillMaxWidth(),
+        ScrollTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = placeholder,
+            onDone = { if (canConfirm) onConfirm() },
+            modifier = Modifier.weight(1f),
+        )
+        SealButton(enabled = canConfirm, onClick = onConfirm, modifier = Modifier.padding(start = 10.dp))
+    }
+}
+
+// 不規則羊皮書卷的輸入框（沒有印章），手動新增單字也用這個
+@Composable
+fun ScrollTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    onDone: () -> Unit = {},
+    textStyle: TextStyle = MaterialTheme.typography.titleLarge,
+    height: Dp = 76.dp,
+    keyboardType: KeyboardType = KeyboardType.Text,
+) {
+    Box(
+        modifier
+            .height(height)
+            .drawBehind { drawScroll() }
+            .padding(start = 28.dp, end = 26.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        if (value.isEmpty()) {
+            // 提示字只排一行，太長就縮小字，不會換行
+            Text(
+                placeholder,
+                color = ScrollHint,
+                style = if (placeholder.length > 7) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Clip,
             )
         }
-        SealButton(enabled = canConfirm, onClick = onConfirm, modifier = Modifier.padding(start = 10.dp))
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = textStyle.copy(color = PixelInk),
+            cursorBrush = SolidColor(PixelInk),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, keyboardType = keyboardType),
+            keyboardActions = KeyboardActions(onDone = { onDone() }),
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 

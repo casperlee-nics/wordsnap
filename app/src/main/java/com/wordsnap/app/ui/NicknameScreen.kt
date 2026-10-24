@@ -62,11 +62,12 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
                 )
                 Text("冒險者，請輸入你的暱稱", style = MaterialTheme.typography.titleMedium)
             } else {
-                Text("${name.trim()}，選一個你的角色", style = MaterialTheme.typography.titleMedium)
+                // 名字寫在藍色緞帶橫幅上（人物圖縮小一點，整頁不會變長）
+                NameRibbon(name.trim())
                 // 左邊是選中的人物，右邊的古書卷寫著這個職業的故事
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.pixelFrame(PixelWhite, unit = 2.dp).padding(14.dp)) {
-                        PixelAvatar(avatar, size = 96.dp)
+                    Box(Modifier.pixelFrame(PixelWhite, unit = 2.dp).padding(10.dp)) {
+                        PixelAvatar(avatar, size = 84.dp)
                     }
                     StoryScroll(
                         title = avatar.race.label,
