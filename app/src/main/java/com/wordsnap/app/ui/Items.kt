@@ -41,18 +41,16 @@ const val WRONG_DAMAGE = 2
 const val CHEST_CHANCE = 0.5f
 
 enum class ItemType(val label: String, val effect: String, val weight: Int, val icon: List<String>) {
-    SmallPotion("小回復劑", "回復 1/5 的 HP", 30, IconSmallPotion),
-    SmartPill("聰明藥", "這題直接顯示答案，算答對", 20, IconSmartPill),
-    BigPotion("大回復劑", "回復一半的 HP", 15, IconBigPotion),
-    Riot("村民暴動", "村民衝過怪物，怪物多扣 1/4 的血", 7, IconHorn),
-    Elixir("聖靈藥", "HP 全部回滿", 1, IconElixir),
-    Angel("天使召喚", "天使從天而降，怪物損血一半", 2, IconBell),
+    SmallPotion("小回復劑", "回復 1/5 的 HP", 20, IconSmallPotion),
+    SmartPill("聰明藥", "這題直接顯示答案，算答對", 12, IconSmartPill),
+    BigPotion("大回復劑", "回復一半的 HP", 10, IconBigPotion),
+    Riot("村民暴動", "村民衝過怪物，怪物多扣 1/4 的血", 15, IconHorn),
+    Elixir("聖靈藥", "HP 全部回滿", 4, IconElixir),
+    Angel("天使召喚", "天使從天而降，怪物損血一半", 6, IconBell),
     Shield("防護盾", "3 回合內答錯，被攻擊也不會扣血", 10, IconShield),
     Confusion("混亂藥劑", "3 回合內答錯，怪物反而會攻擊自己", 10, IconConfusion),
-    Catapult("召喚投石車", "投石車丟大石頭，怪物扣 1/3 的血", 5, IconCatapult);
+    Catapult("召喚投石車", "投石車丟大石頭，怪物扣 1/3 的血", 12, IconCatapult);
 
-    // 寶箱裡抽到這個道具的機率（%）
-    val dropPercent: Int get() = weight
 
     // 回復多少 HP（不是回復道具就是 0）
     val heal: Int
@@ -331,22 +329,6 @@ fun ItemBagDialog(
                     Text(type.effect, style = MaterialTheme.typography.bodySmall)
                 }
                 Text("x${counts[type] ?: 0}", style = MaterialTheme.typography.titleMedium)
-            }
-        }
-        // 道具欄最下面列出寶箱的掉落機率
-        if (onUse == null) {
-            Box(Modifier.fillMaxWidth().height(2.dp).background(ItemDivider))
-            Text("寶箱掉落機率", style = MaterialTheme.typography.titleMedium)
-            Text(
-                "把怪物打飛時有 ${(CHEST_CHANCE * 100).toInt()}% 機率出現寶箱，寶箱裡的道具：",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            ItemType.entries.sortedByDescending { it.dropPercent }.forEach { type ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PixelArt(type.icon, ItemPalette, Modifier.size(24.dp))
-                    Text(type.label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                    Text("${type.dropPercent}%", style = MaterialTheme.typography.bodyMedium)
-                }
             }
         }
     }

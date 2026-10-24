@@ -17,7 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,9 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
+import com.wordsnap.app.ui.theme.PixelWhite
 
 // 第一次開啟：先輸入暱稱，再選一個像素人物
 @Composable
@@ -43,14 +44,15 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
             // 可以上下捲動，鍵盤跳出來時輸入框會自動捲到看得見的位置
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp),
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+            // 從上面開始排，輸入框和說明文字比較靠上
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
         ) {
             if (!pickingAvatar) {
                 // 上面是纏著藤蔓的木牌標題，下面是攤開的魔法書
                 WoodSignTitle("像素單字")
-                MagicBook(Modifier.width(200.dp))
+                MagicBook(Modifier.width(100.dp))
                 // 在羊皮書卷上寫暱稱，右邊蓋章確認（按鈕在旁邊，鍵盤跳出來也不會被擋住）
                 ScrollNameInput(
                     value = name,
@@ -63,7 +65,7 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
                 Text("${name.trim()}，選一個你的角色", style = MaterialTheme.typography.titleMedium)
                 // 左邊是選中的人物，右邊的古書卷寫著這個職業的故事
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.classFrame(avatar, selected = false).padding(14.dp)) {
+                    Box(Modifier.pixelFrame(PixelWhite, unit = 2.dp).padding(14.dp)) {
                         PixelAvatar(avatar, size = 96.dp)
                     }
                     StoryScroll(
@@ -74,13 +76,12 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
                 }
                 AvatarPicker(selected = avatar, onSelect = { avatar = it })
                 AdventureButton("開始冒險", onClick = { onStart(name, avatar) })
-                TextButton(onClick = { pickingAvatar = false }) { Text("← 改暱稱") }
             }
         }
     }
 }
 
-// 像素人物，一排放不下就往下排，選中的多一圈金框
+// 像素人物，一排放不下就往下排，選中的有粗框
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AvatarPicker(selected: Avatar, onSelect: (Avatar) -> Unit, showLabels: Boolean = true, exclude: Avatar? = null) {
@@ -95,11 +96,14 @@ fun AvatarPicker(selected: Avatar, onSelect: (Avatar) -> Unit, showLabels: Boole
                 Modifier
                     .width(72.dp)
                     .then(
-                        // 每個職業有自己特色的外框，選中的外面多一圈金框
-                        Modifier.classFrame(item, isSelected),
+                        if (isSelected) {
+                            Modifier.pixelFrame(PixelWhite, unit = 2.dp)
+                        } else {
+                            Modifier.pixelFrame(MaterialTheme.colorScheme.background, accent = PixelGray, unit = 2.dp)
+                        },
                     )
                     .clickable { onSelect(item) }
-                    .padding(10.dp),
+                    .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PixelAvatar(item, size = 48.dp)
@@ -109,3 +113,4 @@ fun AvatarPicker(selected: Avatar, onSelect: (Avatar) -> Unit, showLabels: Boole
     }
 }
 
+private val PixelGray = Color(0xFFB8A888)

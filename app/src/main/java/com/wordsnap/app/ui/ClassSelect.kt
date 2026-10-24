@@ -33,7 +33,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.ui.theme.PixelInk
 
-// 建立角色畫面用的元件：木牌標題、魔法書、各職業的外框、職業故事書卷、「開始冒險」按鈕
+// 建立角色畫面用的元件：木牌標題、魔法書、職業故事書卷、「開始冒險」按鈕
 
 // ---------- 木牌標題 ----------
 
@@ -42,15 +42,15 @@ import com.wordsnap.app.ui.theme.PixelInk
 fun WoodSignTitle(text: String, modifier: Modifier = Modifier) {
     Box(
         modifier
-            .width(250.dp)
-            .height(84.dp)
+            .width(176.dp)
+            .height(60.dp)
             .drawBehind { drawWoodSign() },
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text,
             color = SignText,
-            style = MaterialTheme.typography.displaySmall.copy(
+            style = MaterialTheme.typography.headlineMedium.copy(
                 shadow = Shadow(PixelInk, offset = Offset(3f, 3f), blurRadius = 0f),
             ),
         )
@@ -58,7 +58,7 @@ fun WoodSignTitle(text: String, modifier: Modifier = Modifier) {
 }
 
 private fun DrawScope.drawWoodSign() {
-    val px = 3.dp.toPx()
+    val px = 2.dp.toPx()
     val w = size.width
     val h = size.height
     val random = java.util.Random(11)
@@ -195,84 +195,6 @@ private val BookArt = listOf(
     "............................................",
 )
 
-// ---------- 各職業的外框 ----------
-
-// fill 是框裡的底色，band 是外框的顏色，motif 是四個角上的小圖案（a、b 兩種顏色）
-private class ClassStyle(val fill: Color, val band: Color, val a: Color, val b: Color, val motif: List<String>)
-
-private val Diamond = listOf("..a..", ".aba.", "abbba", ".aba.", "..a..")
-private val Star = listOf("..a..", "..a..", "aaaaa", ".a.a.", "a...a")
-private val Leaf = listOf("...aa", "..aba", ".aba.", "aba..", "a....")
-private val Spike = listOf("a....", "aa...", "aba..", "abba.", "aaaaa")
-private val Rivet = listOf(".....", ".aaa.", ".aba.", ".aaa.", ".....")
-private val Paw = listOf("a.a.a", ".....", ".aaa.", "aaaaa", ".aaa.")
-private val Flame = listOf("..a..", ".aa..", ".aba.", "abbba", ".aba.")
-private val Horn = listOf("....a", "...aa", "..aba", ".abba", "abbba")
-private val Bolt = listOf("aaaaa", "a.b.a", "abbba", "a.b.a", "aaaaa")
-
-private val ClassStyles = mapOf(
-    // 勇者：銀色鎧甲框、金色菱形
-    Avatar.Hero to ClassStyle(Color(0xFFDCE6F4), Color(0xFF8C9AB4), Color(0xFFF8D030), Color(0xFFFFF6B0), Diamond),
-    // 魔法師：深藍色星空框、金色星星
-    Avatar.Mage to ClassStyle(Color(0xFFDCE0F8), Color(0xFF3A4AA8), Color(0xFFF8D030), Color(0xFFFFFFFF), Star),
-    // 精靈弓手：森林綠框、嫩綠葉子
-    Avatar.ElfArcher to ClassStyle(Color(0xFFDDF0CC), Color(0xFF3E7A36), Color(0xFFA8E070), Color(0xFF58B048), Leaf),
-    // 哥布林：橄欖綠框、骨頭色尖刺
-    Avatar.Goblin to ClassStyle(Color(0xFFE6EAC8), Color(0xFF6A7A2A), Color(0xFFF0E8C8), Color(0xFFB8A878), Spike),
-    // 矮人：鐵灰色框、鉚釘
-    Avatar.Dwarf to ClassStyle(Color(0xFFEADCC8), Color(0xFF5E5E68), Color(0xFFC8CCD8), Color(0xFF8A8E9A), Rivet),
-    // 貓咪：粉紅色框、白色貓掌
-    Avatar.Cat to ClassStyle(Color(0xFFFCE6EE), Color(0xFFD87898), Color(0xFFFFFFFF), Color(0xFFF8C8D8), Paw),
-    // 龍：火紅色框、火焰
-    Avatar.Dragon to ClassStyle(Color(0xFFFCE2CC), Color(0xFFB83820), Color(0xFFF8D030), Color(0xFFF08030), Flame),
-    // 魔族：暗紅色框、骨白色的角
-    Avatar.Demon to ClassStyle(Color(0xFFEEDCE2), Color(0xFF5A1A2A), Color(0xFFF0E0C8), Color(0xFFA07080), Horn),
-    // 機器人：鋼藍色框、發光的螺絲
-    Avatar.Robot to ClassStyle(Color(0xFFD8F0F0), Color(0xFF3E6070), Color(0xFF78E8F8), Color(0xFFD8FFFF), Bolt),
-)
-
-// 依職業畫外框；選中的外面再多一圈發亮的金框
-fun Modifier.classFrame(avatar: Avatar, selected: Boolean): Modifier = drawBehind {
-    val style = ClassStyles[avatar] ?: return@drawBehind
-    val px = 2.dp.toPx()
-    val w = size.width
-    val h = size.height
-    if (selected) {
-        drawRect(Color(0xFFF8D030), Offset(-px, -px), Size(w + px * 2, h + px * 2))
-        drawRect(Color(0xFFFFF6B0), Offset(-px * 0.5f, -px * 0.5f), Size(w + px, h + px))
-    }
-    // 缺角的黑框、職業顏色的寬框、內圈細黑線、底色
-    drawRect(PixelInk, Offset(px, 0f), Size(w - px * 2, h))
-    drawRect(PixelInk, Offset(0f, px), Size(w, h - px * 2))
-    val band = px * 4
-    drawRect(style.band, Offset(px, px), Size(w - px * 2, h - px * 2))
-    drawRect(PixelInk, Offset(band, band), Size(w - band * 2, h - band * 2))
-    drawRect(style.fill, Offset(band + px * 0.5f, band + px * 0.5f), Size(w - band * 2 - px, h - band * 2 - px))
-    // 四個角的小圖案（右邊和下面的鏡射過來）
-    val cell = (band - px) / 5f
-    for ((cx, cy, flipX, flipY) in listOf(
-        Corner(px * 0.5f, px * 0.5f, false, false),
-        Corner(w - px * 0.5f - cell * 5, px * 0.5f, true, false),
-        Corner(px * 0.5f, h - px * 0.5f - cell * 5, false, true),
-        Corner(w - px * 0.5f - cell * 5, h - px * 0.5f - cell * 5, true, true),
-    )) {
-        style.motif.forEachIndexed { y, row ->
-            row.forEachIndexed { x, c ->
-                val color = when (c) {
-                    'a' -> style.a
-                    'b' -> style.b
-                    else -> return@forEachIndexed
-                }
-                val dx = if (flipX) 4 - x else x
-                val dy = if (flipY) 4 - y else y
-                drawRect(color, Offset(cx + dx * cell, cy + dy * cell), Size(cell + 0.5f, cell + 0.5f))
-            }
-        }
-    }
-}
-
-private data class Corner(val x: Float, val y: Float, val flipX: Boolean, val flipY: Boolean)
-
 // ---------- 職業故事書卷 ----------
 
 // 每個職業的小故事
@@ -297,8 +219,8 @@ fun StoryScroll(title: String, story: String, modifier: Modifier = Modifier) {
             .drawBehind { drawStoryScroll() }
             .padding(horizontal = 14.dp, vertical = 20.dp),
     ) {
-        Text(title, color = PixelInk, style = MaterialTheme.typography.titleMedium)
-        Text(story, color = PixelInk, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+        Text(title, color = PixelInk, style = MaterialTheme.typography.labelLarge)
+        Text(story, color = PixelInk, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
     }
 }
 

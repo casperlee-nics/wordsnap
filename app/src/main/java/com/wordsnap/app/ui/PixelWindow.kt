@@ -415,6 +415,12 @@ private fun RetroButtonFrame(
 // 羊皮紙紋路：米黃底、深淺斑點和幾條纖維紋，底下一條黑線
 fun Modifier.parchment(): Modifier = drawBehind { drawParchment() }
 
+// 羊皮紙紋路的卡片，外面一圈木紋細框（和人物能力的標題同一種羊皮紙）
+fun Modifier.parchmentCard(): Modifier = drawBehind {
+    drawParchment()
+    drawWoodFrame()
+}
+
 private fun DrawScope.drawParchment() {
     drawRect(ParchmentBase)
     val px = 2.dp.toPx()

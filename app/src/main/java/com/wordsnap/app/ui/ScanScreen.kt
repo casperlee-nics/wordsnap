@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.wordsnap.app.R
 import com.wordsnap.app.data.Book
 import com.wordsnap.app.ocr.DocumentMimeTypes
 import com.wordsnap.app.ocr.DocumentText
@@ -75,6 +76,8 @@ fun ScanScreen(
     source: ScanSource = ScanSource.Camera,
 ) {
     val context = LocalContext.current
+    // 捕捉怪物專屬的音樂（打開相機或選檔案時 App 到背景，音樂會自動暫停）
+    LoopingMusic(R.raw.hunt_bgm, enabled = true, volume = 0.45f)
     val scope = rememberCoroutineScope()
     var scanning by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf<String?>(null) }

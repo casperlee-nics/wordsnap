@@ -26,7 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
 import com.wordsnap.app.data.Profile
-import com.wordsnap.app.ui.theme.PixelPaper
+import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelRed
 
 // 讀取遊戲（點存檔進入）或記錄管理（右邊有改名字、刪除紀錄的按鈕）共用的存檔清單
@@ -66,17 +66,16 @@ fun SaveSlotScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(profiles, key = { it.id }) { profile ->
-                    // 和人物能力同一種羊皮紙底
-                    PixelSurface(
-                        color = PixelPaper,
-                        modifier = Modifier.fillMaxWidth().clickable(enabled = !managing) { onPick(profile) },
+                    // 和人物能力標題同一種羊皮紙紋路，外面木紋細框
+                    Box(
+                        Modifier.fillMaxWidth().parchmentCard().clickable(enabled = !managing) { onPick(profile) },
                     ) {
-                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                             // 左邊：人物、名字和職業
                             PixelAvatar(Avatar.from(profile.avatar), size = 56.dp, tier = avatarTier(levelInfo(profile.exp).level))
                             Column(Modifier.weight(1f).padding(start = 16.dp)) {
-                                Text(profile.name, style = MaterialTheme.typography.titleLarge)
-                                Text(Avatar.from(profile.avatar).label, style = MaterialTheme.typography.bodyMedium)
+                                Text(profile.name, color = PixelInk, style = MaterialTheme.typography.titleLarge)
+                                Text(Avatar.from(profile.avatar).label, color = PixelInk, style = MaterialTheme.typography.bodyMedium)
                             }
                             if (managing) {
                                 // 右邊：改名字（鉛筆）、刪除紀錄（垃圾桶）

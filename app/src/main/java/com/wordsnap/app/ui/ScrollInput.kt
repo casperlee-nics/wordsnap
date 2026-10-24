@@ -30,10 +30,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.ui.theme.PixelInk
 
-// 在羊皮書卷上寫暱稱：書卷邊緣是不規則的破邊，左右兩端捲起來；右邊一顆深褐色封蠟印章，按下去像蓋章確認
+// 在羊皮書卷上寫暱稱：書卷邊緣是不規則的破邊，左右兩端捲起來；右邊一顆淺色木頭印章，按下去像蓋章確認
 @Composable
 fun ScrollNameInput(
     value: String,
@@ -53,7 +54,15 @@ fun ScrollNameInput(
             contentAlignment = Alignment.CenterStart,
         ) {
             if (value.isEmpty()) {
-                Text(placeholder, color = ScrollHint, style = MaterialTheme.typography.titleMedium)
+                // 提示字只排一行，太長就縮小字，不會換行
+                Text(
+                    placeholder,
+                    color = ScrollHint,
+                    style = if (placeholder.length > 7) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Clip,
+                )
             }
             BasicTextField(
                 value = value,
@@ -70,14 +79,14 @@ fun ScrollNameInput(
     }
 }
 
-// 深褐色封蠟印章：外圈不規則的蠟、內圈壓出來的圓框，中間「確定」；按下去會往下壓
+// 淺色木頭印章：外圈不規則、木紋、左上亮右下暗，中間「確定」；按下去會往下壓
 @Composable
 fun SealButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, label: String = "確定") {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     Box(
         modifier
-            .size(68.dp)
+            .size(58.dp)
             .alpha(if (enabled) 1f else 0.45f)
             .graphicsLayer {
                 val s = if (pressed) 0.88f else 1f
@@ -126,14 +135,26 @@ private fun DrawScope.drawScroll() {
 private fun DrawScope.drawSeal() {
     val c = Offset(size.width / 2, size.height / 2)
     val r = size.minDimension / 2
-    // 外圈蠟滴：幾個小圓讓邊緣不規則
+    // 右下一點點影子，看起來微微浮起
+    drawCircle(SealShadow, r * 0.9f, Offset(c.x + r * 0.07f, c.y + r * 0.08f))
+    // 外圈不規則的邊
     for (k in 0 until 8) {
         val a = k * Math.PI / 4
-        drawCircle(SealWax, r * 0.22f, Offset(c.x + (r * 0.78f * kotlin.math.cos(a)).toFloat(), c.y + (r * 0.78f * kotlin.math.sin(a)).toFloat()))
+        drawCircle(SealEdge, r * 0.2f, Offset(c.x + (r * 0.74f * kotlin.math.cos(a)).toFloat(), c.y + (r * 0.74f * kotlin.math.sin(a)).toFloat()))
     }
-    drawCircle(SealWax, r * 0.86f, c)
-    drawCircle(SealDark, r * 0.66f, c, style = Stroke(r * 0.08f))
-    drawCircle(SealLight, r * 0.2f, Offset(c.x - r * 0.42f, c.y - r * 0.48f))
+    drawCircle(SealEdge, r * 0.84f, c)
+    drawCircle(SealWax, r * 0.78f, c)
+    // 木紋：幾條彎彎的深色細紋
+    for (k in -2..2) {
+        val y = c.y + k * r * 0.26f
+        val half = kotlin.math.sqrt((r * 0.7f) * (r * 0.7f) - (k * r * 0.26f) * (k * r * 0.26f))
+        drawLine(SealGrain, Offset(c.x - half, y + r * 0.04f * k), Offset(c.x + half, y - r * 0.05f), strokeWidth = r * 0.04f)
+    }
+    // 左上亮、右下暗，帶一點點立體感
+    drawArc(SealLight, 150f, 120f, false, Offset(c.x - r * 0.72f, c.y - r * 0.72f), Size(r * 1.44f, r * 1.44f), style = Stroke(r * 0.08f))
+    drawArc(SealDark, -30f, 120f, false, Offset(c.x - r * 0.72f, c.y - r * 0.72f), Size(r * 1.44f, r * 1.44f), style = Stroke(r * 0.08f))
+    // 中間壓出來的圓框
+    drawCircle(SealDark, r * 0.58f, c, style = Stroke(r * 0.05f))
 }
 
 private val ScrollPaper = Color(0xFFEFDDAE)
@@ -143,7 +164,10 @@ private val ScrollLine = Color(0xFFB09060)
 private val ScrollRoll = Color(0xFFD9BE84)
 private val ScrollRollLight = Color(0xFFF6E6BE)
 private val ScrollHint = Color(0xFF9C8458)
-private val SealWax = Color(0xFF6B3E1E)
-private val SealDark = Color(0xFF3E2210)
-private val SealLight = Color(0xFF9A6236)
-private val SealText = Color(0xFFFFE8C8)
+private val SealWax = Color(0xFFC89A62)
+private val SealEdge = Color(0xFF7A5230)
+private val SealDark = Color(0xFF8C6238)
+private val SealLight = Color(0xFFE8C894)
+private val SealGrain = Color(0xFFA87A48)
+private val SealShadow = Color(0x55301C0C)
+private val SealText = Color(0xFF3A2410)

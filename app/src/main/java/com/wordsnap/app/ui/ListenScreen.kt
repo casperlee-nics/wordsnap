@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -74,7 +73,7 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
             ) {
                 if (word == null) {
                     Text("這本單字簿還沒有單字")
-                    Button(onClick = onBack) { Text("回單字本") }
+                    RetroButton("回單字本", onClick = onBack)
                     return@Column
                 }
                 Text("第 ${index % words.size + 1} / ${words.size} 個", style = MaterialTheme.typography.bodyMedium)

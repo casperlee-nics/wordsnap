@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
 import com.wordsnap.app.ui.theme.PixelGold
@@ -168,18 +169,21 @@ fun TitleScreen(
                             Text("♪ 音樂：", style = MaterialTheme.typography.bodyMedium)
                             MusicLevel.entries.forEach { option ->
                                 val chosen = option == level
+                                // 每格一樣寬，字放在正中間
                                 Box(
                                     Modifier
-                                        .padding(horizontal = 3.dp)
+                                        .padding(horizontal = 2.dp)
+                                        .width(34.dp)
                                         .border(2.dp, if (chosen) PixelInk else Color.Transparent)
                                         .background(if (chosen) PixelGold else Color.Transparent)
                                         .clickable {
                                             level = option
                                             setMusicLevel(context, option)
                                         }
-                                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                                        .padding(vertical = 4.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
-                                    Text(option.label, style = MaterialTheme.typography.bodyMedium)
+                                    Text(option.label, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
                                 }
                             }
                         }

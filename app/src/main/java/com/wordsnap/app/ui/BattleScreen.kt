@@ -379,7 +379,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 when {
                     total == 0 -> {
                         Text("這本單字簿還沒有可以出題的單字（至少 3 個字母、已記住）")
-                        Button(onClick = onBack) { Text("回單字本") }
+                        RetroButton("回單字本", onClick = onBack)
                     }
                     died -> {
                         Text("${profile?.name ?: ""} 被打倒了…", style = MaterialTheme.typography.headlineSmall)
@@ -1106,7 +1106,7 @@ private fun ResultDialog(reward: BattleReward, monster: Monster, race: Race, kno
                 }
             }
         },
-        confirmButton = { Button(onClick = onClose) { Text("回單字本") } },
+        confirmButton = { RetroButton("回單字本", onClick = onClose) },
     )
 }
 

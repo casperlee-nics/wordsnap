@@ -2,7 +2,19 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.85（暫定名稱：像素單字）
+## 目前版本 0.86（暫定名稱：像素單字）
+
+v0.86 的改變：
+- 寶箱道具機率：小回復劑 20%、聰明藥 12%、大回復劑 10%、防護盾 10%、混亂藥劑 10%、村民暴動 15%、投石車 12%、天使召喚 6%、聖靈藥 4%（打飛怪物時 50% 出寶箱）；道具欄不再列出機率表
+- 「確定」「出發」印章改成淺色木頭：有木紋、縮小一點、左上亮右下暗帶一點立體感
+- 建立角色：木牌標題縮小 30%、魔法書縮小 50%，輸入框、確定按鈕和說明文字往上移
+- 建立角色選職業：人物外框改回上一版，拿掉「改暱稱」，職業故事的字縮小
+- 複習、朗讀、戰鬥的「回單字本」改成黃褐色復古按鈕
+- 捕捉怪物頁新的背景音樂（`hunt_bgm.ogg`，躡手躡腳的尋寶曲）
+- 主畫面音樂「關／小／大」每格一樣寬，字置中
+- 繼續冒險、記錄管理的角色卡片改成和人物能力標題一樣的羊皮紙紋路
+- 冒險日誌下拉清單改成羊皮紙底＋木紋細框，目前這本有淡金色底，刪除改用像素垃圾桶，「新增冒險日誌」前面加鉛筆圖示
+- 新增冒險日誌：提示字不換行，拿掉「取消」（點視窗外面就能關掉）
 
 v0.85 的改變：
 - 戰鬥：
@@ -230,7 +242,7 @@ v0.65 的改變：
 
 ## 授權
 
-- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`、`fireworks_sfx.ogg`、`victory_jingle.ogg`、`royal_fanfare.ogg`、`logo_chime.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`、`fireworks_sfx.ogg`、`victory_jingle.ogg`、`royal_fanfare.ogg`、`logo_chime.ogg`、`hunt_bgm.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
 - 字典 `app/src/main/assets/ecdict.db`：取自 [ECDICT](https://github.com/skywind3000/ECDICT)（MIT License，Copyright (c) 2017 Linwei），挑出常用的 5 萬字，用 [OpenCC](https://github.com/BYVoid/OpenCC)（Apache License 2.0）轉成台灣繁體用語。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 
