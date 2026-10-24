@@ -118,7 +118,7 @@
     <!-- 능력치, 전직 -->
     <string name="hero_title">능력치</string>
     <string name="quoted">\'%1$s\'</string>
-    <string name="hero_class_level">직업: %1$s　Lv %2$d</string>
+    <string name="hero_class_level">직업: %1$s  Lv %2$d</string>
     <string name="hero_remembered">외운 단어: %1$d개</string>
     <string name="hero_exp">경험치 %1$d / %2$d</string>
     <string name="stat_str">힘</string>
@@ -160,7 +160,7 @@
     <string name="help_tips_title">작은 팁</string>
     <string name="help_tips">메인 화면의 \'게임 설정\'에서 언어 변경, 배경 음악 음량(끄기/작게/크게, 단어 읽기 소리에는 영향 없음), 글자 크기를 바꿀 수 있어요.</string>
     <string name="help_about_title">정보</string>
-    <string name="help_about">《픽셀 단어》는 Make It Fun Studio가 만들었어요. 함께 모험해 줘서 고마워요!</string>
+    <string name="help_about">\'픽셀 단어\'는 Make It Fun Studio가 만들었어요. 함께 모험해 줘서 고마워요!</string>
     <string name="help_version">버전: v%1$s</string>
 
     <!-- 단어장 -->
@@ -258,7 +258,7 @@
     <string name="result_exp_boss">경험치 +%1$d (마왕 보너스 2배)</string>
     <string name="result_practice">연습 전투: 경험치 1/4, 보물 상자 없음</string>
     <string name="result_chest">보물 상자를 열어 \'%1$s\' 획득!</string>
-    <string name="result_level_up">레벨 업! Lv %1$d → Lv %2$d</string>
+    <string name="result_level_up">레벨 업! Lv %1$d -> Lv %2$d</string>
     <string name="new_title">새 칭호 \'%1$s\' 획득!</string>
     <string name="result_boss_down">★ %1$s \'%2$s\' 처치!</string>
     <string name="result_boss_hint">이 전투를 통과해야 마왕을 물리친 것으로 인정돼요. 다음에 또 나타나요</string>
@@ -281,9 +281,9 @@
     <string name="avatar_robot">로봇</string>
 
     <!-- 직업 이름 -->
-    <string name="race_hero">인간・용사</string>
-    <string name="race_mage">인간・마법사</string>
-    <string name="race_archer">엘프・궁수</string>
+    <string name="race_hero">인간 용사</string>
+    <string name="race_mage">인간 마법사</string>
+    <string name="race_archer">엘프 궁수</string>
     <string name="race_goblin">고블린</string>
     <string name="race_dwarf">드워프</string>
     <string name="race_cat">고양이족</string>
