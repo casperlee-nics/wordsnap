@@ -394,15 +394,18 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         died: Boolean,
         monster: Monster,
         practice: Boolean,
+        // 有沒有把怪物打飛：只有打飛才會掉寶箱
+        knockedOut: Boolean,
         onDone: (BattleReward) -> Unit,
     ) {
         val profile = currentProfile.value ?: return
         val correct = asked.size - wrong.size
-        val passed = !died && correct >= passScore(total)
+        // 用道具提早把怪物打倒也算通過
+        val passed = !died && (knockedOut || correct >= passScore(total))
         val full = (correct * EXP_PER_WORD + if (passed) EXP_PASS_BONUS else 0) * monster.rank.expMultiplier()
         val gained = if (practice) full / PRACTICE_EXP_DIVISOR else full
-        // 勝利時有一半機率掉寶箱；練習戰不會掉，避免一直刷道具
-        val item = if (passed && !practice && Random.nextFloat() < CHEST_CHANCE) ItemType.roll() else null
+        // 把怪物打飛時有一半機率掉寶箱；練習戰不會掉，避免一直刷道具
+        val item = if (knockedOut && !practice && Random.nextFloat() < CHEST_CHANCE) ItemType.roll() else null
         val before = levelInfo(profile.exp).level
         val after = levelInfo(profile.exp + gained).level
         val forgotten = wrong.filter { it.wrongCount + 1 >= 2 && it.box >= 1 }.map { it.text }
@@ -460,8 +463,9 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
             val due = dao.getDue(pid, System.currentTimeMillis())
                 .filter { bookId == null || it.bookId == bookId }
             practiceMode = due.isEmpty()
+            // 到期的字也打亂順序出現
             reviewQueue = if (due.isNotEmpty()) {
-                due
+                due.shuffled()
             } else {
                 allWords.value.filter { bookId == null || it.bookId == bookId }.shuffled()
             }

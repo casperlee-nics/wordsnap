@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.ui.theme.PixelInk
 import kotlin.math.PI
@@ -40,15 +41,18 @@ const val WRONG_DAMAGE = 2
 const val CHEST_CHANCE = 0.5f
 
 enum class ItemType(val label: String, val effect: String, val weight: Int, val icon: List<String>) {
-    SmallPotion("小回復劑", "回復 1/5 的 HP", 18, IconSmallPotion),
-    SmartPill("聰明藥", "這題直接顯示答案，算答對", 15, IconSmartPill),
-    BigPotion("大回復劑", "回復一半的 HP", 10, IconBigPotion),
+    SmallPotion("小回復劑", "回復 1/5 的 HP", 30, IconSmallPotion),
+    SmartPill("聰明藥", "這題直接顯示答案，算答對", 20, IconSmartPill),
+    BigPotion("大回復劑", "回復一半的 HP", 15, IconBigPotion),
     Riot("村民暴動", "村民衝過怪物，怪物多扣 1/4 的血", 7, IconHorn),
-    Elixir("聖靈藥", "HP 全部回滿", 2, IconElixir),
-    Angel("天使召喚", "天使從天而降，怪物多扣一半的血", 3, IconBell),
-    Shield("防護盾", "接下來 3 回合答錯，被攻擊也不會扣血", 15, IconShield),
-    Confusion("混亂藥劑", "接下來 3 回合答錯，怪物會混亂打自己、自己扣血", 15, IconConfusion),
-    Catapult("召喚投石車", "投石車丟大石頭，怪物多扣 1/3 的血", 15, IconCatapult);
+    Elixir("聖靈藥", "HP 全部回滿", 1, IconElixir),
+    Angel("天使召喚", "天使從天而降，怪物損血一半", 2, IconBell),
+    Shield("防護盾", "3 回合內答錯，被攻擊也不會扣血", 10, IconShield),
+    Confusion("混亂藥劑", "3 回合內答錯，怪物反而會攻擊自己", 10, IconConfusion),
+    Catapult("召喚投石車", "投石車丟大石頭，怪物扣 1/3 的血", 5, IconCatapult);
+
+    // 寶箱裡抽到這個道具的機率（%）
+    val dropPercent: Int get() = weight
 
     // 回復多少 HP（不是回復道具就是 0）
     val heal: Int
@@ -304,7 +308,7 @@ fun ItemBagDialog(
     PixelWindowDialog(title = if (onUse != null) "道具袋" else "道具欄", onDismiss = onDismiss) {
         val owned = ItemType.entries.filter { (counts[it] ?: 0) > 0 }
         if (owned.isEmpty()) {
-            Text("道具袋是空的。戰鬥勝利時有機會打開寶箱拿到道具！")
+            Text("道具袋是空的。把怪物打飛時有機會打開寶箱拿到道具！")
         }
         owned.forEachIndexed { index, type ->
             val enabled = onUse == null || canUse(type)
@@ -327,6 +331,22 @@ fun ItemBagDialog(
                     Text(type.effect, style = MaterialTheme.typography.bodySmall)
                 }
                 Text("x${counts[type] ?: 0}", style = MaterialTheme.typography.titleMedium)
+            }
+        }
+        // 道具欄最下面列出寶箱的掉落機率
+        if (onUse == null) {
+            Box(Modifier.fillMaxWidth().height(2.dp).background(ItemDivider))
+            Text("寶箱掉落機率", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "把怪物打飛時有 ${(CHEST_CHANCE * 100).toInt()}% 機率出現寶箱，寶箱裡的道具：",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            ItemType.entries.sortedByDescending { it.dropPercent }.forEach { type ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PixelArt(type.icon, ItemPalette, Modifier.size(24.dp))
+                    Text(type.label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    Text("${type.dropPercent}%", style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
     }
@@ -422,6 +442,20 @@ fun DrawScope.drawBulb(t: Float, hero: Offset, heroSize: Float) {
     drawSprite(BulbArt, left, top, cell)
 }
 
+// 天使的劍：握把在 hand，angle 是劍往右偏的角度（-90 是直直朝上）
+private fun DrawScope.drawAngelSword(hand: Offset, cell: Float, angle: Float) {
+    rotate(angle, pivot = hand) {
+        // 劍刃往上：銀色，中間一條亮線
+        drawRect(PixelInk, Offset(hand.x - cell, hand.y - cell * 9), Size(cell * 2, cell * 8))
+        drawRect(Color(0xFFD8E0F0), Offset(hand.x - cell * 0.5f, hand.y - cell * 8.5f), Size(cell, cell * 7.5f))
+        drawRect(Color.White, Offset(hand.x - cell * 0.5f, hand.y - cell * 8.5f), Size(cell * 0.5f, cell * 6f))
+        // 金色護手和握把
+        drawRect(PixelInk, Offset(hand.x - cell * 2.5f, hand.y - cell * 1.5f), Size(cell * 5, cell * 1.5f))
+        drawRect(Color(0xFFF8D030), Offset(hand.x - cell * 2f, hand.y - cell * 1.2f), Size(cell * 4, cell * 0.9f))
+        drawRect(Color(0xFF805030), Offset(hand.x - cell * 0.5f, hand.y), Size(cell, cell * 2))
+    }
+}
+
 // 天使召喚：三位天使從天而降，衝向怪物，碰到時發出白光
 fun DrawScope.drawAngels(t: Float, monster: Offset) {
     val cell = 3.dp.toPx()
@@ -434,7 +468,13 @@ fun DrawScope.drawAngels(t: Float, monster: Offset) {
         val y = -AngelArt.size * cell + (monster.y - AngelArt.size * cell * 0.5f + AngelArt.size * cell) * p
         // 拍翅膀：上下輕輕晃
         val flap = if (((t * 12).toInt() + i) % 2 == 0) 0f else cell
-        if (t < 0.85f) drawSprite(AngelArt, x, y - flap, cell)
+        if (t < 0.85f) {
+            drawSprite(AngelArt, x, y - flap, cell)
+            // 右手的劍：往下飛時舉在頭上，快碰到怪物時一格一格往下揮砍
+            val swing = ((p - 0.75f) / 0.25f).coerceIn(0f, 1f)
+            val angle = -70f + 140f * floor(swing * 4f) / 4f
+            drawAngelSword(Offset(x + cell * 10f, y - flap + cell * 7f), cell, angle)
+        }
     }
     if (t > 0.6f) {
         val f = ((t - 0.6f) / 0.4f).coerceIn(0f, 1f)

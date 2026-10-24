@@ -75,8 +75,8 @@ enum class HeaderTheme(val text: Color, val draw: DrawScope.() -> Unit) {
     Banner(Color(0xFFF8F0D8), { drawBanner() }),
     // 記錄管理：深褐皮革，邊緣有一圈縫線＋米黃字
     Leather(Color(0xFFF8E0A8), { drawLeather() }),
-    // 捕捉怪物：琥珀色獵人帆布，上面罩著一張斜斜的捕獸網＋深褐色字
-    HuntNet(Color(0xFF2A1808), { drawHuntNet() }),
+    // 捕捉怪物：深藍綠色的夜路，下緣有一排怪物腳印＋米黃字
+    HuntNet(Color(0xFFF8E8B8), { drawHuntNet() }),
 }
 
 // 戰鬥、朗讀、複習、記錄管理畫面上方的標題：依 theme 換底色，外面一圈深色木紋框
@@ -239,7 +239,7 @@ fun PixelSurface(
     Surface(
         shape = RectangleShape,
         color = Color.Transparent,
-        contentColor = contentColorFor(color),
+        contentColor = if (color == PixelPaper) PixelInk else contentColorFor(color),
         modifier = modifier.woodFrame(color),
         content = content,
     )
@@ -525,43 +525,30 @@ private val StoneMortar = Color(0xFF26282E)
 private val StoneColors = listOf(Color(0xFF50545E), Color(0xFF5A5E68), Color(0xFF464A54), Color(0xFF545864))
 private val StoneLight = Color(0xFF6E727C)
 private val StoneSpeck = Color(0xFF3A3D45)
-// 捕獸網：琥珀色帆布底，兩個方向的斜線交叉成網，交叉點打一個繩結
+// 獵人的夜路：深藍綠色素面底（字清楚好讀），只有最下面一排淡淡的怪物腳印一路走過去
 private fun DrawScope.drawHuntNet() {
-    drawRect(NetCanvas)
+    drawRect(HuntBase)
     val px = 2.dp.toPx()
-    val step = px * 8
-    // 帆布的橫向織紋
-    var y = px
-    while (y < size.height) {
-        drawRect(NetCanvasLight, Offset(0f, y), Size(size.width, px * 0.5f + 0.5f))
-        y += px * 3
-    }
-    // 網線：一格一格畫成像素斜線
-    var start = -size.height
-    while (start < size.width + size.height) {
-        var k = 0f
-        while (k < size.height) {
-            drawRect(NetRope, Offset(start + k, k), Size(px, px))
-            drawRect(NetRope, Offset(start + size.height - k, k), Size(px, px))
-            k += px
-        }
-        start += step
-    }
-    // 繩結：兩個方向的網線交叉的地方
-    val starts = generateSequence(-size.height) { it + step }.takeWhile { it < size.width + size.height }.toList()
-    for (a in starts) {
-        for (b in starts) {
-            val ky = (b + size.height - a) / 2f
-            if (ky < 0f || ky > size.height) continue
-            drawRect(NetKnot, Offset(a + ky - px / 2, ky - px / 2), Size(px * 2, px * 2))
-        }
+    // 上緣一條亮邊，看起來有一點立體
+    drawRect(HuntLight, Offset(0f, 0f), Size(size.width, px))
+    // 腳印：三顆小趾頭加一個腳掌，左右交錯
+    val baseY = size.height - px * 5
+    var x = px * 3
+    var k = 0
+    while (x < size.width - px * 4) {
+        val y = baseY - (if (k % 2 == 0) 0f else px * 2)
+        drawRect(HuntPrint, Offset(x, y), Size(px, px))
+        drawRect(HuntPrint, Offset(x + px * 1.5f, y - px * 0.5f), Size(px, px))
+        drawRect(HuntPrint, Offset(x + px * 3, y), Size(px, px))
+        drawRect(HuntPrint, Offset(x + px * 0.5f, y + px * 1.5f), Size(px * 3, px * 2))
+        x += px * 9
+        k++
     }
 }
 
-private val NetCanvas = Color(0xFFD9A54E)
-private val NetCanvasLight = Color(0xFFE6BA6A)
-private val NetRope = Color(0xFF8A5A22)
-private val NetKnot = Color(0xFF5C3A14)
+private val HuntBase = Color(0xFF183C48)
+private val HuntLight = Color(0xFF2C5C6A)
+private val HuntPrint = Color(0xFF2A5866)
 
 private val TapestryBase = Color(0xFF5E1A26)
 private val TapestryDark = Color(0xFF4A121C)

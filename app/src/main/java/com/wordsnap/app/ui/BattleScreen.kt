@@ -16,11 +16,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -72,6 +75,7 @@ import com.wordsnap.app.R
 import com.wordsnap.app.data.Word
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelGold
+import com.wordsnap.app.ui.theme.PixelPaper
 import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelRed
 import kotlin.math.PI
@@ -96,7 +100,7 @@ private data class ItemUse(val type: ItemType, val id: Int)
 // 答對時人物衝上去攻擊、怪物扣血；答錯被怪物攻擊，扣 1/5 的 HP，HP 歸零就被打倒
 // 最後一題結束時怪物的血打光了，才用職業招式把怪物打飛（沒用道具就要全對）
 // 招式和頭像隨稱號（每 10 級一階）變強；每記住 50 / 100 個字會遇到中魔王 / 大魔王
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val profile by vm.currentProfile.collectAsState()
@@ -178,7 +182,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val heroHp = (HERO_MAX_HP - damage).coerceAtLeast(0)
     val monsterHp = (total - correct - bonus).coerceAtLeast(0)
     val knocked = knockedOut
-    val answering = introDone && !finished && word != null && result == null
+    // 道具把怪物的血打光：等道具動畫打到怪物，再結束戰鬥
+    var ending by remember { mutableStateOf(false) }
+    val answering = introDone && !finished && !ending && word != null && result == null
 
     // 念一次英文：先把音樂調小聲 0.5 秒，念完再等 0.5 秒才調回來
     fun sayWord() {
@@ -231,12 +237,19 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         endRound()
     }
 
+    // 怪物沒血了，或最後一題答完：結束戰鬥；asked 是真的作答過的題目
+    fun win(asked: List<Word>) {
+        finished = true
+        val ko = total - correct - bonus <= 0
+        vm.finishBattle(bookId, asked, wrong.toList(), total, died = false, monster, practice, knockedOut = ko) { reward = it }
+    }
+
     fun next() {
         input = ""
         result = null
-        if (index + 1 >= total) {
-            finished = true
-            vm.finishBattle(bookId, questions, wrong.toList(), total, died = false, monster, practice) { reward = it }
+        // 道具或混亂讓怪物的血先打光了，就直接打倒，不用把題目答完
+        if (index + 1 >= total || total - correct - bonus <= 0) {
+            win(questions.take(index + 1))
         } else {
             index++
         }
@@ -261,6 +274,14 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             else -> {
                 bonus += type.monsterDamage(total)
                 bonusHits++
+                // 怪物被道具打到沒血：等道具打中（約 1 秒）就直接倒下，這題不用答
+                if (total - correct - bonus <= 0) {
+                    ending = true
+                    scope.launch {
+                        delay(1100)
+                        win(questions.take(index))
+                    }
+                }
             }
         }
     }
@@ -285,7 +306,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         if (heroHp <= 0) {
             died = true
             finished = true
-            vm.finishBattle(bookId, questions.take(index + 1), wrong.toList(), total, died = true, monster, practice) { reward = it }
+            vm.finishBattle(bookId, questions.take(index + 1), wrong.toList(), total, died = true, monster, practice, knockedOut = false) { reward = it }
         } else {
             next()
         }
@@ -298,11 +319,18 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
+    // 鍵盤跳出來時，把戰場、輸入框和按鈕整個往上推（戰場上方的背景被推出畫面），按鈕不會被鍵盤擋住
+    val scroll = rememberScrollState()
+    val typing = WindowInsets.isImeVisible
+    LaunchedEffect(typing, scroll.maxValue) {
+        if (typing) scroll.animateScrollTo(scroll.maxValue)
+    }
+
     Scaffold(
         topBar = { PixelHeader("戰鬥：$bookName", onBack, backDescription = "逃跑", theme = HeaderTheme.Stone) },
     ) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
+            Modifier.fillMaxSize().padding(padding).verticalScroll(scroll),
         ) {
             // 被打倒：先在戰場上倒下，再接著被夥伴拖棺材去教堂
             if (died && fallen) {
@@ -368,13 +396,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     }
                     !introDone -> Text("小心！", style = MaterialTheme.typography.titleMedium)
                     word != null -> {
-                        val status = listOfNotNull(
-                            if (shieldTurns > 0) "防護盾還有 $shieldTurns 回合" else null,
-                            if (confuseTurns > 0) "怪物混亂中，還有 $confuseTurns 回合" else null,
-                        )
-                        if (status.isNotEmpty()) {
-                            Text(status.joinToString("・"), style = MaterialTheme.typography.bodyMedium, color = Color(0xFF3A58C8))
-                        }
                         Question(
                             answer = answer,
                             meaning = word.meaning,
@@ -1155,8 +1176,9 @@ private fun LevelUpScreen(hero: Avatar, race: Race, before: Int, after: Int, onC
                     }
                 }
             }
+            // 和人物能力同一種羊皮紙底的視窗
             PixelSurface(
-                color = MaterialTheme.colorScheme.surface,
+                color = PixelPaper,
                 modifier = Modifier.align(Alignment.Center).padding(24.dp).fillMaxWidth(),
             ) {
                 Column(

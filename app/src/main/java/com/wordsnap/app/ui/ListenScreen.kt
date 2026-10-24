@@ -28,11 +28,13 @@ import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelGold
 import kotlinx.coroutines.delay
 
-// 朗讀模式：一個字接一個字自動念，先念英文，再念中文解釋，念完從頭再來
+// 朗讀模式：隨機順序一個字接一個字自動念，先念英文，再念中文解釋，念完從頭再來
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
-    val words by vm.words.collectAsState()
+    val bookWords by vm.words.collectAsState()
+    // 隨機順序念；單字有增減（例如刪掉一個）時才重新打亂
+    val words = remember(bookWords.map { it.id }.toSet()) { bookWords.shuffled() }
     val speaker = rememberSpeaker()
     val scene = remember { ReviewScene.entries.random() }
     var index by remember { mutableIntStateOf(0) }

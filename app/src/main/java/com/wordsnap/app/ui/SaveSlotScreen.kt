@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
 import com.wordsnap.app.data.Profile
+import com.wordsnap.app.ui.theme.PixelPaper
 import com.wordsnap.app.ui.theme.PixelRed
 
 // 讀取遊戲（點存檔進入）或記錄管理（右邊有改名字、刪除紀錄的按鈕）共用的存檔清單
@@ -65,8 +66,9 @@ fun SaveSlotScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(profiles, key = { it.id }) { profile ->
+                    // 和人物能力同一種羊皮紙底
                     PixelSurface(
-                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        color = PixelPaper,
                         modifier = Modifier.fillMaxWidth().clickable(enabled = !managing) { onPick(profile) },
                     ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -83,7 +85,8 @@ fun SaveSlotScreen(
                                     PixelIconPlain(IconTrash, "刪除紀錄", onClick = { confirm = profile })
                                 }
                             } else {
-                                Text("→", color = MaterialTheme.colorScheme.primary)
+                                // 和新冒險一樣的蓋章按鈕
+                                SealButton(enabled = true, onClick = { onPick(profile) }, label = "出發")
                             }
                         }
                     }

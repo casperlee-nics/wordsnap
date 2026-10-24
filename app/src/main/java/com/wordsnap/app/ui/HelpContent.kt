@@ -3,10 +3,12 @@ package com.wordsnap.app.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 
 // 遊戲說明的內容：一段一個主題，最後一段是公司介紹
 private class HelpSection(val title: String, val body: String)
@@ -62,5 +64,11 @@ fun HelpDialog(onDismiss: () -> Unit) {
                 Text(section.body, style = MaterialTheme.typography.bodyMedium)
             }
         }
+        // 最後面寫上目前的軟體版本
+        val context = LocalContext.current
+        val version = remember {
+            runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty()
+        }
+        Text("軟體版本：v$version", style = MaterialTheme.typography.bodySmall)
     }
 }

@@ -33,7 +33,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.ui.theme.PixelInk
 
-// 在羊皮書卷上寫暱稱：書卷邊緣是不規則的破邊，左右兩端捲起來；右邊一顆紅色封蠟印章，按下去像蓋章確認
+// 在羊皮書卷上寫暱稱：書卷邊緣是不規則的破邊，左右兩端捲起來；右邊一顆深褐色封蠟印章，按下去像蓋章確認
 @Composable
 fun ScrollNameInput(
     value: String,
@@ -70,7 +70,7 @@ fun ScrollNameInput(
     }
 }
 
-// 紅色封蠟印章：外圈不規則的蠟、內圈壓出來的圓框，中間「確定」；按下去會往下壓
+// 深褐色封蠟印章：外圈不規則的蠟、內圈壓出來的圓框，中間「確定」；按下去會往下壓
 @Composable
 fun SealButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, label: String = "確定") {
     val interaction = remember { MutableInteractionSource() }
@@ -143,7 +143,7 @@ private val ScrollLine = Color(0xFFB09060)
 private val ScrollRoll = Color(0xFFD9BE84)
 private val ScrollRollLight = Color(0xFFF6E6BE)
 private val ScrollHint = Color(0xFF9C8458)
-private val SealWax = Color(0xFFB8282E)
-private val SealDark = Color(0xFF7E1418)
-private val SealLight = Color(0xFFE05A58)
+private val SealWax = Color(0xFF6B3E1E)
+private val SealDark = Color(0xFF3E2210)
+private val SealLight = Color(0xFF9A6236)
 private val SealText = Color(0xFFFFE8C8)
