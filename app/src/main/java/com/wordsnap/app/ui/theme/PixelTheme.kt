@@ -51,7 +51,7 @@ private val colors = lightColorScheme(
     error = PixelRed,
 )
 
-// 俐方體 11 號（Cubic 11）：免費、可商用的繁體中文像素字型
+// 俐方體 11 號（Cubic 11）：免費、可商用的繁體中文像素字型，日文假名和漢字也有
 private val PixelFont = FontFamily(Font(R.font.cubic_11))
 
 private fun TextStyle.pixel() = copy(fontFamily = PixelFont)

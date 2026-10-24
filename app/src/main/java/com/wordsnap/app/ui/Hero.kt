@@ -1,60 +1,88 @@
 package com.wordsnap.app.ui
 
-// 人物的種族、等級、能力和稱號
+import androidx.annotation.ArrayRes
+import androidx.annotation.StringRes
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
+import com.wordsnap.app.i18n.trArray
 
-// 擊倒怪物的招式，每個種族不同
-enum class Finisher(val label: String) {
-    Slash("揮劍斬擊"),
-    Magic("星光魔法"),
-    Bomb("偷丟炸彈"),
-    Smash("巨斧重擊"),
-    Claw("貓爪連擊"),
-    Fire("火焰吐息"),
-    Laser("雷射光束"),
+// 人物的職業（種族）、等級、能力、稱號和招式
+
+// 擊倒怪物的招式，每個職業不同；稱號每升一階，招式就換成更強的一招
+enum class Finisher(@ArrayRes private val movesRes: Int) {
+    Slash(R.array.moves_slash),
+    Magic(R.array.moves_magic),
+    Arrow(R.array.moves_arrow),
+    Bomb(R.array.moves_bomb),
+    Smash(R.array.moves_smash),
+    Claw(R.array.moves_claw),
+    Fire(R.array.moves_fire),
+    Laser(R.array.moves_laser),
+    DarkFire(R.array.moves_darkfire);
+
+    // 第 tier 階的招式名稱（tier 見 avatarTier）
+    fun label(tier: Int): String {
+        val moves = trArray(movesRes)
+        return moves[tier.coerceIn(0, moves.size - 1)]
+    }
 }
 
 // 能力：力量、體力、智慧、運氣 = 基礎值 + 每升一級的成長值 x (等級 - 1)
 enum class Race(
-    val label: String,
+    @StringRes private val labelRes: Int,
     val base: Stats,
     val growth: Stats,
     val finisher: Finisher,
     // Lv 1、10、20、30、40、50 時的稱號
-    val titles: List<String>,
+    @ArrayRes private val titlesRes: Int,
 ) {
-    Human("人類", Stats(5, 5, 5, 5), Stats(2, 2, 2, 2), Finisher.Slash,
-        listOf("見習劍士", "劍士", "騎士", "聖騎士", "劍聖", "傳說勇者")),
-    Elf("精靈", Stats(3, 4, 8, 5), Stats(1, 2, 3, 2), Finisher.Magic,
-        listOf("森林學徒", "精靈法師", "元素術士", "大魔導師", "賢者", "星辰守護者")),
-    Goblin("哥布林", Stats(4, 4, 3, 9), Stats(2, 1, 1, 3), Finisher.Bomb,
-        listOf("小嘍囉", "盜賊", "突襲隊長", "哥布林頭目", "哥布林王", "混沌之王")),
-    Dwarf("矮人", Stats(8, 8, 3, 3), Stats(3, 3, 1, 1), Finisher.Smash,
-        listOf("礦工", "斧手", "鐵匠戰士", "重裝衛士", "山之領主", "大地之王")),
-    Cat("貓族", Stats(4, 4, 5, 7), Stats(2, 1, 2, 3), Finisher.Claw,
-        listOf("流浪貓", "獵人", "弓箭手", "神射手", "暗影獵手", "貓神")),
-    Dragon("龍族", Stats(9, 7, 4, 2), Stats(3, 2, 2, 1), Finisher.Fire,
-        listOf("幼龍", "飛龍", "火焰龍", "古龍", "龍王", "神龍")),
-    Machine("機械族", Stats(6, 9, 6, 1), Stats(2, 3, 2, 1), Finisher.Laser,
-        listOf("試作機", "戰鬥機兵", "強化機兵", "鋼鐵守衛", "超級機甲", "終極機神")),
+    Hero(R.string.race_hero, Stats(6, 6, 4, 5), Stats(3, 2, 1, 2), Finisher.Slash, R.array.titles_hero),
+    Mage(R.string.race_mage, Stats(3, 4, 9, 5), Stats(1, 2, 3, 2), Finisher.Magic, R.array.titles_mage),
+    Archer(R.string.race_archer, Stats(5, 4, 5, 7), Stats(2, 1, 2, 3), Finisher.Arrow, R.array.titles_archer),
+    Goblin(R.string.race_goblin, Stats(4, 4, 3, 9), Stats(2, 1, 1, 3), Finisher.Bomb, R.array.titles_goblin),
+    Dwarf(R.string.race_dwarf, Stats(8, 8, 3, 3), Stats(3, 3, 1, 1), Finisher.Smash, R.array.titles_dwarf),
+    Cat(R.string.race_cat, Stats(4, 4, 5, 7), Stats(2, 1, 2, 3), Finisher.Claw, R.array.titles_cat),
+    Dragon(R.string.race_dragon, Stats(9, 7, 4, 2), Stats(3, 2, 2, 1), Finisher.Fire, R.array.titles_dragon),
+    Machine(R.string.race_machine, Stats(6, 9, 6, 1), Stats(2, 3, 2, 1), Finisher.Laser, R.array.titles_machine),
+    Demon(R.string.race_demon, Stats(7, 5, 7, 3), Stats(3, 1, 3, 1), Finisher.DarkFire, R.array.titles_demon);
+
+    val label: String get() = tr(labelRes)
+    val titles: List<String> get() = trArray(titlesRes).toList()
 }
 
 data class Stats(val str: Int, val vit: Int, val intel: Int, val luk: Int)
 
 val Avatar.race: Race
     get() = when (this) {
-        Avatar.Man, Avatar.Woman -> Race.Human
-        Avatar.ElfMan, Avatar.ElfWoman -> Race.Elf
+        Avatar.Hero -> Race.Hero
+        Avatar.Mage -> Race.Mage
+        Avatar.ElfArcher -> Race.Archer
         Avatar.Goblin -> Race.Goblin
         Avatar.Dwarf -> Race.Dwarf
         Avatar.Cat -> Race.Cat
         Avatar.Dragon -> Race.Dragon
         Avatar.Robot -> Race.Machine
+        Avatar.Demon -> Race.Demon
     }
 
 const val MAX_LEVEL = 99
 
 // 從 Lv n 升到 n+1 需要的經驗值，越高級需要越多
-fun expToNext(level: Int): Int = 100 + 20 * (level - 1)
+fun expToNext(level: Int): Int = 80 + 20 * level + 3 * level * level / 2
+
+// 升到這一級為止總共需要的經驗值
+fun totalExpForLevel(level: Int): Int = (1 until level).sumOf { expToNext(it) }
+
+// 轉職：超過 10 級才能轉，轉了會降 10 級
+const val CLASS_CHANGE_MIN_LEVEL = 11
+const val CLASS_CHANGE_PENALTY = 10
+
+// 轉職後的總經驗值：降 10 級，這一級已經累積的經驗值保留（不超過新等級的上限）
+fun expAfterClassChange(totalExp: Int): Int {
+    val info = levelInfo(totalExp)
+    val level = (info.level - CLASS_CHANGE_PENALTY).coerceAtLeast(1)
+    return totalExpForLevel(level) + info.current.coerceAtMost(expToNext(level) - 1)
+}
 
 // 用總經驗值算出等級，以及這一級已經累積多少、還要多少
 data class LevelInfo(val level: Int, val current: Int, val needed: Int)

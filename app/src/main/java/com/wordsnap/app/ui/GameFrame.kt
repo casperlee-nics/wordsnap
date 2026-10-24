@@ -30,13 +30,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// 早期掌上遊戲機（GBA）的靛紫色配色
-private val Body = Color(0xFF5048A8)
-private val BodyDark = Color(0xFF3A3480)
-private val Bezel = Color(0xFF2A2A38)
-private val Label = Color(0xFFC8C4F0)
-private val ButtonRed = Color(0xFFC83048)
-private val Led = Color(0xFFE03040)
+// 掌上遊戲機的機身配色：每次打開 App 隨機挑一種
+private enum class ShellColors(
+    val body: Color,
+    val bodyDark: Color,
+    val bezel: Color,
+    val label: Color,
+    val button: Color,
+    val led: Color,
+) {
+    // 早期掌上遊戲機（GBA）的靛紫色
+    Indigo(Color(0xFF5048A8), Color(0xFF3A3480), Color(0xFF2A2A38), Color(0xFFC8C4F0), Color(0xFFC83048), Color(0xFFE03040)),
+    // 湖水綠機身、橘色按鍵
+    Teal(Color(0xFF2E8E8A), Color(0xFF1F6663), Color(0xFF233034), Color(0xFFD8F4EE), Color(0xFFE8902C), Color(0xFFF8D030)),
+    // 深紅機身、深灰按鍵
+    Crimson(Color(0xFFB03A3A), Color(0xFF822828), Color(0xFF2C2426), Color(0xFFF8D8C8), Color(0xFF3A3848), Color(0xFF78F858)),
+}
+
+private val Shell = ShellColors.entries.random()
+private val Body: Color get() = Shell.body
+private val BodyDark: Color get() = Shell.bodyDark
+private val Bezel: Color get() = Shell.bezel
+private val Label: Color get() = Shell.label
+private val ButtonRed: Color get() = Shell.button
+private val Led: Color get() = Shell.led
 
 // 把整個 App 放進掌上遊戲機的螢幕裡：上面是電源燈和機身字樣，下面是十字鍵和 A、B 鍵（裝飾用）
 @OptIn(ExperimentalLayoutApi::class)
