@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Xml
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 import java.io.InputStream
 import java.util.zip.ZipInputStream
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +27,7 @@ object DocumentText {
         val kind = kindOf(context, uri)
         if (kind == Kind.Pdf) return TextScanner.scanPdf(context, uri, onPage)
         val text = withContext(Dispatchers.IO) {
-            val input = context.contentResolver.openInputStream(uri) ?: throw IllegalArgumentException("打不開這個檔案")
+            val input = context.contentResolver.openInputStream(uri) ?: throw IllegalArgumentException(tr(R.string.file_open_failed))
             input.use { if (kind == Kind.Excel) readExcel(it) else readText(it) }
         }
         return TextScanner.analyzeText(text)
@@ -40,7 +42,7 @@ object DocumentText {
         return when {
             type == "application/pdf" || name.endsWith(".pdf") -> Kind.Pdf
             type.contains("spreadsheetml") || name.endsWith(".xlsx") -> Kind.Excel
-            name.endsWith(".xls") -> throw IllegalArgumentException("舊版 Excel（.xls）請先另存成 .xlsx 或 CSV")
+            name.endsWith(".xls") -> throw IllegalArgumentException(tr(R.string.file_old_excel))
             else -> Kind.Text
         }
     }
@@ -72,7 +74,7 @@ object DocumentText {
                 if (text.length > MAX_TEXT_BYTES) break
             }
         }
-        if (text.isBlank()) throw IllegalArgumentException("這個 Excel 檔裡沒有找到文字")
+        if (text.isBlank()) throw IllegalArgumentException(tr(R.string.file_excel_empty))
         return text.toString()
     }
 

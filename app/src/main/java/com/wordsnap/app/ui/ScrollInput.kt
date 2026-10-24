@@ -35,6 +35,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.ui.theme.PixelInk
 
 // 在羊皮書卷上寫暱稱：書卷邊緣是不規則的破邊，左右兩端捲起來；右邊一顆淺色木頭印章，按下去像蓋章確認
@@ -93,7 +95,8 @@ fun ScrollTextField(
             value = value,
             onValueChange = onValueChange,
             singleLine = true,
-            textStyle = textStyle.copy(color = PixelInk),
+            // 文字大小設定成「大」時，輸入的字放大 1.2 倍
+            textStyle = textStyle.readable().copy(color = PixelInk),
             cursorBrush = SolidColor(PixelInk),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, keyboardType = keyboardType),
             keyboardActions = KeyboardActions(onDone = { onDone() }),
@@ -104,7 +107,7 @@ fun ScrollTextField(
 
 // 淺色木頭印章：外圈不規則、木紋、左上亮右下暗，中間「確定」；按下去會往下壓
 @Composable
-fun SealButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, label: String = "確定") {
+fun SealButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, label: String = tr(R.string.confirm)) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     Box(

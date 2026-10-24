@@ -35,6 +35,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.ui.theme.PixelInk
 
 // 建立角色畫面用的元件：木牌標題、魔法書、職業故事書卷、「開始冒險」按鈕
@@ -204,15 +206,15 @@ private val BookArt = listOf(
 // 每個職業的小故事
 val Avatar.story: String
     get() = when (this) {
-        Avatar.Hero -> "出身王國邊境的年輕人，拿起祖傳的長劍，立誓打倒奪走文字的魔王，讓王國再次響起讀書聲。"
-        Avatar.Mage -> "在古老塔樓裡研讀咒語的學徒。相信每個單字都是一道咒文，念得越準，魔法就越強。"
-        Avatar.ElfArcher -> "守護森林的精靈射手，聽得見遠方的低語。用一支支箭，把躲在書頁裡的怪物射出來。"
-        Avatar.Goblin -> "愛搗蛋又機靈的哥布林，偷來一本字典後竟然愛上學習，決定改邪歸正去冒險。"
-        Avatar.Dwarf -> "住在山腳下的鐵匠戰士，意志比鐵還硬。把單字一個個敲進腦袋，像打造最堅固的盔甲。"
-        Avatar.Cat -> "看起來懶洋洋的貓族，好奇心卻比誰都強。哪裡有新單字，就會踮著腳尖悄悄靠近。"
-        Avatar.Dragon -> "從火山蛋裡孵出來的小龍，翅膀還不夠大，吐出的火焰卻能燒光一整頁的怪物。"
-        Avatar.Demon -> "離開魔王軍的魔族劍士，為了贖罪踏上旅程，用黑暗的力量守護光明。"
-        Avatar.Robot -> "在古代遺跡裡醒來的機械兵，記憶一片空白。每學會一個單字，系統就升級一次。"
+        Avatar.Hero -> tr(R.string.story_hero)
+        Avatar.Mage -> tr(R.string.story_mage)
+        Avatar.ElfArcher -> tr(R.string.story_archer)
+        Avatar.Goblin -> tr(R.string.story_goblin)
+        Avatar.Dwarf -> tr(R.string.story_dwarf)
+        Avatar.Cat -> tr(R.string.story_cat)
+        Avatar.Dragon -> tr(R.string.story_dragon)
+        Avatar.Demon -> tr(R.string.story_demon)
+        Avatar.Robot -> tr(R.string.story_robot)
     }
 
 // 直的古書卷：上下兩端是捲起來的木軸，中間羊皮紙寫著職業名稱和故事
@@ -224,7 +226,7 @@ fun StoryScroll(title: String, story: String, modifier: Modifier = Modifier) {
             .padding(horizontal = 14.dp, vertical = 20.dp),
     ) {
         Text(title, color = PixelInk, style = MaterialTheme.typography.labelLarge)
-        Text(story, color = PixelInk, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+        Text(story, color = PixelInk, style = MaterialTheme.typography.bodySmall.readable(), modifier = Modifier.padding(top = 4.dp))
     }
 }
 
@@ -347,7 +349,8 @@ fun NameRibbon(name: String, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .height(44.dp)
             .drawBehind { drawRibbon() }
-            .padding(horizontal = 34.dp),
+            // 字放在緞帶藍色的那一段正中間再高一點，不會碰到下緣
+            .padding(start = 34.dp, end = 34.dp, bottom = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -361,7 +364,7 @@ fun NameRibbon(name: String, modifier: Modifier = Modifier) {
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            Text("，選擇你的職業", color = RibbonText, style = MaterialTheme.typography.titleSmall, maxLines = 1)
+            Text(tr(R.string.class_pick_suffix), color = RibbonText, style = MaterialTheme.typography.titleSmall, maxLines = 1)
         }
     }
 }

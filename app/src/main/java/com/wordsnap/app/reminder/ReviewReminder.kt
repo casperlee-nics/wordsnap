@@ -16,6 +16,8 @@ import androidx.work.WorkerParameters
 import com.wordsnap.app.MainActivity
 import com.wordsnap.app.R
 import com.wordsnap.app.data.AppDatabase
+import com.wordsnap.app.i18n.Strings
+import com.wordsnap.app.i18n.tr
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -51,7 +53,7 @@ object ReviewReminder {
         if (!manager.areNotificationsEnabled()) return
 
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "每日複習提醒", NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationChannel(CHANNEL_ID, tr(R.string.reminder_channel), NotificationManager.IMPORTANCE_DEFAULT)
         )
         val openApp = PendingIntent.getActivity(
             context, 0,
@@ -60,8 +62,8 @@ object ReviewReminder {
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_word)
-            .setContentTitle("該複習囉！")
-            .setContentText("今天有 $dueCount 個字要複習")
+            .setContentTitle(tr(R.string.reminder_title))
+            .setContentText(tr(R.string.reminder_text, dueCount))
             .setContentIntent(openApp)
             .setAutoCancel(true)
             .build()
@@ -72,6 +74,8 @@ object ReviewReminder {
 // 時間到時，算一下有幾個字要複習，有的話就通知
 class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
+        // 通知的文字用遊戲選的語言
+        Strings.init(applicationContext)
         val due = AppDatabase.get(applicationContext).wordDao().countDue(System.currentTimeMillis())
         if (due > 0) ReviewReminder.notify(applicationContext, due)
         return Result.success()

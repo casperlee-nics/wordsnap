@@ -1,14 +1,20 @@
 package com.wordsnap.app.ui
 
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
+
 // 戰鬥模式的 70 種怪物，大小不一，顏色用 ScenePalette；"." 是透明
 // 一般怪物隨機出現；每記住 50 個字出現一隻中魔王，每記住 100 個字出現一隻大魔王
 enum class MonsterRank { Normal, Mid, Big }
 
-class Monster(val name: String, val art: List<String>, val rank: MonsterRank = MonsterRank.Normal)
+// key 是怪物的中文名稱，只在程式裡用來找怪物；畫面上顯示的名字用 name（依遊戲語言）
+class Monster(val key: String, val art: List<String>, val rank: MonsterRank = MonsterRank.Normal) {
+    val name: String get() = MonsterNames[key]?.let { tr(it) } ?: key
+}
 
 // 換顏色做出同一種怪物的另一個品種
-private fun Monster.recolor(name: String, colors: Map<Char, Char>) =
-    Monster(name, art.map { row -> row.map { colors[it] ?: it }.joinToString("") }, rank)
+private fun Monster.recolor(key: String, colors: Map<Char, Char>) =
+    Monster(key, art.map { row -> row.map { colors[it] ?: it }.joinToString("") }, rank)
 
 private val BaseMonsters = listOf(
     Monster(
@@ -1240,7 +1246,7 @@ private val NewMonsters = listOf(
     ),
 )
 
-private fun base(name: String) = (BaseMonsters + NewMonsters).first { it.name == name }
+private fun base(key: String) = (BaseMonsters + NewMonsters).first { it.key == key }
 
 // 換顏色的 8 個新品種
 private val Variants = listOf(
@@ -1270,3 +1276,77 @@ val BigBosses = listOf(
     "黑暗騎士王", "九頭蛇", "死神", "炎獄巨魔",
     "冰霜巨人", "深海巨妖", "混沌巫師王", "機械泰坦", "文字吞噬者", "魔王",
 ).map(::base)
+
+// 怪物名稱的翻譯（中文名稱 → 介面文字）
+private val MonsterNames = mapOf(
+    "史萊姆" to R.string.monster_slime,
+    "蝙蝠" to R.string.monster_bat,
+    "幽靈" to R.string.monster_ghost,
+    "蘑菇怪" to R.string.monster_mushroom,
+    "骷髏兵" to R.string.monster_skeleton,
+    "岩石魔像" to R.string.monster_golem,
+    "眼球怪" to R.string.monster_eyeball,
+    "火焰精" to R.string.monster_fire_spirit,
+    "冰晶怪" to R.string.monster_ice_crystal,
+    "南瓜怪" to R.string.monster_pumpkin,
+    "仙人掌怪" to R.string.monster_cactus,
+    "大章魚" to R.string.monster_octopus,
+    "灰狼" to R.string.monster_wolf,
+    "寶箱怪" to R.string.monster_mimic,
+    "小惡魔" to R.string.monster_imp,
+    "獨眼巨人" to R.string.monster_cyclops,
+    "沙漠蠍" to R.string.monster_scorpion,
+    "樹人" to R.string.monster_treant,
+    "飛龍" to R.string.monster_wyvern,
+    "魔王" to R.string.monster_demon_lord,
+    "毒蛇" to R.string.monster_viper,
+    "大蜘蛛" to R.string.monster_spider,
+    "殭屍" to R.string.monster_zombie,
+    "木乃伊" to R.string.monster_mummy,
+    "巨鉗蟹" to R.string.monster_crab,
+    "食人花" to R.string.monster_maneater,
+    "石像鬼" to R.string.monster_gargoyle,
+    "烏鴉" to R.string.monster_crow,
+    "水母" to R.string.monster_jellyfish,
+    "殺人蜂" to R.string.monster_killer_bee,
+    "毒蛙" to R.string.monster_poison_frog,
+    "鬼火" to R.string.monster_will_o_wisp,
+    "刺蝟" to R.string.monster_hedgehog,
+    "地底鼴鼠" to R.string.monster_mole,
+    "吸血鬼伯爵" to R.string.monster_vampire,
+    "牛頭人" to R.string.monster_minotaur,
+    "雪怪" to R.string.monster_yeti,
+    "美杜莎" to R.string.monster_medusa,
+    "死神" to R.string.monster_reaper,
+    "九頭蛇" to R.string.monster_hydra,
+    "炎獄巨魔" to R.string.monster_inferno_troll,
+    "黑暗騎士王" to R.string.monster_dark_knight_king,
+    "綿羊怪" to R.string.monster_sheep,
+    "岩龜" to R.string.monster_rock_turtle,
+    "蝸牛怪" to R.string.monster_snail,
+    "雷角甲蟲" to R.string.monster_thunder_beetle,
+    "書蟲" to R.string.monster_bookworm,
+    "火狐" to R.string.monster_fire_fox,
+    "冰企鵝" to R.string.monster_ice_penguin,
+    "鬼燈籠" to R.string.monster_ghost_lantern,
+    "橡實兵" to R.string.monster_acorn_soldier,
+    "發條鼠" to R.string.monster_clockwork_mouse,
+    "獅鷲" to R.string.monster_griffin,
+    "海蛇" to R.string.monster_sea_serpent,
+    "骷髏法師" to R.string.monster_skeleton_mage,
+    "鐵甲熊" to R.string.monster_iron_bear,
+    "墨水巨靈" to R.string.monster_ink_giant,
+    "冰霜巨人" to R.string.monster_frost_giant,
+    "深海巨妖" to R.string.monster_kraken,
+    "混沌巫師王" to R.string.monster_chaos_wizard_king,
+    "機械泰坦" to R.string.monster_mech_titan,
+    "文字吞噬者" to R.string.monster_word_devourer,
+    "熔岩史萊姆" to R.string.monster_lava_slime,
+    "金屬史萊姆" to R.string.monster_metal_slime,
+    "吸血蝙蝠" to R.string.monster_vampire_bat,
+    "暗影幽靈" to R.string.monster_shadow_ghost,
+    "毒蘑菇" to R.string.monster_poison_mushroom,
+    "黃金骷髏" to R.string.monster_golden_skeleton,
+    "雪原狼" to R.string.monster_snow_wolf,
+    "黑蠍" to R.string.monster_black_scorpion,
+)

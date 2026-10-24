@@ -73,10 +73,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.wordsnap.app.R
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelGold
-import com.wordsnap.app.ui.theme.PixelPaper
 import com.wordsnap.app.ui.theme.PixelInk
+import com.wordsnap.app.ui.theme.PixelPaper
 import com.wordsnap.app.ui.theme.PixelRed
 import kotlin.math.PI
 import kotlin.math.cos
@@ -327,7 +328,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     }
 
     Scaffold(
-        topBar = { PixelHeader("戰鬥：$bookName", onBack, backDescription = "逃跑", theme = HeaderTheme.Stone) },
+        topBar = { PixelHeader(tr(R.string.battle_title, bookName), onBack, backDescription = tr(R.string.battle_flee), theme = HeaderTheme.Stone) },
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(scroll),
@@ -371,30 +372,30 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             ) {
                 if (total > 0 && !finished && isBoss) {
                     Text(
-                        "${if (monster.rank == MonsterRank.Big) "大魔王" else "中魔王"}「${monster.name}」出現了！",
+                        tr(R.string.battle_boss_appears, bossRank(monster), monster.name),
                         style = MaterialTheme.typography.titleMedium,
                         color = PixelRed,
                     )
                 }
                 when {
                     total == 0 -> {
-                        Text("這本單字簿還沒有可以出題的單字（至少 3 個字母、已記住）")
-                        RetroButton("回單字本", onClick = onBack)
+                        Text(tr(R.string.battle_no_words), style = MaterialTheme.typography.bodyLarge.readable())
+                        RetroButton(tr(R.string.back_to_book), onClick = onBack)
                     }
                     died -> {
-                        Text("${profile?.name ?: ""} 被打倒了…", style = MaterialTheme.typography.headlineSmall)
-                        Text("同伴把你拖回了教堂")
-                        reward?.let { Text("這是你第 ${it.deaths} 次倒下", color = PixelRed) }
+                        Text(tr(R.string.battle_hero_down, profile?.name.orEmpty()), style = MaterialTheme.typography.headlineSmall)
+                        Text(tr(R.string.battle_dragged))
+                        reward?.let { Text(tr(R.string.battle_death_count, it.deaths), color = PixelRed) }
                     }
                     knocked -> {
-                        Text("${race.finisher.label(tier)}！", style = MaterialTheme.typography.headlineSmall)
-                        Text("擊倒了 ${monster.name}！")
+                        Text(tr(R.string.battle_finisher, race.finisher.label(tier)), style = MaterialTheme.typography.headlineSmall)
+                        Text(tr(R.string.battle_knocked, monster.name))
                     }
                     finished -> {
-                        Text("${monster.name} 還站著！", style = MaterialTheme.typography.headlineSmall)
-                        Text("把怪物的血打光才能把牠打飛，下次再來")
+                        Text(tr(R.string.battle_still_standing, monster.name), style = MaterialTheme.typography.headlineSmall)
+                        Text(tr(R.string.battle_still_standing_hint))
                     }
-                    !introDone -> Text("小心！", style = MaterialTheme.typography.titleMedium)
+                    !introDone -> Text(tr(R.string.battle_watch_out), style = MaterialTheme.typography.titleMedium)
                     word != null -> {
                         Question(
                             answer = answer,
@@ -442,6 +443,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Question(
     answer: String,
@@ -455,40 +457,46 @@ private fun Question(
     onBag: () -> Unit,
     bagEnabled: Boolean,
 ) {
-    // 空白的輸入框，聽發音拼出整個單字；答錯時框裡直接換成正確答案（紅字），不會被鍵盤擋住
     val wrong = result == false
-    SpellSlab(
-        value = if (wrong) answer else input,
-        onValueChange = onInput,
-        result = result,
-        onDone = { if (wrong) onNext() else onSubmit() },
-    )
-    // 左下：大聲公再聽一次；中間：道具袋；右下：劍攻擊，答錯後換成向右箭頭「下一回」
+    // 鍵盤跳出來時按鈕縮小一點，整個答題區比較矮
+    val typing = WindowInsets.isImeVisible
+    val buttonSize = if (typing) 52.dp else 64.dp
+    // 由上往下：答對答錯的結果 → 按鈕 → 咒語輸入框
+    // 輸入框放在最下面，畫面捲到底時它就緊貼在鍵盤上方，按鈕在它正上方，都不會被鍵盤蓋住
+    when (result) {
+        true -> Text(tr(R.string.battle_hit), style = MaterialTheme.typography.headlineSmall, color = PixelRed)
+        false -> Text(tr(R.string.battle_hurt), style = MaterialTheme.typography.titleMedium, color = PixelRed)
+        null -> Unit
+    }
+    if (wrong && meaning.isNotBlank()) Text(meaning, style = MaterialTheme.typography.titleMedium.readable())
+    // 左邊：大聲公再聽一次；中間：道具袋；右邊：劍攻擊，答錯後換成向右箭頭「下一回」
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        PixelIconButton(IconMegaphone, "再聽一次", onClick = onListen, size = 64.dp, palette = ColorIconPalette)
+        PixelIconButton(IconMegaphone, tr(R.string.speak_again), onClick = onListen, size = buttonSize, palette = ColorIconPalette)
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            PixelIconButton(IconBag, "道具", onClick = onBag, size = 64.dp, palette = ItemPalette, enabled = bagEnabled)
+            PixelIconButton(IconBag, tr(R.string.battle_items), onClick = onBag, size = buttonSize, palette = ItemPalette, enabled = bagEnabled)
         }
         if (wrong) {
-            PixelIconButton(IconArrowRight, "下一回", onClick = onNext, size = 64.dp, color = PixelGold, palette = ColorIconPalette)
+            PixelIconButton(IconArrowRight, tr(R.string.battle_next), onClick = onNext, size = buttonSize, color = PixelGold, palette = ColorIconPalette)
         } else {
             PixelIconButton(
                 IconSword,
-                "攻擊",
+                tr(R.string.battle_attack),
                 onClick = onSubmit,
-                size = 64.dp,
+                size = buttonSize,
                 color = PixelGold,
                 palette = ColorIconPalette,
                 enabled = result == null && input.isNotBlank(),
             )
         }
     }
-    when (result) {
-        true -> Text("命中！", style = MaterialTheme.typography.headlineSmall, color = PixelRed)
-        false -> Text("被怪物攻擊了！", style = MaterialTheme.typography.titleMedium, color = PixelRed)
-        null -> Unit
-    }
-    if (wrong && meaning.isNotBlank()) Text(meaning, style = MaterialTheme.typography.titleMedium)
+    // 空白的輸入框，聽發音拼出整個單字；答錯時框裡直接換成正確答案（紅字）
+    // 鍵盤上的「完成」也能攻擊（答錯時是下一回），不用把手移到上面的按鈕
+    SpellSlab(
+        value = if (wrong) answer else input,
+        onValueChange = onInput,
+        result = result,
+        onDone = { if (wrong) onNext() else onSubmit() },
+    )
 }
 
 // 頭上的小血條，血少了會變黃、變紅
@@ -1067,46 +1075,46 @@ private fun ResultDialog(reward: BattleReward, monster: Monster, race: Race, kno
         title = {
             Text(
                 when {
-                    reward.died -> "被打倒了…"
-                    perfect -> "完美勝利！"
-                    reward.passed -> "勝利！"
-                    else -> "還要再練練"
+                    reward.died -> tr(R.string.result_down)
+                    perfect -> tr(R.string.result_perfect)
+                    reward.passed -> tr(R.string.result_win)
+                    else -> tr(R.string.result_lose)
                 },
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 when {
-                    reward.died -> Text("被 $monsterName 打倒了，在教堂休息一下再來吧（第 ${reward.deaths} 次倒下）")
-                    knocked -> Text("把 $monsterName 打飛了！")
-                    else -> Text("$monsterName 還站著，把牠的血打光才能打飛")
+                    reward.died -> Text(tr(R.string.result_down_message, monsterName, reward.deaths))
+                    knocked -> Text(tr(R.string.result_knocked, monsterName))
+                    else -> Text(tr(R.string.result_standing, monsterName))
                 }
-                Text("答對 ${reward.correct} / ${reward.total}（${passScore(reward.total)} 題以上通過）")
-                Text("得到經驗值 +${reward.exp}${if (monster.rank != MonsterRank.Normal) "（魔王加倍）" else ""}")
-                if (reward.practice) Text("練習戰：經驗值只有 1/4，不會掉寶箱", style = MaterialTheme.typography.bodySmall)
+                Text(tr(R.string.result_score, reward.correct, reward.total, passScore(reward.total)))
+                Text(tr(if (monster.rank != MonsterRank.Normal) R.string.result_exp_boss else R.string.result_exp, reward.exp))
+                if (reward.practice) Text(tr(R.string.result_practice), style = MaterialTheme.typography.bodySmall)
                 reward.item?.let { item ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         PixelArt(item.icon, ItemPalette, Modifier.size(32.dp))
-                        Text("打開寶箱，獲得「${item.label}」！", color = PixelRed, modifier = Modifier.padding(start = 8.dp))
+                        Text(tr(R.string.result_chest, item.label), color = PixelRed, modifier = Modifier.padding(start = 8.dp))
                     }
                 }
-                if (leveled) Text("升級！Lv ${reward.levelBefore} → Lv ${reward.levelAfter}", color = PixelRed)
-                if (newTitle != oldTitle) Text("獲得新稱號「$newTitle」！", color = PixelRed)
+                if (leveled) Text(tr(R.string.result_level_up, reward.levelBefore, reward.levelAfter), color = PixelRed)
+                if (newTitle != oldTitle) Text(tr(R.string.new_title, newTitle), color = PixelRed)
                 if (reward.passed && monster.rank != MonsterRank.Normal) {
-                    Text("★ 打倒了${if (monster.rank == MonsterRank.Big) "大魔王" else "中魔王"}「$monsterName」！", color = PixelRed)
+                    Text(tr(R.string.result_boss_down, bossRank(monster), monsterName), color = PixelRed)
                 } else if (monster.rank != MonsterRank.Normal) {
-                    Text("要通過這場戰鬥才算打倒魔王，下次牠還會出現", style = MaterialTheme.typography.bodySmall)
+                    Text(tr(R.string.result_boss_hint), style = MaterialTheme.typography.bodySmall)
                 }
-                if (reward.passed) Text("★ 這本單字簿戰鬥通過")
+                if (reward.passed) Text(tr(R.string.result_book_cleared))
                 if (reward.forgotten.isNotEmpty()) {
                     Text(
-                        "這些字已經答錯兩次，改回「沒記住」，記得去複習：${reward.forgotten.joinToString("、")}",
+                        tr(R.string.result_forgotten, reward.forgotten.joinToString(tr(R.string.list_separator))),
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
             }
         },
-        confirmButton = { RetroButton("回單字本", onClick = onClose) },
+        confirmButton = { RetroButton(tr(R.string.back_to_book), onClick = onClose) },
     )
 }
 
@@ -1117,10 +1125,10 @@ private fun LevelUpScreen(hero: Avatar, race: Race, before: Int, after: Int, onC
     val old = race.stats(before)
     val newStats = race.stats(after)
     val rows = listOf(
-        Triple("力量", old.str, newStats.str),
-        Triple("體力", old.vit, newStats.vit),
-        Triple("智慧", old.intel, newStats.intel),
-        Triple("運氣", old.luk, newStats.luk),
+        Triple(tr(R.string.stat_str), old.str, newStats.str),
+        Triple(tr(R.string.stat_vit), old.vit, newStats.vit),
+        Triple(tr(R.string.stat_int), old.intel, newStats.intel),
+        Triple(tr(R.string.stat_luk), old.luk, newStats.luk),
     )
     val oldTitle = race.title(before)
     val newTitle = race.title(after)
@@ -1208,12 +1216,12 @@ private fun LevelUpScreen(hero: Avatar, race: Race, before: Int, after: Int, onC
                         }
                     }
                     if (shown > rows.size && newTitle != oldTitle) {
-                        Text("獲得新稱號「$newTitle」！", color = PixelRed)
+                        Text(tr(R.string.new_title, newTitle), color = PixelRed)
                     }
                     if (shown > rows.size && newTier != oldTier) {
-                        Text("外觀進化了！學會新招式「${race.finisher.label(newTier)}」！", color = PixelRed, textAlign = TextAlign.Center)
+                        Text(tr(R.string.levelup_evolve, race.finisher.label(newTier)), color = PixelRed, textAlign = TextAlign.Center)
                     }
-                    Button(onClick = onClose, enabled = shown > rows.size) { Text("太好了！") }
+                    Button(onClick = onClose, enabled = shown > rows.size) { Text(tr(R.string.great)) }
                 }
             }
         }
@@ -1302,14 +1310,14 @@ private fun SpellSlab(value: String, onValueChange: (String) -> Unit, result: Bo
             contentAlignment = Alignment.Center,
         ) {
             if (value.isEmpty()) {
-                Text("聽發音，拼出咒語", color = SpellHint, style = MaterialTheme.typography.titleMedium)
+                Text(tr(R.string.spell_hint), color = SpellHint, style = MaterialTheme.typography.titleMedium.readable())
             }
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
                 readOnly = result != null,
                 singleLine = true,
-                textStyle = MaterialTheme.typography.displaySmall.copy(
+                textStyle = MaterialTheme.typography.displaySmall.readable().copy(
                     textAlign = TextAlign.Center,
                     color = tint,
                     shadow = Shadow(tint.copy(alpha = 0.8f), blurRadius = 12f),
@@ -1327,7 +1335,7 @@ private fun SpellSlab(value: String, onValueChange: (String) -> Unit, result: Bo
         }
         // 左上角的小木牌
         Text(
-            "咒語",
+            tr(R.string.spell_label),
             color = Color(0xFFFFE8A8),
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier
@@ -1383,3 +1391,7 @@ private val SlabStoneDark = Color(0xFF1A1C28)
 private val SlabGold = Color(0xFFC89A3A)
 private val SlabGoldLight = Color(0xFFF0D080)
 private val SlabGoldDark = Color(0xFF7A5418)
+
+// 魔王的等級名稱：大魔王、中魔王
+private fun bossRank(monster: Monster): String =
+    tr(if (monster.rank == MonsterRank.Big) R.string.boss_big else R.string.boss_mid)

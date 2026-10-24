@@ -3,6 +3,7 @@ package com.wordsnap.app.ui
 import android.content.Context
 import android.media.MediaPlayer
 import androidx.annotation.RawRes
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,16 +16,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.wordsnap.app.R
 
 private const val PREFS = "wordsnap"
 private const val KEY_MUSIC = "music_on"
 private const val KEY_LEVEL = "music_level"
 
 // 背景音樂音量：關、小、大（只調整音樂和音效，不影響念單字的聲音）
-enum class MusicLevel(val label: String, val scale: Float) {
-    Off("關", 0f),
-    Low("小", 0.4f),
-    High("大", 1f),
+enum class MusicLevel(@StringRes val labelRes: Int, val scale: Float) {
+    Off(R.string.settings_volume_off, 0f),
+    Low(R.string.settings_volume_low, 0.4f),
+    High(R.string.settings_volume_high, 1f),
 }
 
 // 目前的音量設定，主畫面一切換，正在播的音樂馬上跟著變
@@ -34,8 +36,8 @@ fun musicLevel(context: Context): MusicLevel {
     currentLevel?.let { return it }
     val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     val saved = prefs.getString(KEY_LEVEL, null)?.let { name -> MusicLevel.entries.find { it.name == name } }
-    // 舊版只有開/關：關 → 關，開 → 大
-    val level = saved ?: if (prefs.getBoolean(KEY_MUSIC, true)) MusicLevel.High else MusicLevel.Off
+    // 還沒調過音量就用小聲；舊版只有開/關：關 → 關
+    val level = saved ?: if (prefs.getBoolean(KEY_MUSIC, true)) MusicLevel.Low else MusicLevel.Off
     currentLevel = level
     return level
 }

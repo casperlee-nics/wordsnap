@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wordsnap.app.R
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.translate.ModelStatus
 import com.wordsnap.app.ui.theme.PixelInk
@@ -121,9 +122,9 @@ fun WordListScreen(
                             }
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                            DropdownMenuItem(text = { Text("人物能力") }, onClick = { showMenu = false; showHero = true })
-                            DropdownMenuItem(text = { Text("道具欄") }, onClick = { showMenu = false; showItems = true })
-                            DropdownMenuItem(text = { Text("回到主畫面") }, onClick = { showMenu = false; onHome() })
+                            DropdownMenuItem(text = { Text(tr(R.string.hero_title)) }, onClick = { showMenu = false; showHero = true })
+                            DropdownMenuItem(text = { Text(tr(R.string.item_shelf)) }, onClick = { showMenu = false; showItems = true })
+                            DropdownMenuItem(text = { Text(tr(R.string.menu_home)) }, onClick = { showMenu = false; onHome() })
                         }
                     }
                     // 右上角切換冒險日誌
@@ -146,7 +147,7 @@ fun WordListScreen(
             BottomActions(
                 onListen = onListen,
                 // 全部都記住了也能按，進去會隨機複習整本
-                reviewLabel = if (dueCount > 0) "複習 $dueCount" else "複習",
+                reviewLabel = if (dueCount > 0) tr(R.string.action_review_count, dueCount) else tr(R.string.action_review),
                 reviewEnabled = words.isNotEmpty(),
                 onReview = onReview,
                 onAdd = { choosingAdd = true },
@@ -161,21 +162,21 @@ fun WordListScreen(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             Text(
-                "共 ${words.size} 個字",
+                tr(R.string.word_count, words.size),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
             )
             if (unlock.exhausted) {
                 Text(
-                    "這本的單字都在戰鬥答對 $MAX_TESTS 次了，加新單字就能再拿到完整的經驗值和寶箱",
-                    style = MaterialTheme.typography.bodySmall,
+                    tr(R.string.book_exhausted, MAX_TESTS),
+                    style = MaterialTheme.typography.bodySmall.readable(),
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
             if (hasBlank) TranslatorBanner(translatorStatus, onRetry = vm::retryTranslation)
             if (words.isEmpty()) {
                 Box(Modifier.fillMaxSize().padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
-                    Text("還沒有單字，按下方「加單字」新增第一個", textAlign = TextAlign.Center)
+                    Text(tr(R.string.book_empty), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyLarge.readable())
                 }
             } else {
                 LazyColumn(Modifier.fillMaxSize()) {
@@ -188,13 +189,13 @@ fun WordListScreen(
                             supportingContent = {
                                 Text(
                                     word.meaning.ifBlank { blankMeaningHint(translatorStatus) },
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.bodyLarge.readable(),
                                 )
                             },
                             trailingContent = {
                                 Row {
-                                    PixelIconPlain(IconPlayWord, "發音", onClick = { speaker.speak(word.text) }, size = 44.dp, palette = DarkWoodPalette)
-                                    PixelIconPlain(IconTrash, "刪除", onClick = { vm.delete(word) }, size = 44.dp)
+                                    PixelIconPlain(IconPlayWord, tr(R.string.pronounce), onClick = { speaker.speak(word.text) }, size = 44.dp, palette = DarkWoodPalette)
+                                    PixelIconPlain(IconTrash, tr(R.string.delete), onClick = { vm.delete(word) }, size = 44.dp)
                                 }
                             },
                         )
@@ -211,15 +212,15 @@ fun WordListScreen(
     if (confirmPractice) {
         PixelAlertDialog(
             onDismissRequest = { confirmPractice = false },
-            title = { Text("練習戰") },
-            text = { Text("這本的單字都已經在戰鬥中答對 $MAX_TESTS 次了。還是可以繼續練習，但經驗值只有 1/4，也不會掉寶箱。") },
+            title = { Text(tr(R.string.practice_battle)) },
+            text = { Text(tr(R.string.practice_battle_message, MAX_TESTS), style = MaterialTheme.typography.bodyMedium.readable()) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmPractice = false
                     selectedBookId?.let(onBattle)
-                }) { Text("開始練習") }
+                }) { Text(tr(R.string.practice_start)) }
             },
-            dismissButton = { TextButton(onClick = { confirmPractice = false }) { Text("取消") } },
+            dismissButton = { TextButton(onClick = { confirmPractice = false }) { Text(tr(R.string.cancel)) } },
         )
     }
     if (choosingAdd) {
@@ -241,7 +242,7 @@ fun WordListScreen(
     }
     if (showAdd) {
         WordDialog(
-            title = "新增單字",
+            title = tr(R.string.word_add_title),
             onDismiss = { showAdd = false },
             onSave = { text, meaning ->
                 vm.add(text, meaning)
@@ -251,7 +252,7 @@ fun WordListScreen(
     }
     editing?.let { word ->
         WordDialog(
-            title = "編輯單字",
+            title = tr(R.string.word_edit_title),
             initialText = word.text,
             initialMeaning = word.meaning,
             onDismiss = { editing = null },
@@ -280,21 +281,21 @@ private fun WordDialog(
         text = {
             // 兩張羊皮書卷：上面寫英文單字（字比較大），下面寫中文意思
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("英文單字", style = MaterialTheme.typography.labelLarge)
+                Text(tr(R.string.word_field_english), style = MaterialTheme.typography.labelLarge)
                 ScrollTextField(
                     value = text,
                     onValueChange = { text = it },
-                    placeholder = "例如：apple",
+                    placeholder = tr(R.string.word_field_english_hint),
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = MaterialTheme.typography.headlineSmall,
                     height = 64.dp,
                     keyboardType = KeyboardType.Ascii,
                 )
-                Text("中文意思", style = MaterialTheme.typography.labelLarge)
+                Text(tr(R.string.word_field_meaning), style = MaterialTheme.typography.labelLarge)
                 ScrollTextField(
                     value = meaning,
                     onValueChange = { meaning = it },
-                    placeholder = "空白會自動翻譯",
+                    placeholder = tr(R.string.word_field_meaning_hint),
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = MaterialTheme.typography.titleMedium,
                     height = 60.dp,
@@ -303,30 +304,30 @@ private fun WordDialog(
             }
         },
         confirmButton = {
-            RetroButton("儲存", onClick = { onSave(text, meaning) }, enabled = text.isNotBlank(), textStyle = MaterialTheme.typography.titleSmall)
+            RetroButton(tr(R.string.save), onClick = { onSave(text, meaning) }, enabled = text.isNotBlank(), textStyle = MaterialTheme.typography.titleSmall)
         },
-        dismissButton = { RetroButton("取消", onClick = onDismiss, textStyle = MaterialTheme.typography.titleSmall) },
+        dismissButton = { RetroButton(tr(R.string.cancel), onClick = onDismiss, textStyle = MaterialTheme.typography.titleSmall) },
     )
 }
 
 // 中文意思還空著時，依翻譯檔狀態顯示不同提示
 private fun blankMeaningHint(status: ModelStatus): String = when (status) {
-    ModelStatus.Downloading -> "（等待翻譯檔下載…）"
-    ModelStatus.Failed -> "（無法自動翻譯，點一下自己填寫）"
-    else -> "（翻譯中，或點一下自己填寫）"
+    ModelStatus.Downloading -> tr(R.string.meaning_waiting)
+    ModelStatus.Failed -> tr(R.string.meaning_failed)
+    else -> tr(R.string.meaning_translating)
 }
 
 @Composable
 private fun TranslatorBanner(status: ModelStatus, onRetry: () -> Unit) {
     val message = when (status) {
-        ModelStatus.Downloading -> "第一次使用，正在下載翻譯檔（約 30 MB），完成後會自動翻譯"
-        ModelStatus.Failed -> "翻譯檔下載失敗，請確認網路後重試"
+        ModelStatus.Downloading -> tr(R.string.translator_downloading)
+        ModelStatus.Failed -> tr(R.string.translator_failed)
         else -> return
     }
     Surface(color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(message, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            if (status == ModelStatus.Failed) TextButton(onClick = onRetry) { Text("重試") }
+            if (status == ModelStatus.Failed) TextButton(onClick = onRetry) { Text(tr(R.string.retry)) }
         }
     }
 }
@@ -349,10 +350,10 @@ private fun BottomActions(
         ) {
             // 和主畫面一樣的復古黃褐色像素按鈕
             val style = MaterialTheme.typography.labelLarge
-            RetroButton("朗讀", onListen, Modifier.weight(1f), textStyle = style, textPadding = 2.dp)
+            RetroButton(tr(R.string.action_listen), onListen, Modifier.weight(1f), textStyle = style, textPadding = 2.dp)
             RetroButton(reviewLabel, onReview, Modifier.weight(1f), enabled = reviewEnabled, textStyle = style, textPadding = 2.dp)
-            RetroButton("加單字", onAdd, Modifier.weight(1f), textStyle = style, textPadding = 2.dp)
-            RetroButton("戰鬥", onBattle, Modifier.weight(1f), enabled = battleEnabled, textStyle = style, textPadding = 2.dp)
+            RetroButton(tr(R.string.action_add), onAdd, Modifier.weight(1f), textStyle = style, textPadding = 2.dp)
+            RetroButton(tr(R.string.action_battle), onBattle, Modifier.weight(1f), enabled = battleEnabled, textStyle = style, textPadding = 2.dp)
         }
     }
 }
@@ -362,16 +363,16 @@ private fun BottomActions(
 private fun AddChoiceDialog(onDismiss: () -> Unit, onManual: () -> Unit, onSource: (ScanSource) -> Unit) {
     PixelAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("加單字") },
+        title = { Text(tr(R.string.action_add)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                AddChoice(IconNotebook, "手動輸入單字怪物", onManual)
-                AddChoice(IconCamera, "相機找出隱藏怪物") { onSource(ScanSource.Camera) }
-                AddChoice(IconGallery, "相簿新增怪物") { onSource(ScanSource.Gallery) }
-                AddChoice(IconOldBook, "讀取古書上的怪物") { onSource(ScanSource.Pdf) }
+                AddChoice(IconNotebook, tr(R.string.add_manual), onManual)
+                AddChoice(IconCamera, tr(R.string.add_camera)) { onSource(ScanSource.Camera) }
+                AddChoice(IconGallery, tr(R.string.add_gallery)) { onSource(ScanSource.Gallery) }
+                AddChoice(IconOldBook, tr(R.string.add_document)) { onSource(ScanSource.Pdf) }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr(R.string.cancel)) } },
     )
 }
 

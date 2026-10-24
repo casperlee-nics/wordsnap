@@ -58,6 +58,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelPaper
@@ -85,7 +87,7 @@ enum class HeaderTheme(val text: Color, val draw: DrawScope.() -> Unit) {
 fun PixelHeader(
     title: String,
     onBack: () -> Unit,
-    backDescription: String = "返回",
+    backDescription: String = tr(R.string.back),
     theme: HeaderTheme = HeaderTheme.Parchment,
 ) {
     Box(
@@ -142,7 +144,7 @@ fun PixelWindowDialog(
                 )
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                PixelWindowButton("關閉", onDismiss)
+                PixelWindowButton(tr(R.string.close), onDismiss)
             }
         }
     }

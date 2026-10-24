@@ -23,6 +23,8 @@ import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelGold
 import kotlinx.coroutines.delay
@@ -53,7 +55,7 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
         speaker.say(text, rate = 0.85f)
         delay(400)
         if (word.meaning.isNotBlank()) {
-            speaker.say(word.meaning, chinese = true)
+            speaker.say(word.meaning, meaning = true)
         }
         delay(1200)
         index = (index + 1) % words.size
@@ -61,7 +63,7 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
     }
 
     Scaffold(
-        topBar = { PixelHeader("朗讀模式", onBack, theme = HeaderTheme.Tapestry) },
+        topBar = { PixelHeader(tr(R.string.listen_title), onBack, theme = HeaderTheme.Tapestry) },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             PixelArt(scene.art, ScenePalette, Modifier.fillMaxWidth())
@@ -72,11 +74,11 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(20.dp, BiasAlignment.Vertical(-0.45f)),
             ) {
                 if (word == null) {
-                    Text("這本單字簿還沒有單字")
-                    RetroButton("回單字本", onClick = onBack)
+                    Text(tr(R.string.listen_empty))
+                    RetroButton(tr(R.string.back_to_book), onClick = onBack)
                     return@Column
                 }
-                Text("第 ${index % words.size + 1} / ${words.size} 個", style = MaterialTheme.typography.bodyMedium)
+                Text(tr(R.string.listen_progress, index % words.size + 1, words.size), style = MaterialTheme.typography.bodyMedium)
                 PixelSurface(
                     color = MaterialTheme.colorScheme.surfaceContainer,
                     modifier = Modifier.fillMaxWidth(),
@@ -88,26 +90,26 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                     ) {
                         Text(word.text, style = wordStyle(word.text), textAlign = TextAlign.Center)
                         Text(
-                            word.meaning.ifBlank { "（還沒有中文意思）" },
-                            style = MaterialTheme.typography.headlineSmall,
+                            word.meaning.ifBlank { tr(R.string.no_meaning) },
+                            style = MaterialTheme.typography.headlineSmall.readable(),
                             textAlign = TextAlign.Center,
                         )
                     }
                 }
-                if (!playing) Text("已暫停", style = MaterialTheme.typography.bodyMedium)
+                if (!playing) Text(tr(R.string.listen_paused), style = MaterialTheme.typography.bodyMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    PixelIconButton(IconPrev, "上一個", onClick = { index = (index - 1 + words.size) % words.size })
+                    PixelIconButton(IconPrev, tr(R.string.listen_prev), onClick = { index = (index - 1 + words.size) % words.size })
                     PixelIconButton(
                         if (playing) IconPause else IconPlay,
-                        if (playing) "暫停" else "繼續",
+                        tr(if (playing) R.string.listen_pause else R.string.listen_resume),
                         onClick = { playing = !playing },
                         color = PixelGold,
                     )
-                    PixelIconButton(IconNext, "下一個", onClick = { index = (index + 1) % words.size })
+                    PixelIconButton(IconNext, tr(R.string.listen_next), onClick = { index = (index + 1) % words.size })
                 }
                 Text(
-                    "關掉螢幕也會繼續念；若太久沒操作，手機可能會自動暫停",
-                    style = MaterialTheme.typography.bodySmall,
+                    tr(R.string.listen_hint),
+                    style = MaterialTheme.typography.bodySmall.readable(),
                     textAlign = TextAlign.Center,
                 )
             }

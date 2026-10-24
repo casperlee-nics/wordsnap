@@ -37,17 +37,17 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.wordsnap.app.R
 import com.wordsnap.app.data.Profile
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.ui.theme.PixelBlue
 import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelRed
-import kotlin.math.PI
-import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.sin
 
 // 人物能力：等級、稱號、經驗值、已記住的單字數和四項能力
 @Composable
@@ -61,14 +61,14 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit, onClass
     val tier = avatarTier(info.level)
 
     PixelWindowDialog(
-        title = "人物能力",
+        title = tr(R.string.hero_title),
         onDismiss = onDismiss,
         header = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 PixelAvatar(avatar, size = 56.dp, tier = tier)
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(profile.name, style = MaterialTheme.typography.titleLarge)
-                    Text("「${race.title(info.level)}」", style = MaterialTheme.typography.bodyMedium)
+                    Text(tr(R.string.quoted, race.title(info.level)), style = MaterialTheme.typography.bodyMedium)
                 }
                 // 超過 10 級才出現轉職按鈕
                 if (onClassChange != null && info.level >= CLASS_CHANGE_MIN_LEVEL) {
@@ -77,20 +77,20 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit, onClass
             }
         },
     ) {
-        Text("職業：${race.label}　Lv ${info.level}")
-        Text("已記住的單字：$remembered 個")
+        Text(tr(R.string.hero_class_level, race.label, info.level))
+        Text(tr(R.string.hero_remembered, remembered))
         if (info.level < MAX_LEVEL) {
-            Text("經驗值 ${info.current} / ${info.needed}", style = MaterialTheme.typography.bodySmall)
+            Text(tr(R.string.hero_exp, info.current, info.needed), style = MaterialTheme.typography.bodySmall)
             Meter(info.current.toFloat() / info.needed, PixelBlue)
         }
-        StatRow("力量", stats.str)
-        StatRow("體力", stats.vit)
-        StatRow("智慧", stats.intel)
-        StatRow("運氣", stats.luk)
-        Text("必殺技：${race.finisher.label(tier)}", style = MaterialTheme.typography.bodySmall)
+        StatRow(tr(R.string.stat_str), stats.str)
+        StatRow(tr(R.string.stat_vit), stats.vit)
+        StatRow(tr(R.string.stat_int), stats.intel)
+        StatRow(tr(R.string.stat_luk), stats.luk)
+        Text(tr(R.string.hero_finisher, race.finisher.label(tier)), style = MaterialTheme.typography.bodySmall)
         if (nextTitleAt != null) {
             Text(
-                "Lv $nextTitleAt 可獲得稱號「${race.title(nextTitleAt)}」",
+                tr(R.string.hero_next_title, nextTitleAt, race.title(nextTitleAt)),
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -116,20 +116,20 @@ private fun ClassChangeDialog(current: Avatar, level: Int, onDismiss: () -> Unit
     val newLevel = (level - CLASS_CHANGE_PENALTY).coerceAtLeast(1)
     PixelAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("轉職") },
+        title = { Text(tr(R.string.class_change)) },
         text = {
             Column(
                 Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text("要轉成哪一種職業？轉職後等級會從 Lv $level 降到 Lv $newLevel。")
+                Text(tr(R.string.class_change_message, level, newLevel), style = MaterialTheme.typography.bodyMedium.readable())
                 AvatarPicker(selected = picked, onSelect = { if (it != current) picked = it }, exclude = current)
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(picked) }) { Text("轉職成${picked.label}", color = PixelRed) }
+            TextButton(onClick = { onConfirm(picked) }) { Text(tr(R.string.class_change_to, picked.label), color = PixelRed) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr(R.string.cancel)) } },
     )
 }
 
@@ -150,51 +150,90 @@ private fun Meter(fraction: Float, color: Color) {
     }
 }
 
-// 轉職按鈕：會慢慢轉動的魔法陣（金色外圈、深藍底、一格一格繞圈的符文光點），中間是交換箭頭，下面寫「轉職」
+// 轉職按鈕：一本古典魔法書（紅色皮革封面、金色書角和鑲邊、書背兩道金環，右邊和下面露出書頁）
+// 封面中間貼著羊皮紙標籤，深棕色的「轉職」寫在淺色底上，看得清楚；上方的寶石會一閃一閃
 @Composable
 private fun ClassChangeButton(onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val spin by rememberInfiniteTransition(label = "circle").animateFloat(
-        0f, 1f, infiniteRepeatable(tween(4000, easing = LinearEasing)), label = "spin",
+    val glow by rememberInfiniteTransition(label = "gem").animateFloat(
+        0f, 1f, infiniteRepeatable(tween(1600, easing = LinearEasing)), label = "glow",
     )
-    Column(
+    Box(
         Modifier
+            .size(width = 60.dp, height = 72.dp)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
             .graphicsLayer {
-                val k = if (pressed) 0.9f else 1f
+                val k = if (pressed) 0.92f else 1f
                 scaleX = k
                 scaleY = k
-            },
-        horizontalAlignment = Alignment.CenterHorizontally,
+            }
+            .drawBehind { drawSpellBook(bright = floor(glow * 4f).toInt() % 2 == 0) },
     ) {
+        // 文字放在羊皮紙標籤上（標籤在書的第 6～25 格、第 12～21 格，一格 2dp）
         Box(
-            Modifier.size(54.dp).drawBehind {
-                val c = center
-                val r = size.minDimension / 2
-                val px = 2.dp.toPx()
-                drawCircle(PixelInk, r, c)
-                drawCircle(CircleGold, r - px, c)
-                drawCircle(PixelInk, r - px * 2.5f, c)
-                drawCircle(CircleInner, r - px * 3f, c)
-                // 符文光點：每 1/16 圈跳一格
-                val step = floor(spin * 16f) / 16f
-                for (k in 0 until 8) {
-                    val a = (step + k / 8f) * 2 * PI.toFloat()
-                    val d = r - px * 4.5f
-                    val glow = if (k % 2 == 0) CircleRune else CircleRuneDim
-                    drawRect(glow, Offset(c.x + cos(a) * d - px / 2, c.y + sin(a) * d - px / 2), Size(px, px))
-                }
-            },
+            Modifier.padding(start = 12.dp, top = 24.dp).size(width = 40.dp, height = 18.dp),
             contentAlignment = Alignment.Center,
         ) {
-            PixelArt(IconClassChange, ColorIconPalette, Modifier.size(30.dp))
+            Text(tr(R.string.class_change), style = MaterialTheme.typography.labelLarge, color = BookLabelInk, maxLines = 1)
         }
-        Text("轉職", style = MaterialTheme.typography.labelMedium, color = PixelInk)
     }
 }
 
-private val CircleGold = Color(0xFFE0B040)
-private val CircleInner = Color(0xFF1E3C5A)
-private val CircleRune = Color(0xFF8CE8FF)
-private val CircleRuneDim = Color(0xFF4A90B0)
+// 魔法書一格 2dp：寬 30 格、高 36 格
+private fun DrawScope.drawSpellBook(bright: Boolean) {
+    val u = 2.dp.toPx()
+    fun cell(x: Float, y: Float, w: Float, h: Float, color: Color) =
+        drawRect(color, Offset(x * u, y * u), Size(w * u, h * u))
+    // 影子、露出來的書頁
+    cell(2f, 2f, 28f, 34f, BookShadow)
+    cell(2f, 1f, 27f, 34f, PixelInk)
+    cell(3f, 2f, 25f, 32f, BookPage)
+    for (y in 4 until 34 step 3) cell(27f, y.toFloat(), 1f, 1f, BookPageLine)
+    for (x in 5 until 27 step 3) cell(x.toFloat(), 33f, 1f, 1f, BookPageLine)
+    // 封面
+    cell(0f, 0f, 27f, 33f, PixelInk)
+    cell(1f, 1f, 25f, 31f, BookLeather)
+    cell(1f, 1f, 25f, 1f, BookLeatherLight)
+    // 書背：深色皮革和兩道金環
+    cell(1f, 1f, 3f, 31f, BookSpine)
+    cell(1f, 5f, 3f, 2f, BookGold)
+    cell(1f, 26f, 3f, 2f, BookGold)
+    // 金色鑲邊
+    cell(5f, 3f, 20f, 1f, BookGold)
+    cell(5f, 29f, 20f, 1f, BookGold)
+    cell(5f, 3f, 1f, 27f, BookGold)
+    cell(24f, 3f, 1f, 27f, BookGold)
+    // 四個金色書角
+    for ((x, y) in listOf(4f to 1f, 23f to 1f, 4f to 29f, 23f to 29f)) {
+        cell(x, y, 3f, 3f, BookGold)
+        cell(x + 1f, y + 1f, 1f, 1f, BookGoldDark)
+    }
+    // 上方的寶石，一閃一閃
+    cell(13f, 5f, 3f, 1f, PixelInk)
+    cell(12f, 6f, 5f, 3f, PixelInk)
+    cell(13f, 9f, 3f, 1f, PixelInk)
+    cell(13f, 6f, 3f, 3f, if (bright) BookGem else BookGemDim)
+    cell(13f, 6f, 1f, 1f, Color.White)
+    // 羊皮紙標籤
+    cell(6f, 12f, 19f, 10f, PixelInk)
+    cell(7f, 13f, 17f, 8f, BookLabel)
+    cell(7f, 20f, 17f, 1f, BookLabelShade)
+    // 下方的小花紋
+    cell(12f, 25f, 5f, 1f, BookGold)
+    cell(14f, 24f, 1f, 3f, BookGold)
+}
+
+private val BookShadow = Color(0x66000000)
+private val BookPage = Color(0xFFF4ECD0)
+private val BookPageLine = Color(0xFFB8A880)
+private val BookLeather = Color(0xFF8A2A1C)
+private val BookLeatherLight = Color(0xFFB04A30)
+private val BookSpine = Color(0xFF561610)
+private val BookGold = Color(0xFFE8B840)
+private val BookGoldDark = Color(0xFF9A6A18)
+private val BookGem = Color(0xFF7CE8FF)
+private val BookGemDim = Color(0xFF3A90B8)
+private val BookLabel = Color(0xFFF6E6BC)
+private val BookLabelShade = Color(0xFFD8C090)
+private val BookLabelInk = Color(0xFF2A1A0A)

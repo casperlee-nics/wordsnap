@@ -1,5 +1,6 @@
 package com.wordsnap.app.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
@@ -10,6 +11,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 
 // 像素人物：每個字元是一格像素，"." 是透明；大多是 12 x 12 格，貓咪是 16 x 16
 private val palette = mapOf(
@@ -41,9 +44,9 @@ private val palette = mapOf(
 // 每個職業的像素頭像；稱號每升一階（每 10 級）頭像就變強一點，共 6 種：
 // 0 原本的樣子、1 衣服換色、2 加披風、3 衣服再換色、4 戴上皇冠、5 金色衣服加光環
 // cloth 是衣服（或身體）的顏色字元，clothTiers 是 6 個階段要換成的顏色
-enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val clothTiers: String) {
+enum class Avatar(@StringRes private val labelRes: Int, val art: List<String>, val cloth: Char, val clothTiers: String) {
     Hero(
-        "勇者",
+        R.string.avatar_hero,
         listOf(
             "....KKKK....",
             "...KHHHHK...",
@@ -62,7 +65,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "ByMMMY",
     ),
     Mage(
-        "魔法師",
+        R.string.avatar_mage,
         listOf(
             "......KK....",
             ".....KVVK...",
@@ -81,7 +84,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "VyyrrY",
     ),
     ElfArcher(
-        "精靈弓手",
+        R.string.avatar_archer,
         listOf(
             "....KKKK....",
             "...KYYYYK...",
@@ -100,7 +103,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "gGGEEY",
     ),
     Goblin(
-        "哥布林",
+        R.string.avatar_goblin,
         listOf(
             "............",
             "...KKKKKK...",
@@ -119,7 +122,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "DddmmY",
     ),
     Dwarf(
-        "矮人",
+        R.string.avatar_dwarf,
         listOf(
             "............",
             "....KKKK....",
@@ -139,7 +142,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
     ),
     // 貓咪用 16 x 16 格，左右各兩根鬍鬚伸出臉外
     Cat(
-        "貓咪",
+        R.string.avatar_cat,
         listOf(
             "................",
             "................",
@@ -162,7 +165,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "DRRVVY",
     ),
     Dragon(
-        "龍",
+        R.string.avatar_dragon,
         listOf(
             ".K........K.",
             ".KK......KK.",
@@ -181,7 +184,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "GEERRY",
     ),
     Demon(
-        "魔族",
+        R.string.avatar_demon,
         listOf(
             "..d......d..",
             "..dd.KK.dd..",
@@ -200,7 +203,7 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         clothTiers = "VhhmmY",
     ),
     Robot(
-        "機器人",
+        R.string.avatar_robot,
         listOf(
             ".....KK.....",
             ".....RR.....",
@@ -218,6 +221,8 @@ enum class Avatar(val label: String, val art: List<String>, val cloth: Char, val
         cloth = 'm',
         clothTiers = "mBBRRY",
     );
+
+    val label: String get() = tr(labelRes)
 
     private val tierArts = arrayOfNulls<List<String>>(AVATAR_TIERS)
 

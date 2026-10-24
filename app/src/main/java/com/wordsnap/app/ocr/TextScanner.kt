@@ -5,13 +5,15 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 // 拍照找到的東西：words 是不重複的單字，tokens 是照原本順序排的所有字（用來找片語，空字串代表中間斷開）
 // headPhrases 是單字書裡「音標前面那幾個字」組成的片語，例如 TV stand [ˋtiˋvi] [stænd]
@@ -49,7 +51,7 @@ object TextScanner {
         val pagesText = mutableListOf<List<List<Chunk>>>()
         withContext(Dispatchers.IO) {
             val file = context.contentResolver.openFileDescriptor(uri, "r")
-                ?: throw IllegalArgumentException("打不開這個檔案")
+                ?: throw IllegalArgumentException(tr(R.string.file_open_failed))
             file.use { descriptor ->
                 PdfRenderer(descriptor).use { renderer ->
                     val pages = minOf(renderer.pageCount, MAX_PDF_PAGES)

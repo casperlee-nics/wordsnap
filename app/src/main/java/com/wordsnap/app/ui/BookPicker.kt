@@ -23,7 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
+import com.wordsnap.app.R
 import com.wordsnap.app.data.Book
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelPaper
@@ -47,7 +49,7 @@ fun BookPicker(
     var expanded by remember { mutableStateOf(false) }
     var creating by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<Book?>(null) }
-    val current = books.firstOrNull { it.id == selectedId }?.let(::bookLabel) ?: if (allowAll) "全部" else "選擇單字簿"
+    val current = books.firstOrNull { it.id == selectedId }?.let(::bookLabel) ?: tr(if (allowAll) R.string.book_all else R.string.book_choose)
 
     Box(modifier) {
         if (onTopBar) {
@@ -75,7 +77,7 @@ fun BookPicker(
             modifier = Modifier.woodFrame(PixelPaper).padding(horizontal = 6.dp),
         ) {
             if (allowAll) {
-                BookMenuRow("全部", chosen = selectedId == null, onClick = { onSelect(null); expanded = false })
+                BookMenuRow(tr(R.string.book_all), chosen = selectedId == null, onClick = { onSelect(null); expanded = false })
             }
             books.forEach { book ->
                 BookMenuRow(
@@ -90,19 +92,19 @@ fun BookPicker(
                 )
             }
             Box(Modifier.padding(horizontal = 4.dp, vertical = 4.dp).fillMaxWidth().height(2.dp).background(MenuDivider))
-            BookMenuRow("新增冒險日誌", icon = IconPencil, onClick = { creating = true; expanded = false })
+            BookMenuRow(tr(R.string.book_new), icon = IconPencil, onClick = { creating = true; expanded = false })
         }
     }
 
     deleting?.let { book ->
         PixelAlertDialog(
             onDismissRequest = { deleting = null },
-            title = { Text("刪除「${book.name}」？") },
-            text = { Text("這本冒險日誌裡的單字和複習進度都會一起刪除，無法復原。") },
+            title = { Text(tr(R.string.book_delete_title, book.name)) },
+            text = { Text(tr(R.string.book_delete_message)) },
             confirmButton = {
-                TextButton(onClick = { onDelete?.invoke(book); deleting = null }) { Text("刪除", color = PixelRed) }
+                TextButton(onClick = { onDelete?.invoke(book); deleting = null }) { Text(tr(R.string.delete), color = PixelRed) }
             },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("取消") } },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(tr(R.string.cancel)) } },
         )
     }
 
@@ -122,13 +124,13 @@ private fun NewBookDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit) {
     var name by remember { mutableStateOf("") }
     PixelAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("新增冒險日誌") },
+        title = { Text(tr(R.string.book_new)) },
         text = {
             // 和新冒險一樣：寫在羊皮書卷上，右邊蓋章確認
             ScrollNameInput(
                 value = name,
                 onValueChange = { name = it.take(16) },
-                placeholder = "例如：課本、多益",
+                placeholder = tr(R.string.book_name_hint),
                 onConfirm = { onCreate(name.trim()) },
             )
         },
@@ -157,7 +159,7 @@ private fun BookMenuRow(
         if (icon != null) PixelArt(icon, ColorIconPalette, Modifier.padding(end = 8.dp).size(24.dp))
         Text(text, color = PixelInk, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f, fill = false))
         if (onDelete != null) {
-            PixelIconPlain(IconTrash, "刪除 $text", onClick = onDelete, size = 32.dp)
+            PixelIconPlain(IconTrash, tr(R.string.delete_named, text), onClick = onDelete, size = 32.dp)
         }
     }
 }

@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.ui.theme.PixelRed
 import kotlin.math.sin
 
@@ -80,14 +82,14 @@ fun ChestScreen(item: ItemType, onClose: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text("發現寶箱！", style = MaterialTheme.typography.headlineSmall, color = PixelRed)
+                Text(tr(R.string.chest_found), style = MaterialTheme.typography.headlineSmall, color = PixelRed)
                 Box(Modifier.fillMaxWidth().height(180.dp)) {
                     Canvas(Modifier.fillMaxWidth().height(180.dp)) { drawChest(t, item) }
                 }
                 if (t >= 1f) {
-                    Text("獲得「${item.label}」！", style = MaterialTheme.typography.titleLarge, color = PixelRed)
-                    Text(item.effect, textAlign = TextAlign.Center)
-                    Button(onClick = onClose) { Text("太好了！") }
+                    Text(tr(R.string.chest_got, item.label), style = MaterialTheme.typography.titleLarge, color = PixelRed)
+                    Text(item.effect, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium.readable())
+                    Button(onClick = onClose) { Text(tr(R.string.great)) }
                 } else {
                     Text("……", style = MaterialTheme.typography.titleLarge)
                 }

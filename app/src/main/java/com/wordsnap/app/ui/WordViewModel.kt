@@ -9,13 +9,16 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
+import com.wordsnap.app.R
 import com.wordsnap.app.data.AppDatabase
 import com.wordsnap.app.data.Book
 import com.wordsnap.app.data.Profile
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.translate.ModelStatus
 import com.wordsnap.app.translate.WordDictionary
 import com.wordsnap.app.translate.WordTranslator
+import kotlin.random.Random
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,7 +29,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
 private const val DAY = 24 * 60 * 60 * 1000L
 
@@ -112,7 +114,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val id = profileDao.findByName(trimmed)?.id
                 ?: profileDao.insert(Profile(name = trimmed, avatar = avatar.name)).also { newId ->
-                    bookDao.insert(Book(profileId = newId, name = AppDatabase.DEFAULT_BOOK))
+                    bookDao.insert(Book(profileId = newId, name = tr(R.string.default_book)))
                 }
             selectProfile(id)
             onReady()
@@ -128,11 +130,11 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     // 記錄管理：改名字，不能和別的冒險者同名；失敗時回傳原因
     fun renameProfile(profile: Profile, name: String, onDone: (String?) -> Unit) {
         val trimmed = name.trim()
-        if (trimmed.isEmpty()) return onDone("名字不能是空白")
+        if (trimmed.isEmpty()) return onDone(tr(R.string.name_blank))
         viewModelScope.launch {
             val other = profileDao.findByName(trimmed)
             if (other != null && other.id != profile.id) {
-                onDone("已經有叫「$trimmed」的冒險者了")
+                onDone(tr(R.string.name_taken, trimmed))
             } else {
                 profileDao.rename(profile.id, trimmed)
                 onDone(null)
@@ -322,7 +324,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         var canTranslate = true
         for (word in dao.getWithoutMeaning()) {
             val meaning = WordDictionary.lookup(getApplication(), word.text)
-                ?: if (canTranslate) WordTranslator.translate(word.text) else null
+                ?: if (canTranslate) WordTranslator.translate(getApplication(), word.text) else null
             if (meaning == null) {
                 // 翻譯檔還沒下載好，剩下的字只查字典，下次開 App 再試
                 canTranslate = false

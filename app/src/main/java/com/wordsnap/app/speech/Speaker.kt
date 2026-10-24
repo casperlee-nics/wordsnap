@@ -13,15 +13,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CancellationException
+import com.wordsnap.app.i18n.AppLanguage
+import com.wordsnap.app.i18n.appLanguage
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 
-// 用手機內建的文字轉語音念英文單字，也可以念中文解釋
+// 用手機內建的文字轉語音念英文單字，也可以念解釋（依遊戲語言：中文、日文或韓文）
 class Speaker(context: Context) : TextToSpeech.OnInitListener {
     private val tts = TextToSpeech(context.applicationContext, this)
+    private val language = appLanguage(context)
     private val ready = CompletableDeferred<Boolean>()
     @Volatile private var isReady = false
     private val main = Handler(Looper.getMainLooper())
@@ -52,9 +55,9 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
         main.post { speaking = false }
     }
 
-    // 手機上品質最好的英文、中文聲音（找不到就用預設的）
+    // 手機上品質最好的英文聲音、解釋語言的聲音（找不到就用預設的）
     private var englishVoice: Voice? = null
-    private var chineseVoice: Voice? = null
+    private var meaningVoice: Voice? = null
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
@@ -62,8 +65,11 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
             val voices = runCatching { tts.voices }.getOrNull().orEmpty()
                 .filter { TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features }
             englishVoice = bestVoice(voices.filter { it.locale.language == "en" && it.locale.country == "US" })
-            chineseVoice = bestVoice(voices.filter { it.locale.language == "zh" && it.locale.country == "TW" })
-                ?: bestVoice(voices.filter { it.locale.language == "zh" })
+            meaningVoice = when (language) {
+                AppLanguage.Chinese -> bestVoice(voices.filter { it.locale.language == "zh" && it.locale.country == "TW" })
+                    ?: bestVoice(voices.filter { it.locale.language == "zh" })
+                else -> bestVoice(voices.filter { it.locale.language == language.locale.language })
+            }
             useEnglish()
         }
         isReady = status == TextToSpeech.SUCCESS
@@ -83,11 +89,11 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
         if (voice == null || tts.setVoice(voice) != TextToSpeech.SUCCESS) tts.setLanguage(Locale.US)
     }
 
-    private fun useChinese() {
-        val voice = chineseVoice
+    private fun useMeaningLanguage() {
+        val voice = meaningVoice
         if (voice != null && tts.setVoice(voice) == TextToSpeech.SUCCESS) return
-        val result = tts.setLanguage(Locale.TRADITIONAL_CHINESE)
-        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+        val result = tts.setLanguage(language.locale)
+        if (language == AppLanguage.Chinese && (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED)) {
             tts.setLanguage(Locale.CHINESE)
         }
     }
@@ -107,9 +113,10 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
     }
 
     // 念完才回來，用在朗讀模式一句接一句
-    suspend fun say(text: String, chinese: Boolean = false, rate: Float = 1f) {
+    // meaning 為 true 時用解釋的語言念（中文、日文或韓文）
+    suspend fun say(text: String, meaning: Boolean = false, rate: Float = 1f) {
         if (!ready.await() || text.isBlank()) return
-        if (chinese) useChinese() else useEnglish()
+        if (meaning) useMeaningLanguage() else useEnglish()
         tts.setSpeechRate(rate)
         val id = "say-${nextId.incrementAndGet()}"
         val done = CompletableDeferred<Unit>()

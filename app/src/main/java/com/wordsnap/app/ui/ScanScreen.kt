@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.wordsnap.app.R
 import com.wordsnap.app.data.Book
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.ocr.DocumentMimeTypes
 import com.wordsnap.app.ocr.DocumentText
 import com.wordsnap.app.ocr.ScanResult
@@ -111,9 +112,9 @@ fun ScanScreen(
         selected.clear()
         scope.launch {
             try {
-                show(DocumentText.scan(context, uri) { page, pages -> progress = "正在翻閱古書：第 $page / $pages 頁" })
+                show(DocumentText.scan(context, uri) { page, pages -> progress = tr(R.string.scan_reading_page, page, pages) })
             } catch (e: Exception) {
-                error = "讀取失敗：${e.message}"
+                error = tr(R.string.scan_read_failed, e.message.orEmpty())
                 scanning = false
                 progress = null
             }
@@ -128,7 +129,7 @@ fun ScanScreen(
             context, uri,
             onResult = { result -> scope.launch { show(result) } },
             onError = { e ->
-                error = "辨識失敗：${e.message}"
+                error = tr(R.string.scan_ocr_failed, e.message.orEmpty())
                 scanning = false
             },
         )
@@ -165,7 +166,7 @@ fun ScanScreen(
 
     Scaffold(
         topBar = {
-            PixelHeader("捕捉怪物", onBack, theme = HeaderTheme.HuntNet)
+            PixelHeader(tr(R.string.scan_title), onBack, theme = HeaderTheme.HuntNet)
         },
     ) { padding ->
         Column(
@@ -176,9 +177,9 @@ fun ScanScreen(
             if (found != null && !scanning) {
                 RetroButton(
                     when (source) {
-                        ScanSource.Camera -> "再拍一張"
-                        ScanSource.Gallery -> "換一張圖"
-                        ScanSource.Pdf -> "換一本古書"
+                        ScanSource.Camera -> tr(R.string.scan_again_camera)
+                        ScanSource.Gallery -> tr(R.string.scan_again_gallery)
+                        ScanSource.Pdf -> tr(R.string.scan_again_document)
                     },
                     onClick = {
                         when (source) {
@@ -196,9 +197,9 @@ fun ScanScreen(
                     progress?.let { Text(it, Modifier.padding(top = 8.dp)) }
                 }
                 error != null -> Text(error!!)
-                found == null -> Text("拍一張課本或文章的照片，或打開一本古書（PDF、Excel、TXT），我會幫你找出隱藏的單字怪物。")
+                found == null -> Text(tr(R.string.scan_intro), style = MaterialTheme.typography.bodyLarge.readable())
                 found!!.none { ' ' in it || !TextScanner.isCommon(it) } && unclear.isEmpty() ->
-                    Text("沒有找到英文單字，換一張清楚一點的照片試試。")
+                    Text(tr(R.string.scan_none), style = MaterialTheme.typography.bodyLarge.readable())
                 else -> {
                     // 濾掉 the、and 這類常見字；已經收錄的字照樣列出但不能選
                     val all = found!!
@@ -208,9 +209,9 @@ fun ScanScreen(
                     val selectable = words.filter { it !in existing }
                     val allSelected = selectable.isNotEmpty() && selectable.all { it in selected }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("要新增的怪物", Modifier.weight(1f))
+                        Text(tr(R.string.scan_pick), Modifier.weight(1f))
                         RetroButton(
-                            if (allSelected) "全不選" else "全選",
+                            tr(if (allSelected) R.string.scan_select_none else R.string.scan_select_all),
                             onClick = {
                                 selected.clear()
                                 if (!allSelected) selected.addAll(selectable)
@@ -220,7 +221,7 @@ fun ScanScreen(
                         )
                     }
                     if (skipped > 0) {
-                        Text("已略過 $skipped 個常見字（如 the、and、is）", style = MaterialTheme.typography.bodySmall)
+                        Text(tr(R.string.scan_skipped, skipped), style = MaterialTheme.typography.bodySmall.readable())
                     }
                     // 選字的外框，上緣站著幾隻像素怪物
                     Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -238,7 +239,7 @@ fun ScanScreen(
                                 FilterChip(
                                     selected = word in selected,
                                     onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
-                                    label = { Text(if (owned) "$word（已有）" else word) },
+                                    label = { Text(if (owned) tr(R.string.scan_owned, word) else word, style = MaterialTheme.typography.labelLarge.readable()) },
                                     enabled = !owned,
                                 )
                             }
@@ -246,7 +247,7 @@ fun ScanScreen(
                             if (unclear.isNotEmpty()) {
                                 TextButton(onClick = { showUnclear = !showUnclear }, modifier = Modifier.fillMaxWidth()) {
                                     Text(
-                                        if (showUnclear) "收起看不清楚的字 ▲" else "還有 ${unclear.size} 個看不清楚的字（字典查不到）▼",
+                                        if (showUnclear) tr(R.string.scan_unclear_hide) else tr(R.string.scan_unclear_show, unclear.size),
                                         style = MaterialTheme.typography.bodySmall,
                                     )
                                 }
@@ -256,7 +257,7 @@ fun ScanScreen(
                                         FilterChip(
                                             selected = word in selected,
                                             onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
-                                            label = { Text(if (owned) "$word（已有）" else word) },
+                                            label = { Text(if (owned) tr(R.string.scan_owned, word) else word, style = MaterialTheme.typography.labelLarge.readable()) },
                                             enabled = !owned,
                                         )
                                     }
@@ -270,13 +271,13 @@ fun ScanScreen(
                         selectedId = targetBookId,
                         onSelect = { targetBookId = it },
                         onCreate = { name -> onCreateBook(name) { id -> targetBookId = id } },
-                        label = "存到：",
+                        label = tr(R.string.scan_save_to),
                         allowAll = false,
                         // 和單字簿右上角的冒險日誌按鈕同一種樣子
                         onTopBar = true,
                     )
                     RetroButton(
-                        "加入單字本（${selected.size}）",
+                        tr(R.string.scan_add, selected.size),
                         onClick = { onAdd(selected.toList(), targetBookId) },
                         enabled = selected.isNotEmpty(),
                         modifier = Modifier.fillMaxWidth(),
@@ -290,18 +291,18 @@ fun ScanScreen(
     if (showAimHint) {
         PixelAlertDialog(
             onDismissRequest = { showAimHint = false },
-            title = { Text("怪物出現了！") },
-            text = { Text("請將鏡頭對準怪物") },
+            title = { Text(tr(R.string.scan_aim_title)) },
+            text = { Text(tr(R.string.scan_aim)) },
             confirmButton = {
                 Button(onClick = {
                     showAimHint = false
                     val uri = newPhotoUri(context)
                     photoUri = uri
                     takePicture.launch(uri)
-                }) { Text("準備好了") }
+                }) { Text(tr(R.string.scan_ready)) }
             },
             dismissButton = {
-                TextButton(onClick = { showAimHint = false }) { Text("取消") }
+                TextButton(onClick = { showAimHint = false }) { Text(tr(R.string.cancel)) }
             },
         )
     }

@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.speech.rememberSpeaker
 import com.wordsnap.app.ui.theme.PixelGold
 
@@ -36,7 +38,7 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
     val scene = remember { ReviewScene.entries.random() }
 
     Scaffold(
-        topBar = { PixelHeader("${if (vm.practiceMode) "練習" else "複習"}（剩 ${vm.reviewQueue.size} 張）", onBack, theme = HeaderTheme.Banner) },
+        topBar = { PixelHeader(tr(if (vm.practiceMode) R.string.review_title_practice else R.string.review_title, vm.reviewQueue.size), onBack, theme = HeaderTheme.Banner) },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             PixelArt(scene.art, ScenePalette, Modifier.fillMaxWidth())
@@ -51,11 +53,11 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                 } else if (word == null) {
                     Spacer(Modifier.weight(1f))
                     Text(
-                        if (vm.practiceMode) "整本都練習完了！" else "今天的單字都複習完了！",
+                        tr(if (vm.practiceMode) R.string.review_done_practice else R.string.review_done),
                         style = MaterialTheme.typography.headlineSmall,
                     )
-                    if (vm.reviewedCount > 0) Text("這次記住了 ${vm.reviewedCount} 個字")
-                    RetroButton("回單字本", onClick = onBack)
+                    if (vm.reviewedCount > 0) Text(tr(R.string.review_remembered, vm.reviewedCount))
+                    RetroButton(tr(R.string.back_to_book), onClick = onBack)
                     Spacer(Modifier.weight(1f))
                 } else {
                     // 卡片一出現就念英文
@@ -83,12 +85,12 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                                     modifier = Modifier.weight(1f, fill = false),
                                 )
                                 IconButton(onClick = { speaker.speak(word.text) }) {
-                                    Icon(Icons.Filled.PlayArrow, contentDescription = "再念一次")
+                                    Icon(Icons.Filled.PlayArrow, contentDescription = tr(R.string.speak_again))
                                 }
                             }
                             Text(
-                                word.meaning.ifBlank { "（還沒有中文意思）" },
-                                style = MaterialTheme.typography.headlineSmall,
+                                word.meaning.ifBlank { tr(R.string.no_meaning) },
+                                style = MaterialTheme.typography.headlineSmall.readable(),
                                 textAlign = TextAlign.Center,
                             )
                         }
@@ -98,14 +100,14 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                     Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                         PixelIconButton(
                             IconForgot,
-                            "不記得",
+                            tr(R.string.review_forgot),
                             onClick = { vm.answer(word, remembered = false) },
                             size = 88.dp,
                             palette = ColorIconPalette,
                         )
                         PixelIconButton(
                             IconRemember,
-                            "記得",
+                            tr(R.string.review_remember),
                             onClick = { vm.answer(word, remembered = true) },
                             size = 88.dp,
                             color = PixelGold,
@@ -115,7 +117,7 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                     Spacer(Modifier.weight(1f))
                     // 隨機練習的提示放在最下面
                     if (vm.practiceMode) {
-                        Text("今天的字都記住了，隨機再練一次", style = MaterialTheme.typography.bodySmall)
+                        Text(tr(R.string.review_practice_hint), style = MaterialTheme.typography.bodySmall.readable())
                     }
                 }
             }

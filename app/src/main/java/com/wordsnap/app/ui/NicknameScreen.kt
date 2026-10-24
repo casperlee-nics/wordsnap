@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.ui.theme.PixelWhite
 
 // 第一次開啟：先輸入暱稱，再選一個像素人物
@@ -51,16 +52,16 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
         ) {
             if (!pickingAvatar) {
                 // 上面是纏著藤蔓的木牌標題，下面是攤開的魔法書
-                WoodSignTitle("像素單字")
+                WoodSignTitle(tr(R.string.title_logo))
                 MagicBook(Modifier.width(100.dp))
                 // 在羊皮書卷上寫暱稱，右邊蓋章確認（按鈕在旁邊，鍵盤跳出來也不會被擋住）
                 ScrollNameInput(
                     value = name,
                     onValueChange = { name = it.take(12) },
-                    placeholder = "寫下你的暱稱",
+                    placeholder = tr(R.string.nickname_hint),
                     onConfirm = { pickingAvatar = true },
                 )
-                Text("冒險者，請輸入你的暱稱", style = MaterialTheme.typography.titleMedium)
+                Text(tr(R.string.nickname_prompt), style = MaterialTheme.typography.titleMedium)
             } else {
                 // 名字寫在藍色緞帶橫幅上（人物圖縮小一點，整頁不會變長）
                 NameRibbon(name.trim())
@@ -76,7 +77,7 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
                     )
                 }
                 AvatarPicker(selected = avatar, onSelect = { avatar = it })
-                AdventureButton("開始冒險", onClick = { onStart(name, avatar) })
+                AdventureButton(tr(R.string.start_adventure), onClick = { onStart(name, avatar) })
             }
         }
     }

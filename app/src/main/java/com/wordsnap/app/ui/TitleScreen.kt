@@ -8,14 +8,12 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,8 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -43,10 +39,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
+import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.ui.theme.PixelInk
 import kotlin.math.PI
 import kotlin.math.cos
@@ -61,8 +56,6 @@ fun TitleScreen(
     onLoadGame: () -> Unit,
     onManageSaves: () -> Unit,
 ) {
-    val context = LocalContext.current
-    var level by remember { mutableStateOf(musicLevel(context)) }
     // 每次進主畫面從 5 首裡隨機挑一首
     val music = remember { TitleMusic.random() }
     LoopingMusic(music, enabled = true, volume = 0.6f)
@@ -74,6 +67,7 @@ fun TitleScreen(
     OneShotSound(R.raw.fireworks_sfx, play = fireworksOn, volume = 0.7f)
     // 白天的小彩蛋：點城堡，公主走出來迎接，四個人物往兩邊讓開，響起王家號角
     var showHelp by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
     var princessShow by remember { mutableIntStateOf(0) }
     var princessOn by remember { mutableStateOf(false) }
     val princess = remember { Animatable(0f) }
@@ -163,50 +157,27 @@ fun TitleScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        PlankButton("新冒險", onNewGame, Modifier.width(176.dp))
-                        PlankButton("繼續冒險", onLoadGame, Modifier.width(176.dp), enabled = hasSaves)
-                        PlankButton("記錄管理", onManageSaves, Modifier.width(176.dp), enabled = hasSaves)
-                        // 背景音樂音量：關、小、大（念單字的聲音不受影響）
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("♪ 音樂：", style = MaterialTheme.typography.bodyMedium)
-                            MusicLevel.entries.forEach { option ->
-                                val chosen = option == level
-                                // 每格一樣寬，字放在正中間
-                                Box(
-                                    Modifier
-                                        .padding(horizontal = 2.dp)
-                                        .width(34.dp)
-                                        .border(2.dp, if (chosen) PixelInk else Color.Transparent)
-                                        .background(if (chosen) MusicChosen else Color.Transparent)
-                                        .clickable {
-                                            level = option
-                                            setMusicLevel(context, option)
-                                        }
-                                        .padding(vertical = 4.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(option.label, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
-                                }
-                            }
-                        }
+                        PlankButton(tr(R.string.menu_new), onNewGame, Modifier.width(176.dp))
+                        PlankButton(tr(R.string.menu_continue), onLoadGame, Modifier.width(176.dp), enabled = hasSaves)
+                        PlankButton(tr(R.string.menu_manage), onManageSaves, Modifier.width(176.dp), enabled = hasSaves)
+                        // 遊戲設定：語言、音量、文字大小
+                        PlankButton(tr(R.string.menu_settings), { showSettings = true }, Modifier.width(176.dp))
                     }
                 }
                 // 木牌標題壓在選單上緣
-                WoodSignTitle("像素單字")
+                WoodSignTitle(tr(R.string.title_logo))
             }
         }
 
         // 右下角的問號：遊戲說明
         Box(Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 20.dp)) {
             // 插在草地上的小木牌，比較融入背景
-            PixelIconPlain(IconHelpSign, "遊戲說明", onClick = { showHelp = true }, size = 68.dp, palette = SignPalette)
+            PixelIconPlain(IconHelpSign, tr(R.string.help_button), onClick = { showHelp = true }, size = 68.dp, palette = SignPalette)
         }
     }
     if (showHelp) HelpDialog(onDismiss = { showHelp = false })
+    if (showSettings) SettingsDialog(onDismiss = { showSettings = false })
 }
-
-// 音樂選項選中的那格：淺色木頭
-private val MusicChosen = Color(0xFFE8C894)
 
 // 連點草地時，兩下之間要在這個時間內才算連續
 private const val GRASS_TAP_GAP_MS = 800L

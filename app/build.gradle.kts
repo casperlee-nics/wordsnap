@@ -13,8 +13,8 @@ android {
         applicationId = "com.wordsnap.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 33
-        versionName = "0.88"
+        versionCode = 34
+        versionName = "0.90"
     }
 
     buildTypes {
@@ -31,6 +31,10 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    // 字典檔不壓縮：App 可以直接知道檔案大小，安裝字典時顯示進度
+    androidResources {
+        noCompress += "db"
     }
 }
 

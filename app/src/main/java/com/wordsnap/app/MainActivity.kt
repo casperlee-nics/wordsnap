@@ -1,6 +1,7 @@
 package com.wordsnap.app
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -27,6 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wordsnap.app.data.Profile
+import com.wordsnap.app.i18n.Strings
+import com.wordsnap.app.i18n.withAppLanguage
 import com.wordsnap.app.reminder.ReviewReminder
 import com.wordsnap.app.ui.BattleScreen
 import com.wordsnap.app.ui.CompanySplash
@@ -40,12 +43,19 @@ import com.wordsnap.app.ui.ScanSource
 import com.wordsnap.app.ui.TitleScreen
 import com.wordsnap.app.ui.WordListScreen
 import com.wordsnap.app.ui.WordViewModel
+import com.wordsnap.app.ui.loadTextSize
 import com.wordsnap.app.ui.theme.PixelTheme
 
 // App 的畫面：主畫面、新遊戲、讀取、刪除，以及進入遊戲後的單字本、拍照、複習、朗讀、戰鬥
 private enum class Screen { Title, NewGame, Load, Delete, List, Scan, Review, Listen, Battle }
 
 class MainActivity : ComponentActivity() {
+    // 依遊戲設定的語言（還沒設定就跟著手機系統）顯示所有文字
+    override fun attachBaseContext(newBase: Context) {
+        Strings.init(newBase)
+        super.attachBaseContext(newBase.withAppLanguage())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // 讓遊戲機外框鋪到狀態列和導覽列後面
         enableEdgeToEdge(
@@ -54,6 +64,7 @@ class MainActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
         ReviewReminder.schedule(this)
+        loadTextSize(this)
 
         setContent {
             PixelTheme {
