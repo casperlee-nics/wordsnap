@@ -1,7 +1,13 @@
 package com.wordsnap.app.ocr
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -30,6 +36,41 @@ object TextScanner {
             .addOnSuccessListener { result -> onResult(ScanResult(extractWords(result.text), tokens(result.text))) }
             .addOnFailureListener { e -> onError(e) }
     }
+
+    // 讀取 PDF（古書）：一頁一頁畫成圖片再辨識文字，最多讀前 MAX_PDF_PAGES 頁
+    suspend fun scanPdf(context: Context, uri: Uri, onPage: (Int, Int) -> Unit = { _, _ -> }): ScanResult {
+        val text = StringBuilder()
+        withContext(Dispatchers.IO) {
+            val file = context.contentResolver.openFileDescriptor(uri, "r")
+                ?: throw IllegalArgumentException("打不開這個檔案")
+            file.use { descriptor ->
+                PdfRenderer(descriptor).use { renderer ->
+                    val pages = minOf(renderer.pageCount, MAX_PDF_PAGES)
+                    for (i in 0 until pages) {
+                        withContext(Dispatchers.Main) { onPage(i + 1, pages) }
+                        val bitmap = renderer.openPage(i).use { page ->
+                            // 寬度放大到約 1600 像素，小字也認得出來
+                            val scale = PDF_RENDER_WIDTH.toFloat() / page.width
+                            val bitmap = Bitmap.createBitmap(
+                                PDF_RENDER_WIDTH, (page.height * scale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888,
+                            )
+                            bitmap.eraseColor(Color.WHITE)
+                            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                            bitmap
+                        }
+                        val result = recognizer.process(InputImage.fromBitmap(bitmap, 0)).await()
+                        bitmap.recycle()
+                        text.append(result.text).append('\n')
+                    }
+                }
+            }
+        }
+        val all = text.toString()
+        return ScanResult(extractWords(all), tokens(all))
+    }
+
+    private const val MAX_PDF_PAGES = 20
+    private const val PDF_RENDER_WIDTH = 1600
 
     // 太基本的字，拍照時自動略過
     private val commonWords = setOf(

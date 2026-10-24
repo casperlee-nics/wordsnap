@@ -14,7 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,9 +24,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.speech.rememberSpeaker
-import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelGold
-import com.wordsnap.app.ui.theme.PixelShape
 
 // 單字卡複習：卡片出現就念英文、同時顯示中文，按「不記得」或「記得」直接換下一張
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,9 +61,7 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                     }
 
                     // 像遊戲對話框的卡片：英文和中文意思一起顯示
-                    Surface(
-                        shape = PixelShape,
-                        border = PixelBorder,
+                    PixelSurface(
                         color = MaterialTheme.colorScheme.surfaceContainer,
                         modifier = Modifier.fillMaxWidth(),
                     ) {

@@ -30,13 +30,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,11 +68,9 @@ import androidx.compose.ui.window.DialogProperties
 import com.wordsnap.app.R
 import com.wordsnap.app.data.Word
 import com.wordsnap.app.speech.rememberSpeaker
-import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelRed
-import com.wordsnap.app.ui.theme.PixelShape
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -146,26 +142,29 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var chestDone by remember { mutableStateOf(false) }
     val showingChest = endShown && !showingLevelUp && reward?.item != null && !chestDone
 
+    val knockedOut = finished && !died && questions.isNotEmpty() && (questions.size - correct - bonus) <= 0
     LoopingMusic(
         when (monster.rank) {
             MonsterRank.Big -> R.raw.bigboss_bgm
             MonsterRank.Mid -> R.raw.midboss_bgm
             MonsterRank.Normal -> R.raw.battle_bgm
         },
-        enabled = musicOn && introDone && !died && !showingLevelUp && !showingChest,
+        // 打倒怪物時先停掉戰鬥音樂，播勝利號角
+        enabled = musicOn && introDone && !died && !knockedOut && !showingLevelUp && !showingChest,
         volume = if (quiet) 0.05f else 0.3f,
     )
     OneShotSound(R.raw.warning_jingle, play = isBoss && !introDone)
     OneShotSound(R.raw.death_jingle, play = died)
     OneShotSound(R.raw.levelup_jingle, play = showingLevelUp)
     OneShotSound(R.raw.chest_jingle, play = showingChest)
+    OneShotSound(R.raw.victory_jingle, play = knockedOut)
 
     val total = questions.size
     val word = questions.getOrNull(index)
     val answer = word?.text?.trim().orEmpty()
     val heroHp = (HERO_MAX_HP - damage).coerceAtLeast(0)
     val monsterHp = (total - correct - bonus).coerceAtLeast(0)
-    val knocked = finished && !died && total > 0 && monsterHp == 0
+    val knocked = knockedOut
     val answering = introDone && !finished && word != null && result == null
 
     // 念一次英文：先把音樂調小聲 0.5 秒，念完再等 0.5 秒才調回來
@@ -922,7 +921,7 @@ private fun ResultDialog(reward: BattleReward, monster: Monster, race: Race, kno
     val oldTitle = race.title(reward.levelBefore)
     val newTitle = race.title(reward.levelAfter)
     val perfect = !reward.died && reward.correct == reward.total
-    AlertDialog(
+    PixelAlertDialog(
         onDismissRequest = { },
         title = {
             Text(
@@ -1036,9 +1035,7 @@ private fun LevelUpScreen(hero: Avatar, race: Race, before: Int, after: Int, onC
                     }
                 }
             }
-            Surface(
-                shape = PixelShape,
-                border = PixelBorder,
+            PixelSurface(
                 color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.align(Alignment.Center).padding(24.dp).fillMaxWidth(),
             ) {
@@ -1106,24 +1103,33 @@ private fun DrawScope.drawCheeringTown(t: Float, cell: Float) {
     }
 }
 
-// 黑暗森林：怪物們嚇得往右邊逃跑
+// 黑暗森林：怪物們嚇得往森林深處逃跑，越跑越遠、越來越小，最後消失在樹林裡
 private fun DrawScope.drawFleeingMonsters(t: Float, cell: Float, monsters: List<Monster>) {
     val ground = size.height - cell
-    monsters.forEachIndexed { i, monster ->
-        val small = cell * 0.5f
+    val horizon = size.height * 0.45f
+    val vanishX = size.width / 2
+    // 遠的先畫，近的怪物才會擋在前面
+    monsters.withIndex().sortedByDescending { (t + it.index * 0.2f) % 1f }.forEach { (i, monster) ->
+        val p = (t + i * 0.2f) % 1f
+        // 每隻從前面不同的位置出發，往畫面中間的遠方跑
+        val startX = size.width * (0.1f + 0.8f * ((i * 37) % 100) / 100f)
+        val small = cell * (0.9f - 0.75f * p)
         val w = monster.art.first().length * small
         val h = monster.art.size * small
-        val span = size.width + w * 2
-        val x = ((t + i * 0.2f) % 1f) * span - w
-        val hop = if (((t * 24).toInt() + i) % 2 == 0) 0f else cell
+        val footX = startX + (vanishX - startX) * p
+        val footY = ground - (ground - horizon) * p
+        val hop = if (((t * 24).toInt() + i) % 2 == 0) 0f else small * 1.5f
+        val alpha = if (p > 0.8f) (1f - p) / 0.2f else 1f
+        val left = footX - w / 2
+        val top = footY - h - hop
         monster.art.forEachIndexed { y, row ->
             row.forEachIndexed { cx, ch ->
                 val color = ScenePalette[ch] ?: return@forEachIndexed
-                drawRect(color, Offset(x + cx * small, ground - h - hop + y * small), Size(small + 0.5f, small + 0.5f))
+                drawRect(color.copy(alpha = alpha), Offset(left + cx * small, top + y * small), Size(small + 0.5f, small + 0.5f))
             }
         }
-        // 逃跑時冒出的汗滴
-        drawRect(Color(0xFF90D0F8), Offset(x - small * 2, ground - h - hop), Size(small * 2, small * 3))
+        // 逃跑時往後甩的汗滴
+        drawRect(Color(0xFF90D0F8).copy(alpha = alpha), Offset(left + w, top + h * 0.2f), Size(small * 2, small * 3))
     }
 }
 

@@ -4,12 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,7 +54,7 @@ fun BookPicker(
                 )
             }
         } else {
-            OutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }
+            PixelOutlinedButton(onClick = { expanded = true }) { Text("$label$current ▼") }
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             if (allowAll) {
@@ -82,7 +80,7 @@ fun BookPicker(
     }
 
     deleting?.let { book ->
-        AlertDialog(
+        PixelAlertDialog(
             onDismissRequest = { deleting = null },
             title = { Text("刪除「${book.name}」？") },
             text = { Text("這本冒險日誌裡的單字和複習進度都會一起刪除，無法復原。") },
@@ -107,7 +105,7 @@ fun BookPicker(
 @Composable
 private fun NewBookDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit) {
     var name by remember { mutableStateOf("") }
-    AlertDialog(
+    PixelAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("新增冒險日誌") },
         text = {

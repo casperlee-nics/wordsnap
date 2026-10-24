@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -24,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -54,7 +52,7 @@ import com.wordsnap.app.translate.ModelStatus
 @Composable
 fun WordListScreen(
     vm: WordViewModel,
-    onScan: () -> Unit,
+    onScan: (ScanSource) -> Unit,
     onReview: () -> Unit,
     onListen: () -> Unit,
     onBattle: (Long) -> Unit,
@@ -198,7 +196,7 @@ fun WordListScreen(
         ItemBagDialog(counts = itemCounts, onDismiss = { showItems = false })
     }
     if (confirmPractice) {
-        AlertDialog(
+        PixelAlertDialog(
             onDismissRequest = { confirmPractice = false },
             title = { Text("練習戰") },
             text = { Text("這本的單字都已經在戰鬥中答對 $MAX_TESTS 次了。還是可以繼續練習，但經驗值只有 1/4，也不會掉寶箱。") },
@@ -215,11 +213,18 @@ fun WordListScreen(
         AddChoiceDialog(
             onDismiss = { choosingAdd = false },
             onManual = { choosingAdd = false; showAdd = true },
-            onCamera = { choosingAdd = false; onScan() },
+            onSource = { source -> choosingAdd = false; onScan(source) },
         )
     }
     if (showHero) {
-        profile?.let { HeroDialog(it, remembered = allWords.count { w -> w.box >= 1 }, onDismiss = { showHero = false }) }
+        profile?.let {
+            HeroDialog(
+                it,
+                remembered = allWords.count { w -> w.box >= 1 },
+                onDismiss = { showHero = false },
+                onClassChange = { avatar -> vm.changeClass(it, avatar) },
+            )
+        }
     }
     if (showAdd) {
         WordDialog(
@@ -256,7 +261,7 @@ private fun WordDialog(
     var text by remember { mutableStateOf(initialText) }
     var meaning by remember { mutableStateOf(initialMeaning) }
 
-    AlertDialog(
+    PixelAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
@@ -311,7 +316,7 @@ private fun BottomActions(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             val small = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
-            OutlinedButton(onClick = onListen, Modifier.weight(1f), contentPadding = small) { Text("朗讀") }
+            PixelOutlinedButton(onClick = onListen, Modifier.weight(1f), contentPadding = small) { Text("朗讀") }
             Button(onClick = onReview, Modifier.weight(1f), enabled = reviewEnabled, contentPadding = small) {
                 Text(reviewLabel, maxLines = 1)
             }
@@ -323,14 +328,16 @@ private fun BottomActions(
 
 // 加單字：上面是手動輸入（筆和筆記本），下面是拍照（相機），按相機直接打開相機
 @Composable
-private fun AddChoiceDialog(onDismiss: () -> Unit, onManual: () -> Unit, onCamera: () -> Unit) {
-    AlertDialog(
+private fun AddChoiceDialog(onDismiss: () -> Unit, onManual: () -> Unit, onSource: (ScanSource) -> Unit) {
+    PixelAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("加單字") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 AddChoice(IconNotebook, "手動輸入單字怪物", onManual)
-                AddChoice(IconCamera, "用相機找出隱藏的單字怪物", onCamera)
+                AddChoice(IconCamera, "相機找出隱藏怪物") { onSource(ScanSource.Camera) }
+                AddChoice(IconGallery, "相簿新增怪物") { onSource(ScanSource.Gallery) }
+                AddChoice(IconOldBook, "讀取古書上的怪物") { onSource(ScanSource.Pdf) }
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("取消") } },

@@ -2,17 +2,26 @@ package com.wordsnap.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,10 +29,12 @@ import androidx.compose.ui.unit.dp
 import com.wordsnap.app.data.Profile
 import com.wordsnap.app.ui.theme.PixelBlue
 import com.wordsnap.app.ui.theme.PixelInk
+import com.wordsnap.app.ui.theme.PixelRed
 
 // 人物能力：等級、稱號、經驗值、已記住的單字數和四項能力
 @Composable
-fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit) {
+fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit, onClassChange: ((Avatar) -> Unit)? = null) {
+    var changingClass by remember { mutableStateOf(false) }
     val avatar = Avatar.from(profile.avatar)
     val race = avatar.race
     val info = levelInfo(profile.exp)
@@ -37,9 +48,16 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit) {
         header = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 PixelAvatar(avatar, size = 56.dp, tier = tier)
-                Column(Modifier.padding(start = 12.dp)) {
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(profile.name, style = MaterialTheme.typography.titleLarge)
                     Text("「${race.title(info.level)}」", style = MaterialTheme.typography.bodyMedium)
+                }
+                // 超過 10 級才出現轉職按鈕
+                if (onClassChange != null && info.level >= CLASS_CHANGE_MIN_LEVEL) {
+                    PixelIconButton(
+                        IconClassChange, "轉職", onClick = { changingClass = true },
+                        size = 52.dp, palette = ColorIconPalette,
+                    )
                 }
             }
         },
@@ -62,6 +80,42 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit) {
             )
         }
     }
+
+    if (changingClass && onClassChange != null) {
+        ClassChangeDialog(
+            current = avatar,
+            level = info.level,
+            onDismiss = { changingClass = false },
+            onConfirm = { picked ->
+                changingClass = false
+                onClassChange(picked)
+            },
+        )
+    }
+}
+
+// 轉職：選一個別的職業，確認會降 10 級
+@Composable
+private fun ClassChangeDialog(current: Avatar, level: Int, onDismiss: () -> Unit, onConfirm: (Avatar) -> Unit) {
+    var picked by remember { mutableStateOf(Avatar.entries.first { it != current }) }
+    val newLevel = (level - CLASS_CHANGE_PENALTY).coerceAtLeast(1)
+    PixelAlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("轉職") },
+        text = {
+            Column(
+                Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text("要轉成哪一種職業？轉職後等級會從 Lv $level 降到 Lv $newLevel。")
+                AvatarPicker(selected = picked, onSelect = { if (it != current) picked = it }, exclude = current)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(picked) }) { Text("轉職成${picked.label}", color = PixelRed) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+    )
 }
 
 // 能力值長條，以 200 為滿格

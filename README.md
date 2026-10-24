@@ -2,7 +2,17 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
-## 目前版本 0.75（暫定名稱：像素單字）
+## 目前版本 0.76（暫定名稱：像素單字）
+
+v0.76 的改變：
+- 原本單線黑框的卡片、外框按鈕、圖示按鈕和所有確認視窗，都改成黑金雙線的像素外框
+- 白天主畫面小彩蛋：點城堡，公主從城門走出來迎接，四個人物往左右讓開，響起王家號角（`royal_fanfare.ogg`）
+- 升級畫面「黑暗森林」的怪物改成往森林深處逃跑，越跑越遠、越來越小
+- 把怪物打倒時停掉戰鬥音樂，播放勝利號角（`victory_jingle.ogg`）
+- 朗讀模式拿掉「正在念」的文字（暫停時仍顯示「已暫停」）
+- 加單字改成四個選項：手動輸入單字怪物、相機找出隱藏怪物、相簿新增怪物、讀取古書上的怪物（PDF，從「我的檔案」選，最多讀前 20 頁）
+- 人物能力：超過 10 級時頭像右邊出現「轉職」按鈕，可以換成別的職業，等級降 10 級
+- 主畫面右下角加入問號按鈕，打開遊戲說明（內容在 `ui/HelpContent.kt`，之後可以加公司介紹）
 
 v0.75 的改變：
 - 主畫面「像素單字」選單改成像素視窗外框（和人物能力、道具欄同款），位置往上移一些
@@ -128,7 +138,7 @@ v0.65 的改變：
 
 ## 授權
 
-- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`、`fireworks_sfx.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
+- 背景音樂 `app/src/main/res/raw/title_bgm.ogg`、`battle_bgm.ogg`、`hope_bgm.ogg`、`book_bgm.ogg`、`levelup_jingle.ogg`、`death_jingle.ogg`、`bigboss_bgm.ogg`、`midboss_bgm.ogg`、`load_bgm.ogg`、`warning_jingle.ogg`、`chest_jingle.ogg`、`title2_bgm.ogg`、`title3_bgm.ogg`、`fireworks_sfx.ogg`、`victory_jingle.ogg`、`royal_fanfare.ogg`：本專案原創，用程式合成的方波／三角波 chiptune。
 - 字典 `app/src/main/assets/ecdict.db`：取自 [ECDICT](https://github.com/skywind3000/ECDICT)（MIT License，Copyright (c) 2017 Linwei），挑出常用的 5 萬字，用 [OpenCC](https://github.com/BYVoid/OpenCC)（Apache License 2.0）轉成台灣繁體用語。
 - 字型 [俐方體 11 號（Cubic 11）](https://github.com/ACh-K/Cubic-11)：免費授權，可商用與再散布，由多個 woff2 子集合併為 `app/src/main/res/font/cubic_11.ttf`。
 

@@ -10,7 +10,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,9 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.speech.rememberSpeaker
-import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelGold
-import com.wordsnap.app.ui.theme.PixelShape
 import kotlinx.coroutines.delay
 
 // 朗讀模式：一個字接一個字自動念，先念英文，再念中文解釋，念完從頭再來
@@ -41,8 +38,6 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
     var playing by remember { mutableStateOf(true) }
     // 每念完一個字加一，只有一個字時也會重新開始念
     var round by remember { mutableIntStateOf(0) }
-    // 目前念到哪個部分，畫面跟著標示
-    var step by remember { mutableStateOf("") }
 
     val word = words.getOrNull(index % words.size.coerceAtLeast(1))
 
@@ -53,11 +48,9 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
             return@LaunchedEffect
         }
         val text = word.text.trim()
-        step = "英文"
         speaker.say(text, rate = 0.85f)
         delay(400)
         if (word.meaning.isNotBlank()) {
-            step = "解釋"
             speaker.say(word.meaning, chinese = true)
         }
         delay(1200)
@@ -81,9 +74,7 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                     return@Column
                 }
                 Text("第 ${index % words.size + 1} / ${words.size} 個", style = MaterialTheme.typography.bodyMedium)
-                Surface(
-                    shape = PixelShape,
-                    border = PixelBorder,
+                PixelSurface(
                     color = MaterialTheme.colorScheme.surfaceContainer,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -100,7 +91,7 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                         )
                     }
                 }
-                Text(if (playing) "♪ 正在念：$step" else "已暫停", style = MaterialTheme.typography.bodyMedium)
+                if (!playing) Text("已暫停", style = MaterialTheme.typography.bodyMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     PixelIconButton(IconPrev, "上一個", onClick = { index = (index - 1 + words.size) % words.size })
                     PixelIconButton(

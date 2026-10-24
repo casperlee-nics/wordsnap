@@ -119,6 +119,12 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // 轉職：換成別的職業（種族），等級降 10 級
+    fun changeClass(profile: Profile, avatar: Avatar) {
+        if (levelInfo(profile.exp).level < CLASS_CHANGE_MIN_LEVEL) return
+        viewModelScope.launch { profileDao.changeClass(profile.id, avatar.name, expAfterClassChange(profile.exp)) }
+    }
+
     // 記錄管理：改名字，不能和別的冒險者同名；失敗時回傳原因
     fun renameProfile(profile: Profile, name: String, onDone: (String?) -> Unit) {
         val trimmed = name.trim()

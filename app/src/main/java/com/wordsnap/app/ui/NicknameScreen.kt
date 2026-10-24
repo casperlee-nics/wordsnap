@@ -1,7 +1,6 @@
 package com.wordsnap.app.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,8 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
 import com.wordsnap.app.ui.theme.PixelGold
-import com.wordsnap.app.ui.theme.PixelInk
-import com.wordsnap.app.ui.theme.PixelShape
+import com.wordsnap.app.ui.theme.PixelWhite
 
 // 第一次開啟：先輸入暱稱，再選一個像素人物
 @Composable
@@ -57,12 +55,14 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
         ) {
             if (!pickingAvatar) {
                 Box(
-                    Modifier.size(144.dp).border(3.dp, PixelInk, PixelShape),
+                    Modifier.size(144.dp).pixelFrame(PixelGold, accent = PixelWhite),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Surface(color = PixelGold, shape = PixelShape, modifier = Modifier.fillMaxSize().padding(3.dp)) {
-                        Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null)
-                    }
+                    Image(
+                        painterResource(R.drawable.ic_launcher_foreground),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().padding(9.dp),
+                    )
                 }
                 Text("像素單字", style = MaterialTheme.typography.displaySmall)
                 Text("冒險者，請輸入你的暱稱", style = MaterialTheme.typography.titleMedium)
@@ -94,20 +94,26 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
 // 像素人物，一排放不下就往下排，選中的有粗框
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AvatarPicker(selected: Avatar, onSelect: (Avatar) -> Unit, showLabels: Boolean = true) {
+fun AvatarPicker(selected: Avatar, onSelect: (Avatar) -> Unit, showLabels: Boolean = true, exclude: Avatar? = null) {
     FlowRow(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Avatar.entries.forEach { item ->
+        Avatar.entries.filter { it != exclude }.forEach { item ->
             val isSelected = item == selected
             Column(
                 Modifier
                     .width(72.dp)
-                    .border(if (isSelected) 3.dp else 1.dp, if (isSelected) PixelInk else PixelGray, PixelShape)
+                    .then(
+                        if (isSelected) {
+                            Modifier.pixelFrame(PixelWhite, unit = 2.dp)
+                        } else {
+                            Modifier.pixelFrame(MaterialTheme.colorScheme.background, accent = PixelGray, unit = 2.dp)
+                        },
+                    )
                     .clickable { onSelect(item) }
-                    .padding(6.dp),
+                    .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PixelAvatar(item, size = 48.dp)

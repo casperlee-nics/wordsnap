@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,9 +15,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelInk
-import com.wordsnap.app.ui.theme.PixelShape
 
 // 像素按鈕上的小圖示（11 x 11），"K" 是深色，"." 是透明
 private val IconPalette = mapOf('K' to PixelInk)
@@ -224,6 +221,86 @@ val IconArrowRight = listOf(
     "................",
 )
 
+// 加單字：相簿新增怪物（一張山和太陽的照片）
+val IconGallery = listOf(
+    "................",
+    "................",
+    ".KKKKKKKKKKKKKK.",
+    ".KWWWWWWWWWWWWK.",
+    ".KWLLLLLLLLLLWK.",
+    ".KWLLLLLLLYYLWK.",
+    ".KWLLLLLLLYYLWK.",
+    ".KWLLLKLLLLLLWK.",
+    ".KWLLKBKLLLLLWK.",
+    ".KWLKBBBKLKLLWK.",
+    ".KWKBBBBBKBKLWK.",
+    ".KWBBBBBBBBBKWK.",
+    ".KWBBBBBBBBBBWK.",
+    ".KWWWWWWWWWWWWK.",
+    ".KKKKKKKKKKKKKK.",
+    "................",
+)
+
+// 加單字：讀取古書上的怪物（有金色鑲邊和紅寶石的古書）
+val IconOldBook = listOf(
+    "................",
+    "................",
+    "...KKKKKKKKKKK..",
+    "..KHHHHHHHHHHHK.",
+    "..KHYYYYYYYYYHK.",
+    "..KHYHHHHHHHYHK.",
+    "..KHYHHRRHHHYHK.",
+    "..KHYHRYYRHHYHK.",
+    "..KHYHHRRHHHYHK.",
+    "..KHYHHHHHHHYHK.",
+    "..KHYYYYYYYYYHK.",
+    "..KHHHHHHHHHHHK.",
+    "..KSSSSSSSSSSSK.",
+    "..KSWSWSWSWSWSK.",
+    "...KKKKKKKKKKK..",
+    "................",
+)
+
+// 人物能力：轉職（上下兩個相反方向的箭頭）
+val IconClassChange = listOf(
+    "................",
+    "................",
+    "..........K.....",
+    "..........KK....",
+    "...KKKKKKKKYK...",
+    "...KYYYYYYYYYK..",
+    "...KKKKKKKKYK...",
+    "..........KK....",
+    ".....K....K.....",
+    "....KK..........",
+    "...KLKKKKKKKK...",
+    "..KLLLLLLLLLK...",
+    "...KLKKKKKKKK...",
+    "....KK..........",
+    ".....K..........",
+    "................",
+)
+
+// 主畫面：遊戲說明（問號）
+val IconHelp = listOf(
+    "................",
+    "................",
+    ".....KKKKKK.....",
+    "....KYYYYYYK....",
+    "...KYYKKKKYYK...",
+    "...KYK....KYK...",
+    "....K.....KYK...",
+    ".........KYYK...",
+    "........KYYK....",
+    ".......KYYK.....",
+    ".......KYK......",
+    ".......KKK......",
+    "................",
+    ".......KYK......",
+    ".......KKK......",
+    "................",
+)
+
 // 記錄管理：改名字（鉛筆）
 val IconPencil = listOf(
     "................",
@@ -275,10 +352,9 @@ fun PixelIconButton(
     palette: Map<Char, Color> = IconPalette,
     enabled: Boolean = true,
 ) {
-    Surface(
-        shape = PixelShape,
-        border = PixelBorder,
+    PixelSurface(
         color = color,
+        unit = 2.dp,
         modifier = Modifier
             .size(size)
             // 不能按的時候變淡

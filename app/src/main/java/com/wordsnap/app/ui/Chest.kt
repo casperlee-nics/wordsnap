@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,9 +26,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.wordsnap.app.ui.theme.PixelBorder
 import com.wordsnap.app.ui.theme.PixelRed
-import com.wordsnap.app.ui.theme.PixelShape
 import kotlin.math.sin
 
 // 戰鬥勝利掉寶箱的小動畫：寶箱抖一抖 → 打開發光 → 道具從寶箱裡飛出來
@@ -77,7 +74,7 @@ fun ChestScreen(item: ItemType, onClose: () -> Unit) {
     LaunchedEffect(Unit) { anim.animateTo(1f, tween(2600, easing = LinearEasing)) }
     val t = anim.value
     Dialog(onDismissRequest = { }) {
-        Surface(shape = PixelShape, border = PixelBorder, color = MaterialTheme.colorScheme.surface) {
+        PixelSurface(color = MaterialTheme.colorScheme.surface) {
             Column(
                 Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,

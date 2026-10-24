@@ -67,6 +67,20 @@ const val MAX_LEVEL = 99
 // 從 Lv n 升到 n+1 需要的經驗值，越高級需要越多
 fun expToNext(level: Int): Int = 80 + 20 * level + 3 * level * level / 2
 
+// 升到這一級為止總共需要的經驗值
+fun totalExpForLevel(level: Int): Int = (1 until level).sumOf { expToNext(it) }
+
+// 轉職：超過 10 級才能轉，轉了會降 10 級
+const val CLASS_CHANGE_MIN_LEVEL = 11
+const val CLASS_CHANGE_PENALTY = 10
+
+// 轉職後的總經驗值：降 10 級，這一級已經累積的經驗值保留（不超過新等級的上限）
+fun expAfterClassChange(totalExp: Int): Int {
+    val info = levelInfo(totalExp)
+    val level = (info.level - CLASS_CHANGE_PENALTY).coerceAtLeast(1)
+    return totalExpForLevel(level) + info.current.coerceAtMost(expToNext(level) - 1)
+}
+
 // 用總經驗值算出等級，以及這一級已經累積多少、還要多少
 data class LevelInfo(val level: Int, val current: Int, val needed: Int)
 

@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,31 +71,50 @@ fun TitleScreen(
     var fireworksShow by remember { mutableIntStateOf(0) }
     var fireworksOn by remember { mutableStateOf(false) }
     OneShotSound(R.raw.fireworks_sfx, play = fireworksOn, volume = 0.7f)
+    // 白天的小彩蛋：點城堡，公主走出來迎接，四個人物往兩邊讓開，響起王家號角
+    var showHelp by remember { mutableStateOf(false) }
+    var princessShow by remember { mutableIntStateOf(0) }
+    var princessOn by remember { mutableStateOf(false) }
+    val princess = remember { Animatable(0f) }
+    OneShotSound(R.raw.royal_fanfare, play = princessOn, volume = 0.7f)
+    LaunchedEffect(princessShow) {
+        if (princessShow == 0) return@LaunchedEffect
+        princess.snapTo(0f)
+        princess.animateTo(1f, tween(PRINCESS_MS, easing = LinearEasing))
+        princess.snapTo(0f)
+        princessOn = false
+    }
 
     Box(Modifier.fillMaxSize().background(if (night) SceneGrassNight else SceneGrass)) {
         Column(Modifier.fillMaxSize()) {
             Box {
                 PixelArt(if (night) TitleSkyNight else TitleSky, ScenePalette, Modifier.fillMaxWidth())
-                TitleParty(Modifier.matchParentSize())
-                if (night) {
-                    if (fireworksOn) {
-                        CastleFireworks(fireworksShow, onDone = { fireworksOn = false }, Modifier.matchParentSize())
-                    }
-                    BoxWithConstraints(Modifier.matchParentSize()) {
-                        val cell = maxWidth / 64
-                        // 看不見的按鈕蓋在城堡上，不會擋到下面的人物
-                        Box(
-                            Modifier
-                                .offset(x = cell * CastleLeft, y = cell * CastleTop)
-                                .size(width = cell * CastleWidth, height = cell * CastleHeight)
-                                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                                    if (!fireworksOn) {
+                TitleParty(Modifier.matchParentSize(), spread = partySpread(princess.value))
+                if (princessOn) Princess(princess.value, Modifier.matchParentSize())
+                if (night && fireworksOn) {
+                    CastleFireworks(fireworksShow, onDone = { fireworksOn = false }, Modifier.matchParentSize())
+                }
+                BoxWithConstraints(Modifier.matchParentSize()) {
+                    val cell = maxWidth / 64
+                    // 看不見的按鈕蓋在城堡上，不會擋到下面的人物
+                    Box(
+                        Modifier
+                            .offset(x = cell * CastleLeft, y = cell * CastleTop)
+                            .size(width = cell * CastleWidth, height = cell * CastleHeight)
+                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                                when {
+                                    fireworksOn || princessOn -> Unit
+                                    night -> {
                                         fireworksShow++
                                         fireworksOn = true
                                     }
-                                },
-                        )
-                    }
+                                    else -> {
+                                        princessShow++
+                                        princessOn = true
+                                    }
+                                }
+                            },
+                    )
                 }
             }
             Box(Modifier.weight(1f))
@@ -119,10 +137,10 @@ fun TitleScreen(
                     ) {
                         Text("像素單字", style = MaterialTheme.typography.headlineMedium)
                         Button(onClick = onNewGame, modifier = Modifier.fillMaxWidth()) { Text("新遊戲") }
-                        OutlinedButton(onClick = onLoadGame, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
+                        PixelOutlinedButton(onClick = onLoadGame, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
                             Text("讀取遊戲")
                         }
-                        OutlinedButton(onClick = onManageSaves, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
+                        PixelOutlinedButton(onClick = onManageSaves, enabled = hasSaves, modifier = Modifier.fillMaxWidth()) {
                             Text("記錄管理")
                         }
                         // 背景音樂音量：關、小、大（念單字的聲音不受影響）
@@ -149,7 +167,13 @@ fun TitleScreen(
                 }
             }
         }
+
+        // 右下角的問號：遊戲說明
+        Box(Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 20.dp)) {
+            PixelIconButton(IconHelp, "遊戲說明", onClick = { showHelp = true }, size = 48.dp, palette = ColorIconPalette)
+        }
     }
+    if (showHelp) HelpDialog(onDismiss = { showHelp = false })
 }
 
 // 夜晚城堡在天空圖（64 x 36 格）裡的位置
@@ -249,9 +273,75 @@ private enum class Idle { Hop, Sway, LookAround, Squash, Spin }
 // 城堡下的四個人物在第幾格（主畫面的天空圖寬 64 格）
 private val PartyColumns = listOf(14, 23, 33, 42)
 
+// 公主出來時，四個人物各往左右讓開幾格
+private val PartySpread = listOf(-6f, -6f, 6f, 6f)
+
+// 公主彩蛋：前 1/4 從城門走出來、中間揮手迎接、最後 1/4 走回城堡
+private const val PRINCESS_MS = 7000
+private const val PRINCESS_LEFT = 28
+
+private fun princessWalk(p: Float): Float = when {
+    p <= 0f -> 0f
+    p < 0.25f -> p / 0.25f
+    p < 0.75f -> 1f
+    else -> (1f - p) / 0.25f
+}
+
+// 人物讓開的程度跟著公主走出來的距離，公主回去後人物也走回原位
+private fun partySpread(p: Float): Float = princessWalk(p).let { it * it * (3 - 2 * it) }
+
+// 原創的像素公主：金色皇冠、金色長髮、粉紅色禮服
+private val PrincessArt = listOf(
+    "...Y.YY.Y...",
+    "...YYRRYYY..",
+    "..KHHHHHHK..",
+    ".KHSSSSSSHK.",
+    ".KHSKSSKSHK.",
+    ".KHSSSSSSHK.",
+    ".KHHSRRSHHK.",
+    ".KHKPPPPKHK.",
+    "KSKPPWWPPKSK",
+    ".KPPPPPPPPK.",
+    "KPPpPPPPpPPK",
+    "KKKKKKKKKKKK",
+)
+
+private val PrincessPalette = mapOf(
+    'K' to Color(0xFF202030),
+    'Y' to Color(0xFFF8D030),
+    'R' to Color(0xFFE04060),
+    'H' to Color(0xFFF8D878),
+    'S' to Color(0xFFF8C898),
+    'P' to Color(0xFFF890B8),
+    'p' to Color(0xFFC85888),
+    'W' to Color(0xFFFFFFFF),
+)
+
+// 公主從城門（第 27 格）走到人物站的那一排（第 34 格），越走越近、越來越大；迎接時一格一格跳
+@Composable
+private fun Princess(p: Float, modifier: Modifier = Modifier) {
+    val q = princessWalk(p)
+    if (q <= 0.02f) return
+    BoxWithConstraints(modifier) {
+        val cell = maxWidth / 64
+        val scale = 0.55f + 0.45f * q
+        val bottom = 27f + 7f * q
+        val greeting = p in 0.25f..0.75f
+        val hop = if (greeting && ((p * 40).toInt() % 2 == 0)) 1f else 0f
+        val size = cell * 8 * scale
+        PixelArt(
+            PrincessArt,
+            PrincessPalette,
+            Modifier
+                .offset(x = cell * (PRINCESS_LEFT + 4) - size / 2, y = cell * (bottom - hop) - size)
+                .size(size),
+        )
+    }
+}
+
 // 隨機挑四個人物，各做一種小動作，一直循環
 @Composable
-private fun TitleParty(modifier: Modifier = Modifier) {
+private fun TitleParty(modifier: Modifier = Modifier, spread: Float = 0f) {
     val cast = remember { Avatar.entries.shuffled().take(4).zip(Idle.entries.shuffled()) }
     // 每個人物隨機一種稱號階級的樣子
     val tiers = remember { List(cast.size) { (0 until Avatar.TIER_COUNT).random() } }
@@ -268,7 +358,7 @@ private fun TitleParty(modifier: Modifier = Modifier) {
                 size = cell * 8,
                 tier = tiers[i],
                 modifier = Modifier
-                    .offset(x = cell * PartyColumns[i], y = cell * 26)
+                    .offset(x = cell * (PartyColumns[i] + PartySpread[i] * spread), y = cell * 26)
                     .graphicsLayer {
                         val px = cell.toPx()
                         transformOrigin = TransformOrigin(0.5f, 1f)

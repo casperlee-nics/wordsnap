@@ -35,6 +35,7 @@ import com.wordsnap.app.ui.NicknameScreen
 import com.wordsnap.app.ui.ReviewScreen
 import com.wordsnap.app.ui.SaveSlotScreen
 import com.wordsnap.app.ui.ScanScreen
+import com.wordsnap.app.ui.ScanSource
 import com.wordsnap.app.ui.TitleScreen
 import com.wordsnap.app.ui.WordListScreen
 import com.wordsnap.app.ui.WordViewModel
@@ -74,6 +75,7 @@ class MainActivity : ComponentActivity() {
 private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
     var screen by rememberSaveable { mutableStateOf(Screen.Title) }
     var battleBookId by rememberSaveable { mutableLongStateOf(-1L) }
+    var scanSource by rememberSaveable { mutableStateOf(ScanSource.Camera) }
     val backToList = { screen = Screen.List }
     val backToTitle = { screen = Screen.Title }
     val allWords by vm.allWords.collectAsState()
@@ -118,7 +120,10 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
         )
         Screen.List -> WordListScreen(
             vm,
-            onScan = { screen = Screen.Scan },
+            onScan = { source ->
+                scanSource = source
+                screen = Screen.Scan
+            },
             onReview = { screen = Screen.Review },
             onListen = { screen = Screen.Listen },
             onBattle = { bookId ->
@@ -137,7 +142,7 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
                 screen = Screen.List
             },
             onBack = backToList,
-            openCamera = true,
+            source = scanSource,
         )
         Screen.Review -> ReviewScreen(vm, onBack = backToList)
         Screen.Listen -> ListenScreen(vm, onBack = backToList)
