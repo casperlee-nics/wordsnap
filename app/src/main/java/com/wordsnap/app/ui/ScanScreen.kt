@@ -80,6 +80,9 @@ fun ScanScreen(
     var progress by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var found by remember { mutableStateOf<List<String>?>(null) }
+    // 字典查不到的字（多半是辨識錯的），收起來放在最後，要的話再點開
+    var unclear by remember { mutableStateOf<List<String>>(emptyList()) }
+    var showUnclear by remember { mutableStateOf(false) }
     val selected = remember { mutableStateListOf<String>() }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     var showAimHint by remember { mutableStateOf(false) }
@@ -88,8 +91,13 @@ fun ScanScreen(
 
     // 找到的片語排最前面，接著是單字
     suspend fun show(result: ScanResult) {
-        val phrases = WordDictionary.findPhrases(context, result.tokens)
-        found = phrases + result.words.filter { it !in phrases }
+        val phrases = (result.headPhrases + WordDictionary.findPhrases(context, result.tokens))
+            .distinctBy { it.lowercase() }
+        val words = result.words.filter { it !in phrases }
+        val unknown = WordDictionary.unknownWords(context, words)
+        found = phrases + words.filter { it !in unknown }
+        unclear = words.filter { it in unknown }
+        showUnclear = false
         scanning = false
         progress = null
     }
@@ -186,7 +194,8 @@ fun ScanScreen(
                 }
                 error != null -> Text(error!!)
                 found == null -> Text("拍一張課本或文章的照片，或打開一本古書（PDF、Excel、TXT），我會幫你找出隱藏的單字怪物。")
-                found!!.none { ' ' in it || !TextScanner.isCommon(it) } -> Text("沒有找到英文單字，換一張清楚一點的照片試試。")
+                found!!.none { ' ' in it || !TextScanner.isCommon(it) } && unclear.isEmpty() ->
+                    Text("沒有找到英文單字，換一張清楚一點的照片試試。")
                 else -> {
                     // 濾掉 the、and 這類常見字；已經收錄的字照樣列出但不能選
                     val all = found!!
@@ -194,7 +203,7 @@ fun ScanScreen(
                     val words = all.filter { ' ' in it || !TextScanner.isCommon(it) }
                     val skipped = all.size - words.size
                     val selectable = words.filter { it !in existing }
-                    val allSelected = selectable.isNotEmpty() && selected.size == selectable.size
+                    val allSelected = selectable.isNotEmpty() && selectable.all { it in selected }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("要新增的怪物", Modifier.weight(1f))
                         RetroButton(
@@ -229,6 +238,26 @@ fun ScanScreen(
                                     label = { Text(if (owned) "$word（已有）" else word) },
                                     enabled = !owned,
                                 )
+                            }
+                            // 字典查不到的字收在最後，點一下才展開
+                            if (unclear.isNotEmpty()) {
+                                TextButton(onClick = { showUnclear = !showUnclear }, modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        if (showUnclear) "收起看不清楚的字 ▲" else "還有 ${unclear.size} 個看不清楚的字（字典查不到）▼",
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
+                                }
+                                if (showUnclear) {
+                                    unclear.forEach { word ->
+                                        val owned = word in existing
+                                        FilterChip(
+                                            selected = word in selected,
+                                            onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
+                                            label = { Text(if (owned) "$word（已有）" else word) },
+                                            enabled = !owned,
+                                        )
+                                    }
+                                }
                             }
                         }
                         LurkingMonsters(Modifier.fillMaxWidth().padding(horizontal = 12.dp))

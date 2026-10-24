@@ -8,11 +8,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 
-// 離線英漢字典：ECDICT（MIT 授權）挑出最常用的 5 萬個字，事先用 OpenCC 轉成台灣繁體，放在 assets/ecdict.db
+// 離線英漢字典：ECDICT（MIT 授權）挑出最常用的 5 萬個字，加上約 2 萬個常見組合字（floor lamp、alley cat），事先用 OpenCC 轉成台灣繁體，放在 assets/ecdict.db
 // 查不到的字再交給 WordTranslator（ML Kit）翻譯
 object WordDictionary {
     // 換新版字典檔時把版本加一，App 會重新複製
-    private const val VERSION = 2
+    private const val VERSION = 3
     private const val ASSET = "ecdict.db"
 
     private val lock = Mutex()
@@ -49,8 +49,8 @@ object WordDictionary {
         }
     }
 
-    // 從照片裡依順序排的字找出片語（2 到 4 個字，例如 give up、look forward to）
-    // 變化形會換回原形：gave up → give up
+    // 從照片裡依順序排的字找出片語（2 到 4 個字，例如 give up、look forward to、floor lamp）
+    // 變化形會換回原形：gave up → give up；空字串是斷開的地方（換段落、音標），片語不會跨過去
     suspend fun findPhrases(context: Context, tokens: List<String>): List<String> {
         val database = open(context) ?: return emptyList()
         return withContext(Dispatchers.IO) {
@@ -58,7 +58,9 @@ object WordDictionary {
             for (i in tokens.indices) {
                 for (n in 4 downTo 2) {
                     if (i + n > tokens.size) continue
-                    val candidate = tokens.subList(i, i + n).joinToString(" ")
+                    val part = tokens.subList(i, i + n)
+                    if (part.any { it.isEmpty() }) continue
+                    val candidate = part.joinToString(" ")
                     val hit = database.rawQuery("SELECT 1 FROM phrases WHERE phrase = ?", arrayOf(candidate)).use { it.moveToFirst() }
                     if (hit) {
                         found += lemma(database, candidate) ?: candidate
@@ -67,6 +69,17 @@ object WordDictionary {
                 }
             }
             found.toList()
+        }
+    }
+
+    // 字典裡查不到的字（連變化形也找不到），通常是辨識錯的字；字典打不開時當作全部都查得到
+    suspend fun unknownWords(context: Context, words: List<String>): Set<String> {
+        val database = open(context) ?: return emptySet()
+        return withContext(Dispatchers.IO) {
+            words.filterTo(LinkedHashSet()) { word ->
+                val key = word.lowercase()
+                meaning(database, key) == null && lemma(database, key) == null
+            }
         }
     }
 

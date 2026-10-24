@@ -28,7 +28,7 @@ object DocumentText {
             val input = context.contentResolver.openInputStream(uri) ?: throw IllegalArgumentException("打不開這個檔案")
             input.use { if (kind == Kind.Excel) readExcel(it) else readText(it) }
         }
-        return ScanResult(TextScanner.extractWords(text), TextScanner.tokens(text))
+        return TextScanner.analyzeText(text)
     }
 
     private enum class Kind { Pdf, Excel, Text }

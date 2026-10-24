@@ -9,15 +9,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
 
-// 拍照找到的東西：words 是不重複的單字，tokens 是照原本順序排的所有字（用來找片語）
-class ScanResult(val words: List<String>, val tokens: List<String>)
+// 拍照找到的東西：words 是不重複的單字，tokens 是照原本順序排的所有字（用來找片語，空字串代表中間斷開）
+// headPhrases 是單字書裡「音標前面那幾個字」組成的片語，例如 TV stand [ˋtiˋvi] [stænd]
+class ScanResult(val words: List<String>, val tokens: List<String>, val headPhrases: List<String> = emptyList())
 
 // 用 ML Kit 從照片裡找出英文單字
 object TextScanner {
-    private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    // 用中文模型：中英文都認得，中文字不會被硬猜成 kkii、ah 這種英文字母
+    private val recognizer = TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
     private val wordPattern = Regex("[A-Za-z]+(?:['-][A-Za-z]+)*")
 
     fun scan(
@@ -32,14 +35,18 @@ object TextScanner {
             onError(e)
             return
         }
+        // 照片轉過方向時，寬高要對調才是辨識結果用的座標
+        val turned = image.rotationDegrees == 90 || image.rotationDegrees == 270
+        val width = if (turned) image.height else image.width
+        val height = if (turned) image.width else image.height
         recognizer.process(image)
-            .addOnSuccessListener { result -> onResult(ScanResult(extractWords(result.text), tokens(result.text))) }
+            .addOnSuccessListener { result -> onResult(analyze(listOf(linesOf(result, width, height)))) }
             .addOnFailureListener { e -> onError(e) }
     }
 
     // 讀取 PDF（古書）：一頁一頁畫成圖片再辨識文字，最多讀前 MAX_PDF_PAGES 頁
     suspend fun scanPdf(context: Context, uri: Uri, onPage: (Int, Int) -> Unit = { _, _ -> }): ScanResult {
-        val text = StringBuilder()
+        val pagesText = mutableListOf<List<List<Chunk>>>()
         withContext(Dispatchers.IO) {
             val file = context.contentResolver.openFileDescriptor(uri, "r")
                 ?: throw IllegalArgumentException("打不開這個檔案")
@@ -60,15 +67,42 @@ object TextScanner {
                         }
                         val result = recognizer.process(InputImage.fromBitmap(bitmap, 0)).await()
                         bitmap.recycle()
-                        text.append(result.text).append('\n')
+                        // PDF 的頁面是完整的，不會有被切掉的字
+                        pagesText += linesOf(result, 0, 0)
                     }
                 }
             }
         }
-        val all = text.toString()
-        return ScanResult(extractWords(all), tokens(all))
+        return analyze(pagesText)
     }
 
+    // 照片裡的一小段文字（以空白分開）；cut 表示碰到照片邊緣，可能只拍到一半
+    class Chunk(val text: String, val cut: Boolean = false)
+
+    // 把辨識結果整理成一行一行；每一塊文字（段落）中間插一個空行，片語不會跨過去
+    // width、height 是 0 表示不檢查邊緣
+    private fun linesOf(result: Text, width: Int, height: Int): List<List<Chunk>> {
+        val marginX = width * EDGE_MARGIN
+        val marginY = height * EDGE_MARGIN
+        val lines = mutableListOf<List<Chunk>>()
+        for (block in result.textBlocks) {
+            for (line in block.lines) {
+                lines += line.elements.map { element ->
+                    val box = element.boundingBox
+                    val cut = width > 0 && height > 0 && box != null && (
+                        box.left <= marginX || box.right >= width - marginX ||
+                            box.top <= marginY || box.bottom >= height - marginY
+                        )
+                    Chunk(element.text, cut)
+                }
+            }
+            lines += emptyList<Chunk>()
+        }
+        return lines
+    }
+
+    // 碰到照片邊緣 1.5% 以內的字，當作被切掉了
+    private const val EDGE_MARGIN = 0.015f
     private const val MAX_PDF_PAGES = 20
     private const val PDF_RENDER_WIDTH = 1600
 
@@ -90,12 +124,25 @@ object TextScanner {
 
     fun isCommon(word: String): Boolean = word in commonWords
 
-    // 音標：放在 /.../ 或 [...] 裡、中間沒有空白的一小段，例如 /ˈæp.əl/、[ˋæpḷ]
-    private val phoneticPattern = Regex("[/\\[][^/\\[\\]\\s]{1,30}[/\\]]")
-
-    // 音標才會用到的符號（æ、ð、θ、ʃ、ə、重音 ˈ、長音 ː 等）
+    // 音標才會用到的符號（æ、ð、θ、ŋ、ʃ、ə、重音 ˈ ˋ、長音 ː 等）
     private fun isPhoneticSymbol(c: Char): Boolean =
-        c == 'æ' || c == 'ð' || c == 'θ' || c in '\u0250'..'\u02FF' || c in '\u0300'..'\u036F'
+        c == 'æ' || c == 'ð' || c == 'θ' || c == 'ŋ' || c in '\u0250'..'\u02FF' || c in '\u0300'..'\u036F'
+
+    // 重音記號：音標的開頭常常是這些，辨識時也常變成 ' 或 `
+    private const val STRESS_MARKS = "`'ˋˊ´‘’ˈ"
+
+    // 音標的開頭：[ 或 /，或是被認成 l、I、| 的左括號後面接重音記號（例如 [ˋsilɪŋ] 被認成 l'silin），
+    // 或是括號不見了、直接以重音記號開頭（引號 ' ‘ 在一般文章很常見，不算）
+    private val phoneticStart = Regex("^(?:[\\[［]|/(?=\\S)|[lI|1!(\\[{][" + STRESS_MARKS + "]|[`ˋˊˈ][A-Za-z])")
+
+    // I'm、I'll 這種縮寫不是音標
+    private val contraction = Regex("^[Ii]['’](?:m|ll|ve|d|s)\\b")
+
+    private fun opensPhonetic(chunk: String): Boolean =
+        (phoneticStart.containsMatchIn(chunk) && !contraction.containsMatchIn(chunk)) || chunk.any(::isPhoneticSymbol)
+
+    private fun closesPhonetic(chunk: String): Boolean =
+        chunk.contains(']') || chunk.contains('］') || (chunk.length > 1 && chunk.endsWith('/'))
 
     // 字典裡標詞性的縮寫（n. 和 vt. 這種本來就會被略過）
     private val partOfSpeech = setOf("adj", "adv", "prep", "conj", "pron", "interj", "aux")
@@ -103,18 +150,75 @@ object TextScanner {
     // 沒有母音的不是單字（拆散的音標常變成 pl、str 這種）
     private fun hasVowel(word: String): Boolean = word.any { it in "aeiouy" }
 
-    // 照原本順序排的所有英文字（轉小寫），音標會略過
-    fun tokens(text: String): List<String> =
-        text.replace(phoneticPattern, " ")
-            .split(Regex("\\s+"))
-            // 一整段裡有音標符號就整段跳過，不拆出零碎的字母
-            .filterNot { chunk -> chunk.any(::isPhoneticSymbol) }
-            .flatMap { chunk -> wordPattern.findAll(chunk).map { it.value.lowercase() } }
+    private fun isWord(token: String): Boolean =
+        token.length >= 2 && hasVowel(token) && token !in partOfSpeech
 
-    // 只留下兩個字母以上的英文字，去掉重複；一看就不是單字的字母組合會略過
-    fun extractWords(text: String): List<String> =
-        tokens(text)
-            .filter { it.length >= 2 && hasVowel(it) && it !in partOfSpeech }
-            .distinct()
-            .toList()
+    // 整理一行一行的文字：
+    // 1. [ ] 或 / / 裡的音標整段略過，括號被認錯也盡量認出來
+    // 2. 碰到照片邊緣的字略過
+    // 3. 一行開頭的 2~4 個字後面緊接著音標，就是單字書裡的片語（TV stand、floor lamp）
+    fun analyze(pages: List<List<List<Chunk>>>): ScanResult {
+        val tokens = mutableListOf<String>()
+        val words = LinkedHashSet<String>()
+        val headPhrases = LinkedHashSet<String>()
+        for (lines in pages) {
+            for (line in lines) {
+                if (line.isEmpty()) {
+                    tokens += ""
+                    continue
+                }
+                var inPhonetic = false
+                // 這一行開頭的英文字（還沒遇到音標之前）
+                val head = mutableListOf<String>()
+                var headOpen = true
+                var headBeforePhonetic = false
+                val lineWords = mutableListOf<String>()
+                for ((index, chunk) in line.withIndex()) {
+                    val text = chunk.text
+                    if (!inPhonetic && opensPhonetic(text)) {
+                        if (headOpen && head.isNotEmpty()) headBeforePhonetic = true
+                        inPhonetic = true
+                    }
+                    if (inPhonetic || closesPhonetic(text)) {
+                        if (closesPhonetic(text)) inPhonetic = false
+                        headOpen = false
+                        tokens += ""
+                        continue
+                    }
+                    // 一行最前面的編號（1、❶，有時被認成 O 這種單一字母）略過
+                    if (index == 0 && !chunk.cut && text.length == 1) continue
+                    val found = wordPattern.findAll(text).map { it.value }.toList()
+                    if (chunk.cut || found.isEmpty()) {
+                        // 一行最前面的編號（10、⑩）不算斷開
+                        if (!(index == 0 && !chunk.cut)) headOpen = false
+                        tokens += ""
+                        continue
+                    }
+                    if (headOpen) {
+                        if (found.size == 1 && text.trimEnd(',', '.', ';', ':').length == found[0].length) head += found[0]
+                        else headOpen = false
+                    }
+                    for (w in found) {
+                        tokens += w.lowercase()
+                        lineWords += w.lowercase()
+                    }
+                }
+                tokens += ""
+                if (headBeforePhonetic && head.size in 2..4) {
+                    // 全大寫的縮寫（TV）保留大寫，其他轉小寫
+                    headPhrases += head.joinToString(" ") { if (it.length >= 2 && it.all(Char::isUpperCase)) it else it.lowercase() }
+                    // 片語裡的字不另外列出來（同一行其他地方出現的照樣列）
+                    val inHead = head.map { it.lowercase() }.toMutableList()
+                    for (w in lineWords) if (!inHead.remove(w) && isWord(w)) words += w
+                } else {
+                    for (w in lineWords) if (isWord(w)) words += w
+                }
+            }
+        }
+        return ScanResult(words.toList(), tokens, headPhrases.toList())
+    }
+
+    // 純文字（TXT、CSV、Excel）：每一行用空白分開再整理
+    fun analyzeText(text: String): ScanResult =
+        analyze(listOf(text.lines().map { line -> line.split(Regex("\\s+")).filter { it.isNotEmpty() }.map { Chunk(it) } }))
 }
