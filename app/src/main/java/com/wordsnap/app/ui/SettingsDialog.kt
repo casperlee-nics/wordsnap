@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
 import com.wordsnap.app.i18n.AppLanguage
@@ -149,7 +148,7 @@ private fun <T> OptionRow(
                     .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label(option), style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center, maxLines = 1)
+                FitText(label(option), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 4.dp))
             }
         }
     }

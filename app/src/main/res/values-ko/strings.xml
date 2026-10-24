@@ -20,7 +20,7 @@
 
     <!-- 메인 화면 -->
     <string name="menu_new">새 모험</string>
-    <string name="menu_continue">이어서 모험</string>
+    <string name="menu_continue">이어하기</string>
     <string name="menu_manage">기록 관리</string>
     <string name="menu_settings">게임 설정</string>
     <string name="help_button">게임 설명</string>
@@ -47,7 +47,7 @@
     <string name="item_smart_pill_effect">이번 문제의 정답이 바로 보이고, 정답으로 처리</string>
     <string name="item_big_potion">대형 회복약</string>
     <string name="item_big_potion_effect">HP를 절반 회복</string>
-    <string name="item_riot">마을 사람들의 반란</string>
+    <string name="item_riot">주민 폭동</string>
     <string name="item_riot_effect">마을 사람들이 몬스터에게 돌진해 HP를 1/4 더 깎음</string>
     <string name="item_elixir">성령의 약</string>
     <string name="item_elixir_effect">HP를 모두 회복</string>
@@ -72,7 +72,7 @@
     <string name="book_name_hint">예: 교과서, 토익</string>
 
     <!-- 읽기 모드 -->
-    <string name="listen_title">읽기 모드</string>
+    <string name="listen_title">듣기 모드</string>
     <string name="listen_empty">이 단어장에는 아직 단어가 없어요</string>
     <string name="listen_progress">%1$d / %2$d번째</string>
     <string name="listen_paused">일시 정지됨</string>
@@ -141,16 +141,16 @@
     <string name="story_dragon">화산의 알에서 태어난 아기 용. 날개는 아직 작지만, 내뿜는 불꽃은 한 페이지의 몬스터를 모두 태워 버린다.</string>
     <string name="story_demon">마왕군을 떠난 마족 검사. 속죄의 여행을 떠나 어둠의 힘으로 빛을 지킨다.</string>
     <string name="story_robot">고대 유적에서 깨어난 기계 병사. 기억은 텅 비어 있다. 단어를 하나 배울 때마다 시스템이 업그레이드된다.</string>
-    <string name="class_pick_suffix">, 직업을 선택하세요</string>
+    <string name="class_pick_suffix">, 직업을 고르세요</string>
 
     <!-- 게임 설명 -->
     <string name="help_title">게임 설명</string>
     <string name="help_start_title">모험 시작하기</string>
-    <string name="help_start">\'새 모험\'을 눌러 이름을 입력하고 직업을 고르세요. 모험가마다 단어장, 레벨, 아이템이 따로 있고, 나중에 \'이어서 모험\'으로 계속할 수 있어요. \'기록 관리\'에서는 이름을 바꾸거나 기록을 삭제할 수 있어요.</string>
+    <string name="help_start">\'새 모험\'을 눌러 이름을 입력하고 직업을 고르세요. 모험가마다 단어장, 레벨, 아이템이 따로 있고, 나중에 \'이어하기\'로 계속할 수 있어요. \'기록 관리\'에서는 이름을 바꾸거나 기록을 삭제할 수 있어요.</string>
     <string name="help_collect_title">단어 몬스터 모으기</string>
     <string name="help_collect">단어장에서 \'단어 추가\'를 누르세요. 직접 입력, 카메라로 숨은 몬스터 찾기, 앨범에서 몬스터 추가, 고문서(PDF, Excel, TXT 파일)의 몬스터 읽기 중에서 고를 수 있어요. 찾아낸 단어와 숙어를 누르면 단어장에 들어가고, 한국어 뜻도 자동으로 채워져요.</string>
     <string name="help_review_title">복습과 읽기</string>
-    <string name="help_review">\'복습\'은 카드를 넘기며 연습해요. 기억나면 전구, 기억나지 않으면 물음표를 누르세요. 외운 단어는 며칠 뒤에 다시 나와요. \'읽기\'는 영어와 한국어 뜻을 차례대로 자동으로 읽어 줘요. 매일 저녁 8시에 복습 알림이 와요.</string>
+    <string name="help_review">\'복습\'은 카드를 넘기며 연습해요. 기억나면 전구, 기억나지 않으면 물음표를 누르세요. 외운 단어는 며칠 뒤에 다시 나와요. \'듣기\'는 영어와 한국어 뜻을 차례대로 자동으로 읽어 줘요. 매일 저녁 8시에 복습 알림이 와요.</string>
     <string name="help_battle_title">전투</string>
     <string name="help_battle">단어장 하나에서 15개를 외우면(또는 단어장 전체를 외우면) 전투할 수 있어요. 발음을 듣고 단어 철자를 입력해서, 맞히면 몬스터를 공격하고 틀리면 HP가 줄어요. 몬스터의 HP를 0으로 만들면 물리칠 수 있고, 내 HP가 0이 되면 교회로 끌려가요. 한 번의 전투는 5~15문제이고, 두 번 맞힌 단어는 더 이상 나오지 않아요.</string>
     <string name="help_level_title">레벨, 전직, 아이템</string>
@@ -167,7 +167,7 @@
     <string name="menu_home">메인 화면으로</string>
     <string name="action_review">복습</string>
     <string name="action_review_count">복습 %1$d</string>
-    <string name="action_listen">읽기</string>
+    <string name="action_listen">듣기</string>
     <string name="action_add">단어 추가</string>
     <string name="action_battle">전투</string>
     <string name="word_count">총 %1$d개</string>
@@ -228,17 +228,17 @@
 
     <!-- 전투 -->
     <string name="battle_title">전투: %1$s</string>
-    <string name="battle_flee">도망</string>
+    <string name="battle_flee">도망치기</string>
     <string name="boss_big">대마왕</string>
     <string name="boss_mid">중간 보스</string>
     <string name="battle_boss_appears">%1$s \'%2$s\' 등장!</string>
     <string name="battle_no_words">이 단어장에는 아직 문제로 낼 단어가 없어요(3글자 이상, 외운 단어)</string>
-    <string name="battle_hero_down">%1$s 쓰러짐…</string>
+    <string name="battle_hero_down">%1$s이(가) 쓰러졌다…</string>
     <string name="battle_dragged">동료들이 당신을 교회로 끌고 갔다</string>
     <string name="battle_death_count">%1$d번째로 쓰러졌어요</string>
     <string name="battle_finisher">%1$s!</string>
-    <string name="battle_knocked">%1$s 처치!</string>
-    <string name="battle_still_standing">%1$s 아직 버티고 있다!</string>
+    <string name="battle_knocked">%1$s을(를) 쓰러뜨렸다!</string>
+    <string name="battle_still_standing">%1$s이(가) 아직 버티고 있다!</string>
     <string name="battle_still_standing_hint">몬스터의 HP를 0으로 만들어야 날려 버릴 수 있어요. 다음에 다시 도전!</string>
     <string name="battle_watch_out">조심해!</string>
     <string name="battle_items">아이템</string>
@@ -251,8 +251,8 @@
     <string name="result_win">승리!</string>
     <string name="result_lose">조금 더 연습해요</string>
     <string name="result_down_message">%1$s에게 당했어요. 교회에서 잠시 쉬고 다시 와요(%2$d번째 쓰러짐)</string>
-    <string name="result_knocked">%1$s 날려 버렸다!</string>
-    <string name="result_standing">%1$s 아직 버티고 있어요. HP를 0으로 만들어야 날려 버릴 수 있어요</string>
+    <string name="result_knocked">%1$s을(를) 날려 버렸다!</string>
+    <string name="result_standing">%1$s이(가) 아직 버티고 있어요. HP를 0으로 만들어야 날려 버릴 수 있어요</string>
     <string name="result_score">정답 %1$d / %2$d (%3$d문제 이상 통과)</string>
     <string name="result_exp">경험치 +%1$d</string>
     <string name="result_exp_boss">경험치 +%1$d (마왕 보너스 2배)</string>

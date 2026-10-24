@@ -124,7 +124,7 @@ fun SealButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modif
             .drawBehind { drawSeal() },
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = SealText, style = MaterialTheme.typography.titleMedium)
+        FitText(label, color = SealText, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 7.dp))
     }
 }
 

@@ -109,7 +109,7 @@ fun AvatarPicker(selected: Avatar, onSelect: (Avatar) -> Unit, showLabels: Boole
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PixelAvatar(item, size = 48.dp)
-                if (showLabels) Text(item.label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                if (showLabels) FitText(item.label, style = MaterialTheme.typography.labelSmall)
             }
         }
     }

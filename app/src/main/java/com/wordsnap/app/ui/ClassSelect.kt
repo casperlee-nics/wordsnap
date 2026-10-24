@@ -53,12 +53,13 @@ fun WoodSignTitle(text: String, modifier: Modifier = Modifier) {
             .drawBehind { drawWoodSign() },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
+        FitText(
             text,
             color = SignText,
             style = MaterialTheme.typography.headlineMedium.copy(
                 shadow = Shadow(PixelInk, offset = Offset(3f, 3f), blurRadius = 0f),
             ),
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
     }
 }
@@ -275,13 +276,14 @@ fun AdventureButton(label: String, onClick: () -> Unit, modifier: Modifier = Mod
             .drawBehind { drawAdventureButton(lift.toPx()) },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
+        FitText(
             label,
             color = Color(0xFFFFF0C8),
             style = MaterialTheme.typography.titleLarge.copy(
                 shadow = Shadow(PixelInk, offset = Offset(2f, 2f), blurRadius = 0f),
             ),
-            modifier = Modifier.offset(x = 10.dp + 1.5.dp - lift / 2, y = 1.5.dp - lift / 2),
+            // 左邊留給小旗子
+            modifier = Modifier.offset(x = 10.dp + 1.5.dp - lift / 2, y = 1.5.dp - lift / 2).padding(start = 30.dp, end = 20.dp),
         )
     }
 }
@@ -422,11 +424,12 @@ fun PlankButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifie
             .drawBehind { drawPlank(lift.toPx(), label.length) },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
+        FitText(
             label,
             color = PlankText,
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.offset(x = 1.5.dp - lift / 2, y = 1.5.dp - lift / 2),
+            // 兩端留給釘子
+            modifier = Modifier.offset(x = 1.5.dp - lift / 2, y = 1.5.dp - lift / 2).padding(horizontal = 18.dp),
         )
     }
 }

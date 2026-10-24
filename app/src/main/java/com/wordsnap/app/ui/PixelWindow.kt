@@ -32,7 +32,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
@@ -54,7 +53,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -104,12 +102,12 @@ fun PixelHeader(
             IconButton(onClick = onBack, modifier = Modifier.size(38.dp)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDescription, tint = theme.text)
             }
-            Text(
+            FitText(
                 title,
                 color = theme.text,
                 style = MaterialTheme.typography.titleLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Start,
+                minScale = 0.7f,
                 modifier = Modifier.padding(start = 4.dp, end = 12.dp),
             )
         }
@@ -160,11 +158,10 @@ fun PixelWindowButton(label: String, onClick: () -> Unit) {
 private fun WindowTitle(title: String) {
     // 視窗標題也是羊皮紙底、黑字
     Box(Modifier.fillMaxWidth().parchment(), contentAlignment = Alignment.Center) {
-        Text(
+        FitText(
             title,
             color = PixelInk,
             style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center,
             modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp),
         )
     }
@@ -314,12 +311,10 @@ fun RetroButton(
     textPadding: Dp = 12.dp,
 ) {
     RetroButtonFrame(onClick, modifier, enabled) { lift ->
-        Text(
+        FitText(
             label,
             color = ButtonText,
             style = textStyle,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).padding(horizontal = textPadding),
         )
     }
@@ -343,12 +338,10 @@ fun RetroButtonWithIcon(
             Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).padding(start = 12.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
+            FitText(
                 label,
                 color = ButtonText,
                 style = textStyle,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
             PixelArt(icon, palette, Modifier.padding(start = 4.dp).size(iconSize))

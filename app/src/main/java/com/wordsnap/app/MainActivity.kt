@@ -33,6 +33,7 @@ import com.wordsnap.app.i18n.withAppLanguage
 import com.wordsnap.app.reminder.ReviewReminder
 import com.wordsnap.app.ui.BattleScreen
 import com.wordsnap.app.ui.CompanySplash
+import com.wordsnap.app.ui.FitToScreen
 import com.wordsnap.app.ui.GameFrame
 import com.wordsnap.app.ui.ListenScreen
 import com.wordsnap.app.ui.NicknameScreen
@@ -67,19 +68,22 @@ class MainActivity : ComponentActivity() {
         loadTextSize(this)
 
         setContent {
+            // 小螢幕的手機把整個畫面等比例縮小
             PixelTheme {
-                // 先播公司開場動畫，跑完才進遊戲（轉螢幕不會重播）
-                var splashDone by rememberSaveable { mutableStateOf(false) }
-                if (!splashDone) {
-                    CompanySplash(onDone = { splashDone = true })
-                } else GameFrame {
-                    val vm: WordViewModel = viewModel()
-                    val profiles by vm.profiles.collectAsState()
-                    // 還在讀資料：只畫背景，避免閃一下
-                    if (profiles == null) {
-                        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {}
-                    } else {
-                        MainScreens(vm, profiles!!)
+                FitToScreen {
+                    // 先播公司開場動畫，跑完才進遊戲（轉螢幕不會重播）
+                    var splashDone by rememberSaveable { mutableStateOf(false) }
+                    if (!splashDone) {
+                        CompanySplash(onDone = { splashDone = true })
+                    } else GameFrame {
+                        val vm: WordViewModel = viewModel()
+                        val profiles by vm.profiles.collectAsState()
+                        // 還在讀資料：只畫背景，避免閃一下
+                        if (profiles == null) {
+                            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {}
+                        } else {
+                            MainScreens(vm, profiles!!)
+                        }
                     }
                 }
             }

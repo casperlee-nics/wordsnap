@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
 import com.wordsnap.app.data.Profile
@@ -137,7 +139,7 @@ private fun ClassChangeDialog(current: Avatar, level: Int, onDismiss: () -> Unit
 @Composable
 private fun StatRow(label: String, value: Int) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.width(40.dp))
+        FitText(label, Modifier.width(76.dp), textAlign = TextAlign.Start)
         Box(Modifier.weight(1f)) { Meter((value / 200f).coerceAtMost(1f), Color(0xFFE04030)) }
         Text("$value", Modifier.width(40.dp).padding(start = 8.dp))
     }
@@ -150,8 +152,8 @@ private fun Meter(fraction: Float, color: Color) {
     }
 }
 
-// 轉職按鈕：一本古典魔法書（紅色皮革封面、金色書角和鑲邊、書背兩道金環，右邊和下面露出書頁）
-// 封面中間貼著羊皮紙標籤，深棕色的「轉職」寫在淺色底上，看得清楚；上方的寶石會一閃一閃
+// 轉職按鈕：一本古典魔法書（紅色皮革封面、金色書角和鑲邊、書背兩道金環，右邊和下面露出書頁），上方的寶石會一閃一閃
+// 書下面掛一塊小木牌寫「轉職」；整個按鈕往左下偏一點，不會擠到標題列的邊
 @Composable
 private fun ClassChangeButton(onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
@@ -159,30 +161,66 @@ private fun ClassChangeButton(onClick: () -> Unit) {
     val glow by rememberInfiniteTransition(label = "gem").animateFloat(
         0f, 1f, infiniteRepeatable(tween(1600, easing = LinearEasing)), label = "glow",
     )
-    Box(
+    Column(
         Modifier
-            .size(width = 60.dp, height = 72.dp)
+            .offset(x = (-6).dp, y = 6.dp)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
             .graphicsLayer {
                 val k = if (pressed) 0.92f else 1f
                 scaleX = k
                 scaleY = k
-            }
-            .drawBehind { drawSpellBook(bright = floor(glow * 4f).toInt() % 2 == 0) },
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // 文字放在羊皮紙標籤上（標籤在書的第 6～25 格、第 12～21 格，一格 2dp）
+        // 原本 60 x 72dp 的書縮小 30%
         Box(
-            Modifier.padding(start = 12.dp, top = 24.dp).size(width = 40.dp, height = 18.dp),
+            Modifier
+                .size(width = 42.dp, height = 50.dp)
+                .drawBehind { drawSpellBook(bright = floor(glow * 4f).toInt() % 2 == 0) },
+        )
+        // 書下面的小木牌：淺色木板、木紋、深棕色字
+        Box(
+            Modifier
+                .padding(top = 2.dp)
+                .width(56.dp)
+                .height(22.dp)
+                .drawBehind { drawSmallPlank() },
             contentAlignment = Alignment.Center,
         ) {
-            Text(tr(R.string.class_change), style = MaterialTheme.typography.labelLarge, color = BookLabelInk, maxLines = 1)
+            FitText(
+                tr(R.string.class_change),
+                style = MaterialTheme.typography.labelMedium,
+                color = BookLabelInk,
+                modifier = Modifier.padding(horizontal = 5.dp),
+            )
         }
     }
 }
 
-// 魔法書一格 2dp：寬 30 格、高 36 格
+private fun DrawScope.drawSmallPlank() {
+    val px = 2.dp.toPx()
+    val w = size.width
+    val h = size.height
+    // 缺角的黑框、淺色木頭、上亮下暗、兩條木紋、兩端小釘子
+    drawRect(PixelInk, Offset(px, 0f), Size(w - px * 2, h))
+    drawRect(PixelInk, Offset(0f, px), Size(w, h - px * 2))
+    drawRect(PlankWood, Offset(px, px), Size(w - px * 2, h - px * 2))
+    drawRect(PlankLight, Offset(px, px), Size(w - px * 2, px))
+    drawRect(PlankDark, Offset(px, h - px * 2), Size(w - px * 2, px))
+    drawRect(PlankGrain, Offset(px * 4, h * 0.35f), Size(w * 0.3f, px * 0.5f))
+    drawRect(PlankGrain, Offset(w * 0.55f, h * 0.65f), Size(w * 0.3f, px * 0.5f))
+    drawRect(PlankDark, Offset(px * 2, h / 2 - px / 2), Size(px, px))
+    drawRect(PlankDark, Offset(w - px * 3, h / 2 - px / 2), Size(px, px))
+}
+
+private val PlankWood = Color(0xFFD8B078)
+private val PlankLight = Color(0xFFF0D0A0)
+private val PlankDark = Color(0xFF9A6E3C)
+private val PlankGrain = Color(0xFFB88C54)
+
+// 魔法書寬 30 格、高 36 格，一格是寬度的 1/30
 private fun DrawScope.drawSpellBook(bright: Boolean) {
-    val u = 2.dp.toPx()
+    val u = size.width / 30f
     fun cell(x: Float, y: Float, w: Float, h: Float, color: Color) =
         drawRect(color, Offset(x * u, y * u), Size(w * u, h * u))
     // 影子、露出來的書頁
@@ -215,10 +253,18 @@ private fun DrawScope.drawSpellBook(bright: Boolean) {
     cell(13f, 9f, 3f, 1f, PixelInk)
     cell(13f, 6f, 3f, 3f, if (bright) BookGem else BookGemDim)
     cell(13f, 6f, 1f, 1f, Color.White)
-    // 羊皮紙標籤
-    cell(6f, 12f, 19f, 10f, PixelInk)
-    cell(7f, 13f, 17f, 8f, BookLabel)
-    cell(7f, 20f, 17f, 1f, BookLabelShade)
+    // 封面中間的金色魔法陣徽章
+    cell(12f, 13f, 6f, 1f, BookGold)
+    cell(12f, 21f, 6f, 1f, BookGold)
+    cell(10f, 15f, 1f, 5f, BookGold)
+    cell(19f, 15f, 1f, 5f, BookGold)
+    cell(11f, 14f, 1f, 1f, BookGold)
+    cell(18f, 14f, 1f, 1f, BookGold)
+    cell(11f, 20f, 1f, 1f, BookGold)
+    cell(18f, 20f, 1f, 1f, BookGold)
+    cell(14f, 15f, 2f, 5f, BookGoldDark)
+    cell(12f, 17f, 6f, 1f, BookGoldDark)
+    cell(14f, 17f, 2f, 1f, if (bright) BookGem else BookGemDim)
     // 下方的小花紋
     cell(12f, 25f, 5f, 1f, BookGold)
     cell(14f, 24f, 1f, 3f, BookGold)
@@ -234,6 +280,4 @@ private val BookGold = Color(0xFFE8B840)
 private val BookGoldDark = Color(0xFF9A6A18)
 private val BookGem = Color(0xFF7CE8FF)
 private val BookGemDim = Color(0xFF3A90B8)
-private val BookLabel = Color(0xFFF6E6BC)
-private val BookLabelShade = Color(0xFFD8C090)
 private val BookLabelInk = Color(0xFF2A1A0A)
