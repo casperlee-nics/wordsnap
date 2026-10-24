@@ -47,7 +47,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
-import com.wordsnap.app.ui.theme.PixelGold
 import com.wordsnap.app.ui.theme.PixelInk
 import kotlin.math.PI
 import kotlin.math.cos
@@ -152,18 +151,21 @@ fun TitleScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom,
         ) {
-            // 像素風的視窗外框（和人物能力、道具欄同一種），比之前稍微往上
-            Box(Modifier.padding(bottom = 110.dp).width(230.dp).pixelWindowFrame()) {
+            // 羊皮紙紋路的選單（外圈深色木紋細框），上緣掛著纏藤蔓的木牌標題
+            Box(Modifier.padding(bottom = 110.dp).width(230.dp), contentAlignment = Alignment.TopCenter) {
                 CompositionLocalProvider(LocalContentColor provides PixelInk) {
                     Column(
-                        Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
+                        Modifier
+                            .padding(top = 30.dp)
+                            .fillMaxWidth()
+                            .parchmentCard()
+                            .padding(start = 18.dp, end = 18.dp, top = 40.dp, bottom = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Text("像素單字", style = MaterialTheme.typography.headlineMedium)
-                        RetroButton("新冒險", onNewGame, Modifier.width(176.dp))
-                        RetroButton("繼續冒險", onLoadGame, Modifier.width(176.dp), enabled = hasSaves)
-                        RetroButton("記錄管理", onManageSaves, Modifier.width(176.dp), enabled = hasSaves)
+                        PlankButton("新冒險", onNewGame, Modifier.width(176.dp))
+                        PlankButton("繼續冒險", onLoadGame, Modifier.width(176.dp), enabled = hasSaves)
+                        PlankButton("記錄管理", onManageSaves, Modifier.width(176.dp), enabled = hasSaves)
                         // 背景音樂音量：關、小、大（念單字的聲音不受影響）
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("♪ 音樂：", style = MaterialTheme.typography.bodyMedium)
@@ -175,7 +177,7 @@ fun TitleScreen(
                                         .padding(horizontal = 2.dp)
                                         .width(34.dp)
                                         .border(2.dp, if (chosen) PixelInk else Color.Transparent)
-                                        .background(if (chosen) PixelGold else Color.Transparent)
+                                        .background(if (chosen) MusicChosen else Color.Transparent)
                                         .clickable {
                                             level = option
                                             setMusicLevel(context, option)
@@ -189,6 +191,8 @@ fun TitleScreen(
                         }
                     }
                 }
+                // 木牌標題壓在選單上緣
+                WoodSignTitle("像素單字")
             }
         }
 
@@ -200,6 +204,9 @@ fun TitleScreen(
     }
     if (showHelp) HelpDialog(onDismiss = { showHelp = false })
 }
+
+// 音樂選項選中的那格：淺色木頭
+private val MusicChosen = Color(0xFFE8C894)
 
 // 連點草地時，兩下之間要在這個時間內才算連續
 private const val GRASS_TAP_GAP_MS = 800L

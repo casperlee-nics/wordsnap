@@ -46,7 +46,9 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
                 val word = vm.reviewQueue.firstOrNull()
-                if (word == null) {
+                if (vm.reviewLoading) {
+                    // 還在準備這次的字：先空著
+                } else if (word == null) {
                     Spacer(Modifier.weight(1f))
                     Text(
                         if (vm.practiceMode) "整本都練習完了！" else "今天的單字都複習完了！",
@@ -57,7 +59,8 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                     Spacer(Modifier.weight(1f))
                 } else {
                     // 卡片一出現就念英文
-                    LaunchedEffect(vm.reviewStep) { speaker.speak(word.text) }
+                    // 換到新的一張（或換了一個字）就念眼前這個字
+                    LaunchedEffect(vm.reviewStep, word.id) { speaker.speak(word.text) }
                     // 卡片和按鈕放在偏上面，下面留空間
                     Spacer(Modifier.weight(0.3f))
 

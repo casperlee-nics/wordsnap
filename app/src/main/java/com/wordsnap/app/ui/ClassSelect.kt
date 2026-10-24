@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -401,3 +402,65 @@ private val RibbonDark = Color(0xFF1E3260)
 private val RibbonGold = Color(0xFFE0B040)
 private val RibbonName = Color(0xFFFFE070)
 private val RibbonText = Color(0xFFF8F0D8)
+
+// ---------- 主畫面的木板按鈕 ----------
+
+// 淺色木板按鈕（和「確定」印章同一種木頭）：有木紋、兩端各一顆小釘子，左上亮右下暗、底下一點影子，按下去會往下沉
+@Composable
+fun PlankButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val lift = if (pressed || !enabled) 0.dp else 3.dp
+    Box(
+        modifier
+            .height(48.dp)
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+            .drawBehind { drawPlank(lift.toPx(), label.length) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            color = PlankText,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.offset(x = 1.5.dp - lift / 2, y = 1.5.dp - lift / 2),
+        )
+    }
+}
+
+private fun DrawScope.drawPlank(up: Float, seed: Int) {
+    val px = 3.dp.toPx()
+    val w = size.width - px
+    val h = size.height - px
+    if (up > 0f) drawRect(PlankShadow, Offset(px, px), Size(w, h))
+    val left = px - up
+    val top = px - up
+    drawRect(PixelInk, Offset(left + px, top), Size(w - px * 2, h))
+    drawRect(PixelInk, Offset(left, top + px), Size(w, h - px * 2))
+    drawRect(PlankWood, Offset(left + px, top + px), Size(w - px * 2, h - px * 2))
+    drawRect(PlankLight, Offset(left + px, top + px), Size(w - px * 2, px))
+    drawRect(PlankLight, Offset(left + px, top + px), Size(px, h - px * 2))
+    drawRect(PlankDark, Offset(left + px, top + h - px * 2), Size(w - px * 2, px))
+    drawRect(PlankDark, Offset(left + w - px * 2, top + px), Size(px, h - px * 2))
+    // 木紋：每顆按鈕的紋路不太一樣
+    val random = java.util.Random(seed * 31L + 7)
+    var x = left + px * 6
+    while (x < left + w - px * 10) {
+        val y = top + px * (2 + random.nextInt(((h / px).toInt() - 4).coerceAtLeast(1)))
+        val len = px * (2 + random.nextInt(4))
+        drawRect(PlankGrain, Offset(x, y), Size(len, px * 0.5f))
+        x += len + px * (2 + random.nextInt(4))
+    }
+    // 兩端的小釘子
+    for (nx in listOf(left + px * 3, left + w - px * 4.5f)) {
+        drawRect(PlankNail, Offset(nx, top + h / 2 - px * 0.75f), Size(px * 1.5f, px * 1.5f))
+    }
+}
+
+private val PlankWood = Color(0xFFC89A62)
+private val PlankLight = Color(0xFFE8C894)
+private val PlankDark = Color(0xFF8C6238)
+private val PlankGrain = Color(0xFFA87A48)
+private val PlankNail = Color(0xFF5A3A1C)
+private val PlankShadow = Color(0xFF3A2410)
+private val PlankText = Color(0xFF3A2410)

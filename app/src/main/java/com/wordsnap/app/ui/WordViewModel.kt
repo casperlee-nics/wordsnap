@@ -454,10 +454,17 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     var practiceMode by mutableStateOf(false)
         private set
 
+    // 正在準備這次要複習的字（還沒準備好時畫面先空著，不會顯示上一次剩下的字）
+    var reviewLoading by mutableStateOf(false)
+        private set
+
     // 有該複習（沒記住）的字就只考那些；全部都記住了，就把整本隨機考一遍
     fun startReview() {
         val pid = profileId ?: return
         reviewedCount = 0
+        // 先清掉上一次複習剩下的字，免得一進來念到上一次的最後一個字
+        reviewQueue = emptyList()
+        reviewLoading = true
         viewModelScope.launch {
             val bookId = selectedBookId.value
             val due = dao.getDue(pid, System.currentTimeMillis())
@@ -469,6 +476,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 allWords.value.filter { bookId == null || it.bookId == bookId }.shuffled()
             }
+            reviewLoading = false
         }
     }
 
