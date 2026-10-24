@@ -3,6 +3,7 @@ package com.wordsnap.app.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -43,22 +44,23 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
             Column(
                 Modifier.fillMaxWidth().weight(1f).padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
                 val word = vm.reviewQueue.firstOrNull()
                 if (word == null) {
+                    Spacer(Modifier.weight(1f))
                     Text(
                         if (vm.practiceMode) "整本都練習完了！" else "今天的單字都複習完了！",
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     if (vm.reviewedCount > 0) Text("這次記住了 ${vm.reviewedCount} 個字")
                     Button(onClick = onBack) { Text("回單字本") }
+                    Spacer(Modifier.weight(1f))
                 } else {
                     // 卡片一出現就念英文
                     LaunchedEffect(vm.reviewStep) { speaker.speak(word.text) }
-                    if (vm.practiceMode) {
-                        Text("今天的字都記住了，隨機再練一次", style = MaterialTheme.typography.bodySmall)
-                    }
+                    // 卡片和按鈕放在偏上面，下面留空間
+                    Spacer(Modifier.weight(0.3f))
 
                     // 像遊戲對話框的卡片：英文和中文意思一起顯示
                     PixelSurface(
@@ -107,6 +109,11 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                             color = PixelGold,
                             palette = ColorIconPalette,
                         )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    // 隨機練習的提示放在最下面
+                    if (vm.practiceMode) {
+                        Text("今天的字都記住了，隨機再練一次", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }

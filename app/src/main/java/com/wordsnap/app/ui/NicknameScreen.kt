@@ -64,7 +64,6 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
                     )
                 }
                 Text("像素單字", style = MaterialTheme.typography.displaySmall)
-                Text("冒險者，請輸入你的暱稱", style = MaterialTheme.typography.titleMedium)
                 // 在羊皮書卷上寫暱稱，右邊蓋章確認（按鈕在旁邊，鍵盤跳出來也不會被擋住）
                 ScrollNameInput(
                     value = name,
@@ -72,6 +71,7 @@ fun NicknameScreen(onStart: (String, Avatar) -> Unit) {
                     placeholder = "寫下你的暱稱",
                     onConfirm = { pickingAvatar = true },
                 )
+                Text("冒險者，請輸入你的暱稱", style = MaterialTheme.typography.titleMedium)
             } else {
                 PixelAvatar(avatar, size = 120.dp)
                 Text("${name.trim()}，選一個你的角色", style = MaterialTheme.typography.titleMedium)

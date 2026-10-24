@@ -130,6 +130,13 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var bonusHits by remember { mutableIntStateOf(0) }
     var itemUse by remember { mutableStateOf<ItemUse?>(null) }
     var showBag by remember { mutableStateOf(false) }
+    // 防護盾、混亂藥劑還剩幾回合
+    var shieldTurns by remember { mutableIntStateOf(0) }
+    var confuseTurns by remember { mutableIntStateOf(0) }
+    // 怪物出手的次數（擋下的也算）、最後一次有沒有被盾擋下、怪物混亂打自己的次數
+    var monsterAttacks by remember { mutableIntStateOf(0) }
+    var lastBlocked by remember { mutableStateOf(false) }
+    var selfHits by remember { mutableIntStateOf(0) }
     // 念單字的前後 0.5 秒把背景音樂調小聲
     var quiet by remember { mutableStateOf(false) }
     var sayJob by remember { mutableStateOf<Job?>(null) }
@@ -184,6 +191,12 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
+    // 每答完一題，防護盾和混亂藥劑少一回合
+    fun endRound() {
+        if (shieldTurns > 0) shieldTurns--
+        if (confuseTurns > 0) confuseTurns--
+    }
+
     fun submit() {
         if (!answering || input.isBlank() || word == null) return
         // 要拼出整個單字
@@ -193,8 +206,25 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             correct++
         } else {
             wrong.add(word)
-            damage += WRONG_DAMAGE
+            when {
+                // 混亂：怪物打到自己，自己扣血
+                confuseTurns > 0 -> {
+                    bonus++
+                    selfHits++
+                }
+                // 防護盾：怪物照樣攻擊，但被盾擋下不扣血
+                shieldTurns > 0 -> {
+                    lastBlocked = true
+                    monsterAttacks++
+                }
+                else -> {
+                    lastBlocked = false
+                    monsterAttacks++
+                    damage += WRONG_DAMAGE
+                }
+            }
         }
+        endRound()
     }
 
     fun next() {
@@ -220,7 +250,10 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 input = answer
                 result = true
                 correct++
+                endRound()
             }
+            type == ItemType.Shield -> shieldTurns = ITEM_TURNS
+            type == ItemType.Confusion -> confuseTurns = ITEM_TURNS
             else -> {
                 bonus += type.monsterDamage(total)
                 bonusHits++
@@ -280,7 +313,11 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     finisher = race.finisher,
                     hits = correct,
                     bonusHits = bonusHits,
-                    attacks = wrong.size,
+                    attacks = monsterAttacks,
+                    lastBlocked = lastBlocked,
+                    selfHits = selfHits,
+                    shielded = shieldTurns > 0 || (lastBlocked && result == false),
+                    confused = confuseTurns > 0,
                     monsterHp = monsterHp,
                     monsterMax = total,
                     heroHp = heroHp,
@@ -326,18 +363,27 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                         Text("把怪物的血打光才能把牠打飛，下次再來")
                     }
                     !introDone -> Text("小心！", style = MaterialTheme.typography.titleMedium)
-                    word != null -> Question(
-                        answer = answer,
-                        meaning = word.meaning,
-                        input = input,
-                        onInput = { if (result == null) input = it.filterNot { c -> c == '\n' } },
-                        result = result,
-                        onListen = ::sayWord,
-                        onSubmit = ::submit,
-                        onNext = ::nextRound,
-                        onBag = { showBag = true },
-                        bagEnabled = answering,
-                    )
+                    word != null -> {
+                        val status = listOfNotNull(
+                            if (shieldTurns > 0) "防護盾還有 $shieldTurns 回合" else null,
+                            if (confuseTurns > 0) "怪物混亂中，還有 $confuseTurns 回合" else null,
+                        )
+                        if (status.isNotEmpty()) {
+                            Text(status.joinToString("・"), style = MaterialTheme.typography.bodyMedium, color = Color(0xFF3A58C8))
+                        }
+                        Question(
+                            answer = answer,
+                            meaning = word.meaning,
+                            input = input,
+                            onInput = { if (result == null) input = it.filterNot { c -> c == '\n' } },
+                            result = result,
+                            onListen = ::sayWord,
+                            onSubmit = ::submit,
+                            onNext = ::nextRound,
+                            onBag = { showBag = true },
+                            bagEnabled = answering,
+                        )
+                    }
                 }
             }
         }
@@ -347,7 +393,13 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         ItemBagDialog(
             counts = items,
             onDismiss = { showBag = false },
-            canUse = { type -> answering && (type.heal == 0 || damage > 0) },
+            canUse = { type ->
+                answering && when (type) {
+                    ItemType.Shield -> shieldTurns == 0
+                    ItemType.Confusion -> confuseTurns == 0
+                    else -> type.heal == 0 || damage > 0
+                }
+            },
             onUse = ::useItem,
         )
     }
@@ -463,6 +515,10 @@ private fun BattleField(
     hits: Int,
     bonusHits: Int,
     attacks: Int,
+    lastBlocked: Boolean,
+    selfHits: Int,
+    shielded: Boolean,
+    confused: Boolean,
     monsterHp: Int,
     monsterMax: Int,
     heroHp: Int,
@@ -545,6 +601,8 @@ private fun BattleField(
         val lunge = remember { Animatable(0f) }
         val heroShake = remember { Animatable(0f) }
         val heroFlash = remember { Animatable(0f) }
+        val blocked by rememberUpdatedState(lastBlocked)
+        val block = remember { Animatable(0f) }
         LaunchedEffect(attacks) {
             if (attacks == 0) return@LaunchedEffect
             launch {
@@ -557,6 +615,12 @@ private fun BattleField(
                 })
             }
             delay(260)
+            // 被防護盾擋下：光罩亮一下，人物不閃也不晃
+            if (blocked) {
+                block.snapTo(1f)
+                block.animateTo(0f, tween(600))
+                return@LaunchedEffect
+            }
             launch {
                 heroFlash.snapTo(1f)
                 heroFlash.animateTo(0f, tween(600))
@@ -569,6 +633,30 @@ private fun BattleField(
                 4f at 300
             })
         }
+
+        // 混亂打自己：怪物原地轉一圈，再被自己打到晃一下
+        val selfSpin = remember { Animatable(0f) }
+        LaunchedEffect(selfHits) {
+            if (selfHits == 0) return@LaunchedEffect
+            selfSpin.snapTo(0f)
+            selfSpin.animateTo(1f, tween(500, easing = LinearEasing))
+            selfSpin.snapTo(0f)
+            launch {
+                flash.snapTo(1f)
+                flash.animateTo(0f, tween(450))
+            }
+            shake.animateTo(0f, keyframes {
+                durationMillis = 360
+                10f at 60
+                -10f at 120
+                7f at 180
+                -5f at 260
+            })
+        }
+        // 混亂星星一直繞圈
+        val spinClock by idle.animateFloat(
+            0f, 1f, infiniteRepeatable(tween(1200, easing = LinearEasing)), label = "stars",
+        )
 
         // 擊倒：前半段是招式特效，後半段怪物飛走
         val ko = remember { Animatable(0f) }
@@ -601,6 +689,7 @@ private fun BattleField(
                 ItemType.Riot -> 1600
                 ItemType.Elixir -> 1600
                 ItemType.SmartPill -> 1400
+                ItemType.Catapult -> 1200
                 else -> 1100
             }
             itemAnim.animateTo(1f, tween(duration, easing = LinearEasing))
@@ -684,7 +773,8 @@ private fun BattleField(
                                     translationX = shake.value.dp.toPx() + lunge.value.dp.toPx() + move.dx.dp.toPx()
                                     translationY = -bob * 4.dp.toPx() + move.dy.dp.toPx() -
                                         (1f - drop) * (artH + 160.dp).toPx()
-                                    rotationZ = move.rotation
+                                    // 混亂打自己時一格一格轉一圈
+                                    rotationZ = move.rotation + floor(selfSpin.value * 8f) * 45f
                                     scaleX = move.scale * (1f + 0.04f * bob)
                                     scaleY = move.scale * (1f - 0.04f * bob) * squash
                                     alpha = if (drop <= 0f) 0f else move.alpha * (1f - 0.7f * flash.value)
@@ -729,7 +819,16 @@ private fun BattleField(
                         ItemType.SmartPill -> drawBulb(t, heroCenter, HeroSize.toPx())
                         ItemType.Angel -> drawAngels(t, monsterCenter)
                         ItemType.Riot -> drawRiot(t, ground)
+                        ItemType.Catapult -> drawCatapult(t, ground, monsterCenter)
+                        ItemType.Shield, ItemType.Confusion -> Unit
                     }
+                }
+                // 防護盾的光罩、怪物混亂的星星
+                if (shielded || block.value > 0f) {
+                    drawShieldBubble(heroCenter, HeroSize.toPx(), bob, block.value)
+                }
+                if (confused && !knockout) {
+                    drawConfusionStars(monsterCenter, artH.toPx(), spinClock)
                 }
                 // 魔王出場：畫面一閃一閃的紅光
                 if (ip < 0.9f) {

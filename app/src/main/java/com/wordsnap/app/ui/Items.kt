@@ -21,11 +21,16 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.ui.theme.PixelInk
 import kotlin.math.PI
+import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.random.Random
+
+// 防護盾、混亂藥劑持續幾回合
+const val ITEM_TURNS = 3
 
 // 戰鬥道具：勝利時有一半機率掉寶箱，寶箱裡依機率抽一個道具（weight 加起來是 100）
 // 玩家 HP 是 10 格，每答錯一題扣 2 格（1/5）
@@ -35,12 +40,15 @@ const val WRONG_DAMAGE = 2
 const val CHEST_CHANCE = 0.5f
 
 enum class ItemType(val label: String, val effect: String, val weight: Int, val icon: List<String>) {
-    SmallPotion("小回復劑", "回復 1/5 的 HP", 30, IconSmallPotion),
-    SmartPill("聰明藥", "這題直接顯示答案，算答對", 30, IconSmartPill),
-    BigPotion("大回復劑", "回復一半的 HP", 15, IconBigPotion),
-    Riot("村民暴動", "村民衝過怪物，怪物多扣 1/4 的血", 15, IconHorn),
-    Elixir("聖靈藥", "HP 全部回滿", 5, IconElixir),
-    Angel("天使召喚", "天使從天而降，怪物多扣一半的血", 5, IconBell);
+    SmallPotion("小回復劑", "回復 1/5 的 HP", 18, IconSmallPotion),
+    SmartPill("聰明藥", "這題直接顯示答案，算答對", 15, IconSmartPill),
+    BigPotion("大回復劑", "回復一半的 HP", 10, IconBigPotion),
+    Riot("村民暴動", "村民衝過怪物，怪物多扣 1/4 的血", 7, IconHorn),
+    Elixir("聖靈藥", "HP 全部回滿", 2, IconElixir),
+    Angel("天使召喚", "天使從天而降，怪物多扣一半的血", 3, IconBell),
+    Shield("防護盾", "接下來 3 回合答錯，被攻擊也不會扣血", 15, IconShield),
+    Confusion("混亂藥劑", "接下來 3 回合答錯，怪物會混亂打自己、自己扣血", 15, IconConfusion),
+    Catapult("召喚投石車", "投石車丟大石頭，怪物多扣 1/3 的血", 15, IconCatapult);
 
     // 回復多少 HP（不是回復道具就是 0）
     val heal: Int
@@ -54,6 +62,7 @@ enum class ItemType(val label: String, val effect: String, val weight: Int, val 
     // 讓怪物多扣多少血（總題數的幾分之幾，至少 1）
     fun monsterDamage(total: Int): Int = when (this) {
         Riot -> maxOf(1, (total + 3) / 4)
+        Catapult -> maxOf(1, (total + 2) / 3)
         Angel -> maxOf(1, (total + 1) / 2)
         else -> 0
     }
@@ -78,6 +87,68 @@ val ItemPalette = ColorIconPalette + mapOf(
     'D' to Color(0xFFA06030),
     'A' to Color(0xFFF8F0A0),
     'G' to Color(0xFF40A048),
+    'P' to Color(0xFF9058D0),
+    'p' to Color(0xFFC8A0F0),
+)
+
+// 防護盾：藍色盾牌、金色鑲邊、中間白色十字
+private val IconShield = listOf(
+    "................",
+    "..KKKKKKKKKKKK..",
+    "..KYYYYYYYYYYK..",
+    "..KYBBBWWBBBYK..",
+    "..KYBBBWWBBBYK..",
+    "..KYBWWWWWWBYK..",
+    "..KYBWWWWWWBYK..",
+    "..KYBBBWWBBBYK..",
+    "..KYLBBWWBBBYK..",
+    "...KYLBWWBBYK...",
+    "...KYBBBBBBYK...",
+    "....KYBBBBYK....",
+    ".....KYBBYK.....",
+    "......KYYK......",
+    ".......KK.......",
+    "................",
+)
+
+// 混亂藥劑：紫色圓瓶，裡面有漩渦
+private val IconConfusion = listOf(
+    "................",
+    "......KKKK......",
+    "......KDDK......",
+    "......KKKK......",
+    ".......KLK......",
+    ".......KLK......",
+    ".....KKPPKK.....",
+    "....KPPPPPPK....",
+    "...KPpppppPPK...",
+    "...KPpPPPpPPK...",
+    "...KPpPpPpPPK...",
+    "...KPpPppPPPK...",
+    "...KPPPPPPPPK...",
+    "....KPPPPPPK....",
+    ".....KKKKKK.....",
+    "................",
+)
+
+// 投石車：木頭架子、長長的投臂，勺子裡放著大石頭
+private val IconCatapult = listOf(
+    "................",
+    "..KKK...........",
+    ".KMMMK..........",
+    ".KMmMK..........",
+    "..KKKDK.........",
+    "......DK........",
+    ".......DK.......",
+    "........DK......",
+    ".....KK..DK.....",
+    ".....KHK..DK....",
+    "....KHHHKKDDK...",
+    "...KHHKHHHHHHK..",
+    "..KKKKKKKKKKKKK.",
+    "..KHHHHHHHHHHHK.",
+    "..KMK......KMK..",
+    "...K........K...",
 )
 
 // IconSmallPotion
@@ -405,5 +476,96 @@ fun DrawScope.drawRiot(t: Float, groundY: Float) {
     for (k in 0 until 10) {
         val x = (size.width + w * 8) * t - k * w * 0.7f - w
         drawRect(Color(0xFFD0B080).copy(alpha = 0.6f), Offset(x, groundY - cell * (1 + k % 3)), Size(cell * 2, cell * 2))
+    }
+}
+
+// 投石車的樣子：左邊木架、右邊轉軸，投臂由 drawCatapult 另外畫
+private val CatapultBase = listOf(
+    "....KK......",
+    "...KdeK.....",
+    "..KdKKeK....",
+    ".KdK..KeK...",
+    "KKKKKKKKKKKK",
+    "KddddddddddK",
+    "KKKKKKKKKKKK",
+    ".KmK....KmK.",
+    ".KKK....KKK.",
+)
+
+// 召喚投石車：投石車從左邊推出來，投臂甩起來把大石頭丟到怪物頭上，碰的一聲碎石飛濺
+fun DrawScope.drawCatapult(t: Float, groundY: Float, monster: Offset) {
+    val cell = 3.dp.toPx()
+    val baseW = CatapultBase.first().length * cell
+    val baseH = CatapultBase.size * cell
+    // 前 0.2 推進畫面，最後 0.15 退出去
+    val enter = (t / 0.2f).coerceIn(0f, 1f)
+    val exit = ((t - 0.85f) / 0.15f).coerceIn(0f, 1f)
+    val left = -baseW + (baseW + cell * 4) * enter - (baseW + cell * 4) * exit
+    val top = groundY - baseH
+    drawSprite(CatapultBase, left, top, cell)
+    // 投臂：從轉軸往左後方斜躺，0.2～0.35 秒一格一格甩到直立
+    val pivot = Offset(left + cell * 4.5f, top + cell * 1f)
+    val swing = ((t - 0.2f) / 0.15f).coerceIn(0f, 1f)
+    val angle = (-150f + 90f * floor(swing * 4f) / 4f) * PI.toFloat() / 180f
+    val armLen = cell * 9
+    val tip = Offset(pivot.x + kotlin.math.cos(angle) * armLen, pivot.y + sin(angle) * armLen)
+    drawLine(Color(0xFF202030), pivot, tip, cell * 1.8f)
+    drawLine(Color(0xFFC08848), pivot, tip, cell)
+    // 大石頭：還沒丟出去時放在投臂尾端，0.35～0.75 秒沿著拋物線飛向怪物
+    val fly = ((t - 0.35f) / 0.4f).coerceIn(0f, 1f)
+    val rock = cell * 3.5f
+    if (t < 0.75f) {
+        val start = tip
+        val x = start.x + (monster.x - start.x) * fly
+        val arc = 4f * fly * (1f - fly) * 90.dp.toPx()
+        val y = start.y + (monster.y - start.y) * fly - arc
+        drawCircle(Color(0xFF202030), rock + cell * 0.6f, Offset(x, y))
+        drawCircle(Color(0xFF8A8478), rock, Offset(x, y))
+        drawRect(Color(0xFFB8B0A0), Offset(x - rock * 0.5f, y - rock * 0.5f), Size(cell, cell))
+    }
+    // 打中：碎石往四面飛
+    if (t >= 0.75f) {
+        val f = ((t - 0.75f) / 0.25f).coerceIn(0f, 1f)
+        drawCircle(Color(0xFFF8E8A0).copy(alpha = (1f - f) * 0.7f), 40.dp.toPx() * f + 8.dp.toPx(), monster)
+        for (k in 0 until 10) {
+            val a = k * PI.toFloat() / 5 + 0.3f
+            val r = 60.dp.toPx() * f
+            val drop = f * f * 30.dp.toPx()
+            drawRect(
+                (if (k % 2 == 0) Color(0xFF8A8478) else Color(0xFFB8B0A0)).copy(alpha = 1f - f),
+                Offset(monster.x + kotlin.math.cos(a) * r, monster.y + sin(a) * r + drop),
+                Size(cell * 2, cell * 2),
+            )
+        }
+    }
+}
+
+// 防護盾：人物身上一層淡藍色的光罩；擋住攻擊的瞬間（block 從 1 變 0）會亮一下並冒出六角形碎光
+fun DrawScope.drawShieldBubble(hero: Offset, heroSize: Float, pulse: Float, block: Float) {
+    val r = heroSize * 0.75f
+    drawCircle(Color(0xFF90D0F8).copy(alpha = 0.18f + 0.1f * pulse + 0.5f * block), r, hero)
+    drawCircle(Color(0xFFE8F8FF).copy(alpha = 0.55f + 0.4f * block), r, hero, style = Stroke(3.dp.toPx()))
+    if (block > 0f) {
+        val cell = 3.dp.toPx()
+        for (k in 0 until 6) {
+            val a = k * PI.toFloat() / 3
+            val d = r + (1f - block) * 20.dp.toPx()
+            drawRect(Color.White.copy(alpha = block), Offset(hero.x + kotlin.math.cos(a) * d, hero.y + sin(a) * d), Size(cell, cell))
+        }
+    }
+}
+
+// 混亂：怪物頭上有星星一格一格繞圈圈
+fun DrawScope.drawConfusionStars(monster: Offset, monsterHeight: Float, t: Float) {
+    val cell = 3.dp.toPx()
+    val center = Offset(monster.x, monster.y - monsterHeight / 2 - cell * 3)
+    for (k in 0 until 3) {
+        // 每 1/8 圈跳一格，像像素遊戲
+        val step = floor((t * 8f + k * 8f / 3f)) / 8f
+        val a = step * 2 * PI.toFloat()
+        val p = Offset(center.x + kotlin.math.cos(a) * cell * 6, center.y + sin(a) * cell * 2)
+        val color = if (k == 1) Color(0xFFC8A0F0) else Color(0xFFF8D030)
+        drawRect(color, Offset(p.x - cell / 2, p.y - cell * 1.5f), Size(cell, cell * 3))
+        drawRect(color, Offset(p.x - cell * 1.5f, p.y - cell / 2), Size(cell * 3, cell))
     }
 }

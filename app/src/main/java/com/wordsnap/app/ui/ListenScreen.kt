@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -66,7 +67,8 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
             Column(
                 Modifier.fillMaxWidth().weight(1f).padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
+                // 比正中間再偏上一點
+                verticalArrangement = Arrangement.spacedBy(20.dp, BiasAlignment.Vertical(-0.45f)),
             ) {
                 if (word == null) {
                     Text("這本單字簿還沒有單字")

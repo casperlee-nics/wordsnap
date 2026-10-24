@@ -146,10 +146,10 @@ fun PixelWindowDialog(
     }
 }
 
-// 有像素外框的小按鈕，像遊戲選單裡的「▶ 關閉」
+// 有像素外框的小按鈕，像遊戲選單裡的「關閉」
 @Composable
 fun PixelWindowButton(label: String, onClick: () -> Unit) {
-    RetroButton("▶ $label", onClick, textStyle = MaterialTheme.typography.bodyMedium)
+    RetroButton(label, onClick, textStyle = MaterialTheme.typography.bodyMedium)
 }
 
 @Composable

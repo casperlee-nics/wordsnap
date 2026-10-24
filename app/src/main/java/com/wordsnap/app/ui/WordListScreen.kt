@@ -33,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -105,13 +104,7 @@ fun WordListScreen(
                             Modifier.clickable { showMenu = true },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            // 人物放進一個小肖像框裡，不會和羊皮紙的紋路混在一起
-                            Box(
-                                Modifier.size(54.dp).pixelFrame(PortraitBackground, accent = PortraitWood, unit = 2.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                PixelAvatar(Avatar.from(profile?.avatar), size = 42.dp, tier = avatarTier(levelInfo(profile?.exp ?: 0).level))
-                            }
+                            PixelAvatar(Avatar.from(profile?.avatar), size = 48.dp, tier = avatarTier(levelInfo(profile?.exp ?: 0).level))
                             Column(Modifier.padding(start = 6.dp)) {
                                 Text(
                                     profile?.name ?: "",
@@ -382,6 +375,3 @@ private fun AddChoice(icon: List<String>, text: String, onClick: () -> Unit) {
     }
 }
 
-// 單字簿左上角人物肖像框的顏色
-private val PortraitBackground = Color(0xFF9CC8E8)
-private val PortraitWood = Color(0xFF7A4E28)
