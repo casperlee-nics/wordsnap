@@ -227,6 +227,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var prisonBreak by remember { mutableIntStateOf(0) }
     // 羅馬競技場彩蛋：觀眾丟石頭的次數（每場一次）
     var stonesThrown by remember { mutableIntStateOf(0) }
+    // 墓園彩蛋：殭屍爬出來幾次（每場一次）、這次打人物還是怪物
+    var zombieRises by remember { mutableIntStateOf(0) }
+    var zombieOnHero by remember { mutableStateOf(false) }
     var showBag by remember { mutableStateOf(false) }
     // 防護盾、混亂藥劑還剩幾回合
     var shieldTurns by remember { mutableIntStateOf(0) }
@@ -628,6 +631,21 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         hitMonster(1, STONE_HIT_AT)
     }
 
+    // 墓園彩蛋：殭屍隨機打人物或怪物 1 格血（每場一次；人物至少留 1 點血）
+    fun zombieAttack() {
+        if (!answering || zombieRises > 0) return
+        zombieOnHero = Random.nextBoolean()
+        zombieRises++
+        if (zombieOnHero) {
+            scope.launch {
+                delay(ZOMBIE_HIT_AT.toLong())
+                damage = (damage + WRONG_DAMAGE).coerceAtMost(HERO_MAX_HP - 1)
+            }
+        } else {
+            hitMonster(1, ZOMBIE_HIT_AT)
+        }
+    }
+
     // 效果還在、要一直畫在戰場上的招式（光芒、醫生、樂團、跟班…）
     fun lastingActive(skill: Skill): Boolean = when {
         skill == boostSkill -> boostTurns > 0
@@ -635,7 +653,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         skill == Skill.DarkMist -> dodgeTurns > 0
         skill == Skill.StolenWatch -> timeStopTurns > 0
         skill == Skill.AncientTome || skill == Skill.ElderBlessing -> hintTurns > 0
-        skill == Skill.TreantGrip -> stunTurns > 0
+        skill == Skill.TreantGrip || skill == Skill.IceArrow -> stunTurns > 0
         skill == Skill.CatOrchestra || skill == Skill.UltimateArmor || skill == Skill.CutestCat -> !finished
         else -> false
     }
@@ -737,6 +755,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     onPrisonDoor = { openPrisonDoor() },
                     stones = stonesThrown,
                     onStones = { stoneRain() },
+                    zombie = zombieRises,
+                    zombieOnHero = zombieOnHero,
+                    onZombie = { zombieAttack() },
                     remaining = if (introDone && !finished && word != null) total - index else null,
                     skillUse = skillUse,
                     cheering = cheerTurns > 0,
@@ -978,6 +999,9 @@ private fun BattleField(
     onPrisonDoor: () -> Unit = {},
     stones: Int = 0,
     onStones: () -> Unit = {},
+    zombie: Int = 0,
+    zombieOnHero: Boolean = false,
+    onZombie: () -> Unit = {},
     // 這場還剩幾題（左上角的小字）
     remaining: Int? = null,
     skillUse: SkillUse? = null,
@@ -1183,6 +1207,7 @@ private fun BattleField(
         }
         val doorTap by rememberUpdatedState(onPrisonDoor)
         val stonesTap by rememberUpdatedState(onStones)
+        val zombieTap by rememberUpdatedState(onZombie)
         // 海豚：點的位置（0..1）和跳了幾次；雪人堆好就一直在
         var dolphinX by remember { mutableStateOf<Float?>(null) }
         var dolphinJumps by remember { mutableIntStateOf(0) }
@@ -1200,6 +1225,22 @@ private fun BattleField(
             stoneAnim.snapTo(0f)
             stoneAnim.animateTo(1f, tween(STONE_DURATION, easing = LinearEasing))
             stoneAnim.snapTo(0f)
+        }
+        // 月球的飛碟（每點三下飛一台）、墓園的殭屍
+        var ufoFlights by remember { mutableIntStateOf(0) }
+        val ufo = remember { Animatable(0f) }
+        LaunchedEffect(ufoFlights) {
+            if (ufoFlights == 0) return@LaunchedEffect
+            ufo.snapTo(0f)
+            ufo.animateTo(1f, tween(UFO_DURATION, easing = LinearEasing))
+            ufo.snapTo(0f)
+        }
+        val zombieAnim = remember { Animatable(0f) }
+        LaunchedEffect(zombie) {
+            if (zombie == 0) return@LaunchedEffect
+            zombieAnim.snapTo(0f)
+            zombieAnim.animateTo(1f, tween(ZOMBIE_DURATION, easing = LinearEasing))
+            zombieAnim.snapTo(0f)
         }
 
         // 技能動畫
@@ -1312,7 +1353,8 @@ private fun BattleField(
         // 巨斧落下時怪物被壓扁
         val squash = if (finisher == Finisher.Smash && effect in 0.6f..1f && fly == 0f) 0.45f else 1f
 
-        // 場景彩蛋（只有一般怪物的戰場才有自己的場景）：監獄鐵門點兩下、船上的海面點兩下、競技場觀眾席點三下、雪地中間點三下
+        // 場景彩蛋（只有一般怪物的戰場才有自己的場景）：監獄鐵門點兩下、船上的海面點兩下、競技場觀眾席點三下、雪地中間點三下、
+        // 月球的星球點三下、墓園中間的墓碑點三下
         val eggScene = monster.rank == MonsterRank.Normal && scene in SceneEggScenes
         val eggTap by rememberUpdatedState<(SceneEgg, Float) -> Unit>({ egg, x ->
             when (egg) {
@@ -1323,6 +1365,8 @@ private fun BattleField(
                 }
                 SceneEgg.Stones -> stonesTap()
                 SceneEgg.Snowman -> if (snowmanX == null) snowmanX = x
+                SceneEgg.Ufo -> if (ufo.value == 0f) ufoFlights++
+                SceneEgg.Zombie -> zombieTap()
             }
         })
         Box(
@@ -1473,10 +1517,14 @@ private fun BattleField(
                 }
                 if (doctorLeave.value > 0f) drawDoctorLeave(doctorLeave.value, monsterCenter, artH.toPx(), ground)
                 if (treantLeave.value > 0f) drawTreantLeave(treantLeave.value, monsterCenter, artH.toPx(), ground)
-                // 場景彩蛋：海豚跳出海面、雪人、觀眾丟石頭
+                // 場景彩蛋：海豚跳出海面、雪人、觀眾丟石頭、飛碟、殭屍
                 dolphinX?.let { if (dolphin.value > 0f) drawDolphinJump(dolphin.value, it * size.width, size.height * DOLPHIN_SEA_Y) }
                 snowmanX?.let { drawSnowman(it * size.width, ground, spinClock) }
                 if (stoneAnim.value > 0f) drawStoneRain(stoneAnim.value, heroCenter, monsterCenter)
+                if (ufo.value > 0f) drawUfo(ufo.value, Offset(size.width * (UFO_PLANET_X + 0.5f) / 64f, size.height * (UFO_PLANET_Y + 0.5f) / 28f))
+                if (zombieAnim.value > 0f) {
+                    drawZombie(zombieAnim.value, size.width * (GRAVE_X + 0.5f) / 64f, ground, if (zombieOnHero) heroCenter else monsterCenter)
+                }
                 if (volley.value > 0f) drawElfVolley(volley.value, monsterCenter)
                 if (sneak.value > 0f) drawSneakStab(sneak.value, monsterCenter, artH.toPx())
                 if (skillUse?.skill == Skill.Possession && possessArt != null && skillAnim.value > 0f) {

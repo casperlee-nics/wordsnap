@@ -123,7 +123,7 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                     if (vm.practiceMode) {
                         Text(
                             tr(R.string.review_practice_hint),
-                            style = MaterialTheme.typography.titleMedium.readable(),
+                            style = MaterialTheme.typography.titleSmall.readable(),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.offset(y = (-12).dp),
                         )

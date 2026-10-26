@@ -58,16 +58,18 @@ fun ShopDialog(
                     RetroButton(
                         tr(R.string.shop_buy_tab),
                         onClick = { selling = false; note = null },
-                        modifier = Modifier.width(60.dp).alpha(if (selling) 0.5f else 1f),
+                        modifier = Modifier.width(TAB_SIZE).alpha(if (selling) 0.5f else 1f),
                         textStyle = MaterialTheme.typography.bodyMedium,
-                        textPadding = 2.dp,
+                        textPadding = 0.dp,
+                        height = TAB_SIZE,
                     )
                     RetroButton(
                         tr(R.string.shop_sell_tab),
                         onClick = { selling = true; note = null },
-                        modifier = Modifier.width(60.dp).alpha(if (selling) 1f else 0.5f),
+                        modifier = Modifier.width(TAB_SIZE).alpha(if (selling) 1f else 0.5f),
                         textStyle = MaterialTheme.typography.bodyMedium,
-                        textPadding = 2.dp,
+                        textPadding = 0.dp,
+                        height = TAB_SIZE,
                     )
                     WalkingMerchant(Modifier.weight(1f).height(60.dp))
                 }
@@ -111,6 +113,9 @@ fun ShopDialog(
         }
     }
 }
+
+// 購買／販售分頁按鈕：寬高一樣，正方形（實際按鈕面再扣掉右下 3dp 的影子，也是正方形）
+private val TAB_SIZE = 54.dp
 
 private val ShopSlot = Color(0xFFE8D8B0)
 private val ShopDivider = Color(0x40202030)
