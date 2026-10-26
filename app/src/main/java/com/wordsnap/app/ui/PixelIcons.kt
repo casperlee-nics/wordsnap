@@ -381,6 +381,26 @@ val IconPencil = listOf(
 )
 
 // 記錄管理：刪除紀錄（垃圾桶）
+// 單字列表：復原剛剛刪掉的字（往左轉回去的藍色箭頭）
+val IconUndo = listOf(
+    "................",
+    "....KK..........",
+    "...KBK..........",
+    "..KBBKKKKKKK....",
+    ".KBBBBBBBBBBKK..",
+    "KBBBBBBBBBBBBBK.",
+    ".KBBBBBBBBBBBBBK",
+    "..KBBKKKKKKKBBBK",
+    "...KBK.....KBBBK",
+    "....KK......KBBK",
+    "............KBBK",
+    "...........KBBK.",
+    "......KKKKKBBBK.",
+    "......KBBBBBBK..",
+    "......KKKKKKK...",
+    "................",
+)
+
 val IconTrash = listOf(
     "................",
     "......KKKK......",

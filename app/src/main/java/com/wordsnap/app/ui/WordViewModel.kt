@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
@@ -380,12 +381,27 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         return books.value.filter { it.id in ids }
     }
 
+    // 刪掉的字依序記下來，可以按「復原」一個一個救回來（關掉 App 就清空）
+    val deletedWords = mutableStateListOf<Word>()
+
     // 刪掉已經記住的字，記住的字數照樣保留
     fun delete(word: Word) {
+        deletedWords.add(word)
         viewModelScope.launch {
             db.withTransaction {
                 if (word.box >= 1) profileDao.addKeptRemembered(word.profileId, 1)
                 dao.delete(word)
+            }
+        }
+    }
+
+    // 復原最後刪掉的那個字（原本的編號、記憶進度都一樣）
+    fun undoDelete() {
+        val word = deletedWords.removeLastOrNull() ?: return
+        viewModelScope.launch {
+            db.withTransaction {
+                if (word.box >= 1) profileDao.addKeptRemembered(word.profileId, -1)
+                dao.insert(word)
             }
         }
     }

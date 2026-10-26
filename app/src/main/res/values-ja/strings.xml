@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 像素單字：日本語 -->
+<!-- 單字勇者：日本語 -->
 <resources>
-    <string name="app_name">ピクセル単語</string>
+    <string name="app_name">たんご勇者</string>
 
     <!-- 共通 -->
     <string name="cancel">キャンセル</string>
     <string name="delete">削除</string>
+    <string name="undo_delete">元に戻す</string>
     <string name="delete_named">%1$s を削除</string>
     <string name="confirm">OK</string>
     <string name="close">閉じる</string>
@@ -15,7 +16,7 @@
     <string name="great">やったね！</string>
     <string name="save">保存</string>
     <string name="retry">再試行</string>
-    <string name="title_logo">ピクセル単語</string>
+    <string name="title_logo">たんご勇者</string>
     <string name="default_book">ぼうけんの書</string>
 
     <!-- メイン画面 -->
@@ -85,6 +86,10 @@
     <string name="shop_bought">「%1$s」を %2$d ゴールドで買った！</string>
     <string name="shop_sold">「%1$s」を売って %2$d ゴールド手に入れた！</string>
     <string name="shop_nothing_to_sell">アイテム袋は空っぽで、売るものがありません。</string>
+    <string name="shop_buy_confirm_title">買いますか？</string>
+    <string name="shop_buy_confirm">%2$dゴールドで「%1$s」を1つ買いますか？</string>
+    <string name="shop_sell_confirm_title">売りますか？</string>
+    <string name="shop_sell_confirm">「%1$s」を1つ売って%2$dゴールドもらいますか？</string>
     <string name="item_bag">アイテム袋</string>
     <string name="item_shelf">ポケットを開く</string>
     <string name="item_bag_empty">アイテム袋は空っぽです。モンスターを倒すと宝箱からアイテムが手に入ることがあります！</string>
@@ -195,7 +200,7 @@
     <string name="help_free_title">無料版と完全版</string>
     <string name="help_free">無料版で遊べる職業は勇者・魔法使い・エルフの射手の 3 つで、単語帳は 2 冊まで、1 冊 100 語までです。大魔王は出現せず、職業スキルから生まれた特別なアイテム（ネコ缶、王国の召集状、ネコの楽譜、戦艦の信号旗、航空支援要請、オリハルコン鉱石、魔導書のページ）も出ません。完全版にはこの制限がありません。</string>
     <string name="help_about_title">このアプリについて</string>
-    <string name="help_about">『ピクセル単語』は Make It Fun Studio が制作しました。一緒に冒険してくれてありがとう！日本語辞書の一部は EJDict-hand（CC0）のデータを使用しています。</string>
+    <string name="help_about">『たんご勇者』は Make It Fun Studio が制作しました。一緒に冒険してくれてありがとう！日本語辞書の一部は EJDict-hand（CC0）のデータを使用しています。</string>
     <string name="help_version">バージョン：v%1$s</string>
 
     <!-- 単語帳 -->
@@ -732,7 +737,7 @@
     <string name="skill_teaser_wand">ねこじゃらしフリフリ～ニャ</string>
     <string name="skill_teaser_wand_desc">敵が1ターン何もしない</string>
     <string name="skill_lick_fur">ペロペロ毛づくろい～ニャ</string>
-    <string name="skill_lick_fur_desc">HPを1マス回復</string>
+    <string name="skill_lick_fur_desc">毛づくろいしてHPを2マス回復</string>
     <string name="skill_cat_stampede">進撃のネコたち～ニャ</string>
     <string name="skill_cat_stampede_desc">敵に3ダメージ、1ターンの間 敵は攻撃できない</string>
     <string name="skill_cat_orchestra">ネコ交響楽団～ニャ</string>

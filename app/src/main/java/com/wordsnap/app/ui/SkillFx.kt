@@ -24,7 +24,7 @@ fun skillDuration(skill: Skill): Int = when (skill) {
     Skill.CheatSheet -> 3200
     Skill.PotPush -> 3600
     Skill.GoblinRaid, Skill.TreantGrip -> 2600
-    Skill.ElderBlessing -> 2200
+    Skill.ElderBlessing, Skill.LickFur -> 2200
     Skill.Orichalcum, Skill.PlagueDoctor, Skill.ElvenUprising -> 2600
     Skill.RoyalSoldiers, Skill.GoblinKing, Skill.UltimateArmor, Skill.PitStop, Skill.PhoenixDescent -> 2400
     Skill.CatStampede -> 2200
@@ -524,18 +524,37 @@ private fun DrawScope.drawTeaser(t: Float, hero: Offset, monster: Offset, monste
 }
 
 private fun DrawScope.drawLick(t: Float, hero: Offset, heroSize: Float, cell: Float) {
-    // 舔舔：粉紅小舌頭一伸一縮，身邊冒閃亮亮
-    if ((t * 8).toInt() % 2 == 0 && t < 0.7f) {
-        drawRect(Color(0xFFF08090), Offset(hero.x + heroSize * 0.15f, hero.y - heroSize * 0.05f), Size(cell * 2, cell * 2))
+    // 舔毛：抬起一隻小貓掌到嘴邊，粉紅小舌頭沿著掌一下一下舔（掌跟著上下滑），舔過的地方冒出亮亮的毛
+    val lick = t < 0.75f
+    val mouth = Offset(hero.x + heroSize * 0.12f, hero.y - heroSize * 0.05f)
+    // 貓掌畫大一點才看得出來
+    val pc = cell * 1.5f
+    if (lick) {
+        val raise = seg(t, 0f, 0.12f)
+        // 每舔一下掌往上滑一點再回來
+        val stroke = sin(stepped(t, 24) * TAU * 6)
+        val paw = Offset(mouth.x + pc * 3, mouth.y + pc * (8 - raise * 6) + stroke * pc * 1.5f)
+        drawRect(Color(0xFF202030), Offset(paw.x - pc * 2.5f, paw.y - pc * 2.5f), Size(pc * 5, pc * 7))
+        drawRect(Color.White, Offset(paw.x - pc * 2, paw.y - pc * 2), Size(pc * 4, pc * 6))
+        drawRect(Color(0xFFF08090), Offset(paw.x - pc, paw.y - pc), Size(pc * 2, pc * 1.5f))
+        for (k in 0 until 3) drawRect(Color(0xFFF08090), Offset(paw.x - pc * 1.8f + k * pc * 1.3f, paw.y - pc * 2), Size(pc * 0.8f, pc * 0.8f))
+        // 舌頭伸出來碰到掌（伸、縮交替）
+        if (stroke > 0f && raise >= 1f) {
+            drawRect(Color(0xFF202030), Offset(mouth.x - pc / 2, mouth.y - pc / 2), Size(pc * 3, pc * 2.5f))
+            drawRect(Color(0xFFF08090), Offset(mouth.x, mouth.y), Size(pc * 2, pc * 1.5f))
+            // 「舔～」的小弧線
+            drawArc(Color.White, 200f, 140f, false, Offset(paw.x - pc * 4, paw.y - pc * 5), Size(pc * 8, pc * 4), style = Stroke(pc / 2))
+        }
     }
+    // 舔過的毛亮晶晶
     for (k in 0 until 6) {
-        val p = seg(t, k * 0.1f, k * 0.1f + 0.4f)
+        val p = seg(t, 0.15f + k * 0.08f, 0.5f + k * 0.08f)
         if (p <= 0f || p >= 1f) continue
         val a = k * TAU / 6
         val c = Offset(hero.x + cos(a) * heroSize * 0.55f, hero.y + sin(a) * heroSize * 0.45f)
         pixelStar(c, cell * (0.5f + p), Color.White.copy(alpha = 1f - p))
     }
-    if (t > 0.4f) drawHeal(ItemType.SmallPotion, seg(t, 0.4f, 1f), hero, heroSize)
+    if (t > 0.6f) drawHeal(ItemType.BigPotion, seg(t, 0.6f, 1f), hero, heroSize)
 }
 
 private fun DrawScope.drawSneeze(t: Float, hero: Offset, heroSize: Float, monster: Offset, cell: Float) {

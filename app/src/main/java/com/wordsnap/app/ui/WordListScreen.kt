@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -167,11 +168,25 @@ fun WordListScreen(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            Text(
-                tr(R.string.word_count, words.size),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    tr(R.string.word_count, words.size),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f).padding(horizontal = 16.dp, vertical = 6.dp),
+                )
+                // 剛剛在這本刪掉的字可以復原：放在播放和垃圾桶的正上方
+                val lastDeleted = vm.deletedWords.lastOrNull()
+                if (lastDeleted != null && lastDeleted.bookId == selectedBookId) {
+                    Row(
+                        Modifier.padding(end = 16.dp).width(88.dp).clickable { vm.undoDelete() },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        PixelArt(IconUndo, ColorIconPalette, Modifier.size(30.dp))
+                        Text(tr(R.string.undo_delete), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 4.dp))
+                    }
+                }
+            }
             if (unlock.exhausted) {
                 Text(
                     tr(R.string.book_exhausted, MAX_TESTS),

@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  像素單字的所有介面文字（預設：繁體中文）。
+  單字勇者的所有介面文字（預設：繁體中文）。
   日文放在 values-ja/strings.xml、韓文放在 values-ko/strings.xml，name 要一模一樣，只翻譯內容。
   %1$s、%1$d 是程式會填進去的文字或數字，翻譯時要保留（位置可以換）；%% 是百分比符號。
   string-array 的項目數量和順序不能變。
 -->
 <resources>
     <!-- 暫定名稱，上架前再決定 -->
-    <string name="app_name">像素單字</string>
+    <string name="app_name">單字勇者</string>
 
     <!-- 共用 -->
     <string name="cancel">取消</string>
     <string name="delete">刪除</string>
+    <string name="undo_delete">復原</string>
     <string name="delete_named">刪除 %1$s</string>
     <string name="confirm">確定</string>
     <string name="close">關閉</string>
@@ -21,7 +22,7 @@
     <string name="great">太好了！</string>
     <string name="save">儲存</string>
     <string name="retry">重試</string>
-    <string name="title_logo">像素單字</string>
+    <string name="title_logo">單字勇者</string>
     <string name="default_book">我的冒險日誌</string>
 
     <!-- 主畫面 -->
@@ -91,6 +92,10 @@
     <string name="shop_bought">買了「%1$s」，花了 %2$d 金幣！</string>
     <string name="shop_sold">賣掉「%1$s」，得到 %2$d 金幣！</string>
     <string name="shop_nothing_to_sell">道具袋是空的，沒有東西可以賣。</string>
+    <string name="shop_buy_confirm_title">要買嗎？</string>
+    <string name="shop_buy_confirm">用 %2$d 金幣買一個「%1$s」？</string>
+    <string name="shop_sell_confirm_title">要賣嗎？</string>
+    <string name="shop_sell_confirm">把一個「%1$s」賣掉，換 %2$d 金幣？</string>
     <string name="item_bag">道具袋</string>
     <string name="item_shelf">打開口袋</string>
     <string name="item_bag_empty">道具袋是空的。把怪物打飛時有機會打開寶箱拿到道具！</string>
@@ -201,7 +206,7 @@
     <string name="help_free_title">免費版與完整版</string>
     <string name="help_free">免費版可以玩勇者、魔法師、精靈弓手三種職業，最多兩本單字簿、每本最多 100 個字；不會出現大魔王，也不會掉落從職業技能變成的特殊道具（貓罐頭、王國召集令、貓咪樂譜、戰艦信號旗、呼叫空中支援、奧利哈鋼礦石、魔導書的書頁）。完整版沒有這些限制。</string>
     <string name="help_about_title">關於</string>
-    <string name="help_about">《像素單字》由 好玩製造所 Make It Fun Studio 製作。謝謝你一起來冒險！</string>
+    <string name="help_about">《單字勇者》由 好玩製造所 Make It Fun Studio 製作。謝謝你一起來冒險！</string>
     <string name="help_version">軟體版本：v%1$s</string>
 
     <!-- 單字簿 -->
@@ -738,7 +743,7 @@
     <string name="skill_teaser_wand">逗貓棒搖搖～喵</string>
     <string name="skill_teaser_wand_desc">怪物 1 回合不攻擊任何人</string>
     <string name="skill_lick_fur">舔舔毛毛～喵</string>
-    <string name="skill_lick_fur_desc">補 1 格血</string>
+    <string name="skill_lick_fur_desc">舔舔毛，補 2 格血</string>
     <string name="skill_cat_stampede">進擊的貓貓們～喵</string>
     <string name="skill_cat_stampede_desc">怪物扣 3 格血，1 回合嚇得不能攻擊</string>
     <string name="skill_cat_orchestra">貓咪交響樂團～喵</string>

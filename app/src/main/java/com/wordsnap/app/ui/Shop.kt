@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +49,8 @@ fun ShopDialog(
     var selling by remember { mutableStateOf(false) }
     // 剛剛買了或賣了什麼，顯示在錢包下面
     var note by remember { mutableStateOf<String?>(null) }
+    // 按了買／賣之後先問一次「確定嗎？」
+    var pending by remember { mutableStateOf<ItemType?>(null) }
     PixelWindowDialog(
         title = tr(R.string.shop_title),
         onDismiss = onDismiss,
@@ -58,18 +61,16 @@ fun ShopDialog(
                     RetroButton(
                         tr(R.string.shop_buy_tab),
                         onClick = { selling = false; note = null },
-                        modifier = Modifier.width(TAB_SIZE).alpha(if (selling) 0.5f else 1f),
+                        modifier = Modifier.width(92.dp).alpha(if (selling) 0.5f else 1f),
                         textStyle = MaterialTheme.typography.bodyMedium,
-                        textPadding = 0.dp,
-                        height = TAB_SIZE,
+                        textPadding = 4.dp,
                     )
                     RetroButton(
                         tr(R.string.shop_sell_tab),
                         onClick = { selling = true; note = null },
-                        modifier = Modifier.width(TAB_SIZE).alpha(if (selling) 1f else 0.5f),
+                        modifier = Modifier.width(92.dp).alpha(if (selling) 1f else 0.5f),
                         textStyle = MaterialTheme.typography.bodyMedium,
-                        textPadding = 0.dp,
-                        height = TAB_SIZE,
+                        textPadding = 4.dp,
                     )
                     WalkingMerchant(Modifier.weight(1f).height(60.dp))
                 }
@@ -101,21 +102,37 @@ fun ShopDialog(
                 }
                 RetroButton(
                     tr(if (selling) R.string.shop_sell else R.string.shop_buy),
-                    onClick = {
-                        if (selling) onSell(type) else onBuy(type)
-                        note = tr(if (selling) R.string.shop_sold else R.string.shop_bought, type.label, price)
-                    },
+                    onClick = { pending = type },
+                    modifier = Modifier.width(ITEM_BUTTON_SIZE),
                     enabled = enabled,
                     textStyle = MaterialTheme.typography.bodyMedium,
-                    textPadding = 8.dp,
+                    textPadding = 0.dp,
+                    height = ITEM_BUTTON_SIZE,
                 )
             }
         }
     }
+
+    pending?.let { type ->
+        val price = if (selling) type.sellPrice else type.price
+        PixelAlertDialog(
+            onDismissRequest = { pending = null },
+            title = { Text(tr(if (selling) R.string.shop_sell_confirm_title else R.string.shop_buy_confirm_title)) },
+            text = { Text(tr(if (selling) R.string.shop_sell_confirm else R.string.shop_buy_confirm, type.label, price)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (selling) onSell(type) else onBuy(type)
+                    note = tr(if (selling) R.string.shop_sold else R.string.shop_bought, type.label, price)
+                    pending = null
+                }) { Text(tr(R.string.confirm)) }
+            },
+            dismissButton = { TextButton(onClick = { pending = null }) { Text(tr(R.string.cancel)) } },
+        )
+    }
 }
 
-// 購買／販售分頁按鈕：寬高一樣，正方形（實際按鈕面再扣掉右下 3dp 的影子，也是正方形）
-private val TAB_SIZE = 54.dp
+// 每個道具右邊的「買／賣」按鈕：寬高一樣，正方形（實際按鈕面再扣掉右下 3dp 的影子，也是正方形）
+private val ITEM_BUTTON_SIZE = 48.dp
 
 private val ShopSlot = Color(0xFFE8D8B0)
 private val ShopDivider = Color(0x40202030)

@@ -225,8 +225,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var itemUse by remember { mutableStateOf<ItemUse?>(null) }
     // 監獄彩蛋：點兩下鐵門，囚犯衝出來打怪物（每場一次）；值每次加一讓動畫播放
     var prisonBreak by remember { mutableIntStateOf(0) }
-    // 羅馬競技場彩蛋：觀眾丟石頭的次數（每場一次）
-    var stonesThrown by remember { mutableIntStateOf(0) }
     // 墓園彩蛋：殭屍爬出來幾次（每場一次）、這次打人物還是怪物
     var zombieRises by remember { mutableIntStateOf(0) }
     var zombieOnHero by remember { mutableStateOf(false) }
@@ -277,8 +275,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
     OneShotSound(R.raw.meow_sfx, play = meowing, volume = 0.5f)
-    // 競技場觀眾丟石頭時一陣喧嘩
-    OneShotSound(R.raw.crowd_sfx, play = stonesThrown > 0, volume = 0.6f)
     OneShotSound(R.raw.warning_jingle, play = isBoss && !introDone)
     OneShotSound(R.raw.death_jingle, play = died)
     OneShotSound(R.raw.levelup_jingle, play = showingLevelUp)
@@ -623,14 +619,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
-    // 羅馬競技場彩蛋：觀眾丟石頭下來，人物和怪物都扣 1 格血（每場一次；人物至少留 1 點血）
-    fun stoneRain() {
-        if (!answering || stonesThrown > 0) return
-        stonesThrown++
-        damage = (damage + WRONG_DAMAGE).coerceAtMost(HERO_MAX_HP - 1)
-        hitMonster(1, STONE_HIT_AT)
-    }
-
     // 墓園彩蛋：殭屍隨機打人物或怪物 1 格血（每場一次；人物至少留 1 點血）
     fun zombieAttack() {
         if (!answering || zombieRises > 0) return
@@ -753,8 +741,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     itemUse = itemUse,
                     prisonBreak = prisonBreak,
                     onPrisonDoor = { openPrisonDoor() },
-                    stones = stonesThrown,
-                    onStones = { stoneRain() },
                     zombie = zombieRises,
                     zombieOnHero = zombieOnHero,
                     onZombie = { zombieAttack() },
@@ -997,8 +983,6 @@ private fun BattleField(
     itemUse: ItemUse?,
     prisonBreak: Int = 0,
     onPrisonDoor: () -> Unit = {},
-    stones: Int = 0,
-    onStones: () -> Unit = {},
     zombie: Int = 0,
     zombieOnHero: Boolean = false,
     onZombie: () -> Unit = {},
@@ -1206,7 +1190,6 @@ private fun BattleField(
             prisonAnim.snapTo(0f)
         }
         val doorTap by rememberUpdatedState(onPrisonDoor)
-        val stonesTap by rememberUpdatedState(onStones)
         val zombieTap by rememberUpdatedState(onZombie)
         // 海豚：點的位置（0..1）和跳了幾次；雪人堆好就一直在
         var dolphinX by remember { mutableStateOf<Float?>(null) }
@@ -1219,13 +1202,6 @@ private fun BattleField(
             dolphin.snapTo(0f)
         }
         var snowmanX by remember { mutableStateOf<Float?>(null) }
-        val stoneAnim = remember { Animatable(0f) }
-        LaunchedEffect(stones) {
-            if (stones == 0) return@LaunchedEffect
-            stoneAnim.snapTo(0f)
-            stoneAnim.animateTo(1f, tween(STONE_DURATION, easing = LinearEasing))
-            stoneAnim.snapTo(0f)
-        }
         // 月球的飛碟（每點三下飛一台）、墓園的殭屍
         var ufoFlights by remember { mutableIntStateOf(0) }
         val ufo = remember { Animatable(0f) }
@@ -1353,7 +1329,7 @@ private fun BattleField(
         // 巨斧落下時怪物被壓扁
         val squash = if (finisher == Finisher.Smash && effect in 0.6f..1f && fly == 0f) 0.45f else 1f
 
-        // 場景彩蛋（只有一般怪物的戰場才有自己的場景）：監獄鐵門點兩下、船上的海面點兩下、競技場觀眾席點三下、雪地中間點三下、
+        // 場景彩蛋（只有一般怪物的戰場才有自己的場景）：監獄鐵門點兩下、船上的海面點兩下、雪地中間點三下、
         // 月球的星球點三下、墓園中間的墓碑點三下
         val eggScene = monster.rank == MonsterRank.Normal && scene in SceneEggScenes
         val eggTap by rememberUpdatedState<(SceneEgg, Float) -> Unit>({ egg, x ->
@@ -1363,7 +1339,6 @@ private fun BattleField(
                     dolphinX = x
                     dolphinJumps++
                 }
-                SceneEgg.Stones -> stonesTap()
                 SceneEgg.Snowman -> if (snowmanX == null) snowmanX = x
                 SceneEgg.Ufo -> if (ufo.value == 0f) ufoFlights++
                 SceneEgg.Zombie -> zombieTap()
@@ -1517,10 +1492,9 @@ private fun BattleField(
                 }
                 if (doctorLeave.value > 0f) drawDoctorLeave(doctorLeave.value, monsterCenter, artH.toPx(), ground)
                 if (treantLeave.value > 0f) drawTreantLeave(treantLeave.value, monsterCenter, artH.toPx(), ground)
-                // 場景彩蛋：海豚跳出海面、雪人、觀眾丟石頭、飛碟、殭屍
+                // 場景彩蛋：海豚跳出海面、雪人、飛碟、殭屍
                 dolphinX?.let { if (dolphin.value > 0f) drawDolphinJump(dolphin.value, it * size.width, size.height * DOLPHIN_SEA_Y) }
                 snowmanX?.let { drawSnowman(it * size.width, ground, spinClock) }
-                if (stoneAnim.value > 0f) drawStoneRain(stoneAnim.value, heroCenter, monsterCenter)
                 if (ufo.value > 0f) drawUfo(ufo.value, Offset(size.width * (UFO_PLANET_X + 0.5f) / 64f, size.height * (UFO_PLANET_Y + 0.5f) / 28f))
                 if (zombieAnim.value > 0f) {
                     drawZombie(zombieAnim.value, size.width * (GRAVE_X + 0.5f) / 64f, ground, if (zombieOnHero) heroCenter else monsterCenter)

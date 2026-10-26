@@ -123,7 +123,7 @@ enum class Skill(
     UltimateArmor(Race.Dwarf, 60, R.string.skill_ultimate_armor, R.string.skill_ultimate_armor_desc, SkillEffect(guard = 50)),
     TeaserWand(Race.Cat, 10, R.string.skill_teaser_wand, R.string.skill_teaser_wand_desc, SkillEffect(stun = 1)),
     PotPush(Race.Cat, 20, R.string.skill_pot_push, R.string.skill_pot_push_desc, SkillEffect(damage = 2)),
-    LickFur(Race.Cat, 30, R.string.skill_lick_fur, R.string.skill_lick_fur_desc, SkillEffect(heal = 1)),
+    LickFur(Race.Cat, 30, R.string.skill_lick_fur, R.string.skill_lick_fur_desc, SkillEffect(heal = 2)),
     CatOrchestra(Race.Cat, 40, R.string.skill_cat_orchestra, R.string.skill_cat_orchestra_desc, SkillEffect(charm = 3, music = SkillMusic.Classical)),
     CatStampede(Race.Cat, 50, R.string.skill_cat_stampede, R.string.skill_cat_stampede_desc, SkillEffect(damage = 3, stun = 1)),
     CutestCat(Race.Cat, 60, R.string.skill_cutest_cat, R.string.skill_cutest_cat_desc, SkillEffect(cute = true)),

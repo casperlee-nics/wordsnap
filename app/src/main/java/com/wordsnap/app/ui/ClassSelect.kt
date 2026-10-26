@@ -48,7 +48,7 @@ import com.wordsnap.app.ui.theme.PixelInk
 fun WoodSignTitle(text: String, modifier: Modifier = Modifier) {
     Box(
         modifier
-            // 日文名稱「ピクセル単語」比較長，木牌跟著加寬，字不用縮小
+            // 日文名稱「たんご勇者」有 5 個字，木牌跟著加寬，字不用縮小
             .width(if (text.length > 4) 212.dp else 176.dp)
             .height(60.dp)
             .drawBehind { drawWoodSign() },
