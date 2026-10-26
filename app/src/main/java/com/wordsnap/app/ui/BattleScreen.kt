@@ -464,6 +464,19 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
+    // 附身：那個職業的人從畫面外走進來，魔族化成黑影鑽進去，換成那個職業；這回合不能再用技能
+    // 背景音樂換成可怕的曲子，直到戰鬥結束
+    fun possess(target: Race) {
+        usedSkills.add(Skill.Possession)
+        skillThisRound = true
+        skillUse = SkillUse(Skill.Possession, (skillUse?.id ?: 0) + 1, target)
+        musicOverride = R.raw.scary_bgm
+        scope.launch {
+            delay((skillDuration(Skill.Possession) * POSSESS_SWAP_AT).toLong())
+            possessed = target
+        }
+    }
+
     fun useSkill(skill: Skill) {
         val e = skill.effect ?: return
         if (!canUseSkill(skill)) return
@@ -541,19 +554,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         skill == Skill.AncientTome || skill == Skill.ElfEye -> hintTurns > 0
         skill == Skill.CatOrchestra || skill == Skill.UltimateArmor || skill == Skill.CutestCat -> !finished
         else -> false
-    }
-
-    // 附身：那個職業的人從畫面外走進來，魔族化成黑影鑽進去，換成那個職業；這回合不能再用技能
-    // 背景音樂換成可怕的曲子，直到戰鬥結束
-    fun possess(target: Race) {
-        usedSkills.add(Skill.Possession)
-        skillThisRound = true
-        skillUse = SkillUse(Skill.Possession, (skillUse?.id ?: 0) + 1, target)
-        musicOverride = R.raw.scary_bgm
-        scope.launch {
-            delay((skillDuration(Skill.Possession) * POSSESS_SWAP_AT).toLong())
-            possessed = target
-        }
     }
 
     // 監獄的鐵門點兩下：一群囚犯衝出來，怪物損血 1
