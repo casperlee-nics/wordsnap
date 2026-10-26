@@ -343,7 +343,7 @@ private val ItemSlot = Color(0xFFE8D8B0)
 private val ItemDivider = Color(0x40202030)
 
 // 在戰鬥畫面上畫道具的效果動畫，t 從 0 到 1
-private val SpritePalette = ScenePalette + mapOf('S' to Color(0xFFF8C898), 'H' to Color(0xFF704020))
+internal val SpritePalette = ScenePalette + mapOf('S' to Color(0xFFF8C898), 'H' to Color(0xFF704020))
 
 private val AngelArt = listOf(
     "....YYYYY....",
@@ -402,7 +402,7 @@ private val BulbArt = listOf(
 )
 
 // 在 (left, top) 畫一張小像素圖，每格 cell 像素
-private fun DrawScope.drawSprite(art: List<String>, left: Float, top: Float, cell: Float, alpha: Float = 1f, recolor: Map<Char, Char> = emptyMap()) {
+internal fun DrawScope.drawSprite(art: List<String>, left: Float, top: Float, cell: Float, alpha: Float = 1f, recolor: Map<Char, Char> = emptyMap()) {
     art.forEachIndexed { y, row ->
         row.forEachIndexed { x, c ->
             val color = SpritePalette[recolor[c] ?: c] ?: return@forEachIndexed

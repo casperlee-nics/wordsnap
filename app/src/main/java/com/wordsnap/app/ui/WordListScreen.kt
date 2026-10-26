@@ -69,6 +69,7 @@ fun WordListScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showHero by remember { mutableStateOf(false) }
     var showItems by remember { mutableStateOf(false) }
+    var showSkills by remember { mutableStateOf(false) }
     val itemCounts by vm.items.collectAsState()
     val speaker = rememberSpeaker()
     val translatorStatus by vm.translatorStatus.collectAsState()
@@ -124,6 +125,7 @@ fun WordListScreen(
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             DropdownMenuItem(text = { Text(tr(R.string.hero_title)) }, onClick = { showMenu = false; showHero = true })
+                            DropdownMenuItem(text = { Text(tr(R.string.skill_title)) }, onClick = { showMenu = false; showSkills = true })
                             DropdownMenuItem(text = { Text(tr(R.string.item_shelf)) }, onClick = { showMenu = false; showItems = true })
                             DropdownMenuItem(text = { Text(tr(R.string.menu_home)) }, onClick = { showMenu = false; onHome() })
                         }
@@ -207,6 +209,15 @@ fun WordListScreen(
         }
     }
 
+    if (showSkills) {
+        profile?.let {
+            SkillDialog(
+                skills = Skill.of(Avatar.from(it.avatar).race),
+                level = levelInfo(it.exp).level,
+                onDismiss = { showSkills = false },
+            )
+        }
+    }
     if (showItems) {
         ItemBagDialog(counts = itemCounts, onDismiss = { showItems = false })
     }

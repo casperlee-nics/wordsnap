@@ -49,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -99,6 +100,9 @@ private val GroundPad = 8.dp
 // 道具使用一次的紀錄；id 每次加一，讓動畫重新播放
 private data class ItemUse(val type: ItemType, val id: Int)
 
+// 技能使用一次的紀錄；id 每次加一，讓動畫重新播放
+private data class SkillUse(val skill: Skill, val id: Int)
+
 // 戰鬥模式：聽英文發音，拼出整個單字。
 // 答對時人物衝上去攻擊、怪物扣血；答錯被怪物攻擊，扣 1/5 的 HP，HP 歸零就被打倒
 // 最後一題結束時怪物的血打光了，才用職業招式把怪物打飛（沒用道具就要全對）
@@ -113,10 +117,14 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val race = avatar.race
     // 戰鬥開始時的稱號階級，決定頭像和招式
     val tier = remember { avatarTier(levelInfo(profile?.exp ?: 0).level) }
+    // 戰鬥開始時的等級，決定學會哪些技能、能用幾次
+    val level = remember { levelInfo(profile?.exp ?: 0).level }
+    val skills = remember { Skill.of(race) }
     val bookName = books.firstOrNull { it.id == bookId }?.name ?: ""
     // 這本的字都答對兩次了：練習戰，經驗值 1/4、不掉道具
     val practice = remember { vm.isPracticeBattle(bookId) }
-    val questions = remember { vm.pickBattleWords(bookId, practice) }
+    // 用「躲進草叢」這類技能跳過的字會移到最後，所以題目清單可以改
+    val questions = remember { vm.pickBattleWords(bookId, practice).toMutableStateList() }
     val monster = remember { vm.pickBattleMonster() }
     val isBoss = monster.rank != MonsterRank.Normal
     val scene = remember { ReviewScene.entries.random() }
@@ -139,6 +147,19 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var damage by remember { mutableIntStateOf(0) }
     var bonus by remember { mutableIntStateOf(0) }
     var bonusHits by remember { mutableIntStateOf(0) }
+    // 攻擊力 x1.5 多打的半格血（2 個半格 = 1 格）
+    var halfHits by remember { mutableIntStateOf(0) }
+    // 怪物還剩幾個半格血；<= 0 就倒下
+    fun monsterHalves() = (questions.size - correct - bonus) * 2 - halfHits
+    // 這場用過的技能、技能動畫、技能視窗
+    val usedSkills = remember { mutableStateListOf<Skill>() }
+    var skillUse by remember { mutableStateOf<SkillUse?>(null) }
+    var showSkills by remember { mutableStateOf(false) }
+    // 粉絲加油、精神集中、怪物不能動還剩幾回合；跳過幾次（換題時重新念）
+    var cheerTurns by remember { mutableIntStateOf(0) }
+    var focusTurns by remember { mutableIntStateOf(0) }
+    var stunTurns by remember { mutableIntStateOf(0) }
+    var skips by remember { mutableIntStateOf(0) }
     var itemUse by remember { mutableStateOf<ItemUse?>(null) }
     // 監獄彩蛋：點兩下鐵門，囚犯衝出來打怪物（每場一次）；值每次加一讓動畫播放
     var prisonBreak by remember { mutableIntStateOf(0) }
@@ -164,7 +185,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var chestDone by remember { mutableStateOf(false) }
     val showingChest = endShown && !showingLevelUp && reward?.item != null && !chestDone
 
-    val knockedOut = finished && !died && questions.isNotEmpty() && (questions.size - correct - bonus) <= 0
+    val knockedOut = finished && !died && questions.isNotEmpty() && monsterHalves() <= 0
     LoopingMusic(
         when (monster.rank) {
             MonsterRank.Big -> R.raw.bigboss_bgm
@@ -185,7 +206,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val word = questions.getOrNull(index)
     val answer = word?.text?.trim().orEmpty()
     val heroHp = (HERO_MAX_HP - damage).coerceAtLeast(0)
-    val monsterHp = (total - correct - bonus).coerceAtLeast(0)
+    val monsterHp = monsterHalves().coerceAtLeast(0)
     val knocked = knockedOut
     // 道具把怪物的血打光：等道具動畫打到怪物，再結束戰鬥
     var ending by remember { mutableStateOf(false) }
@@ -206,10 +227,19 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
-    // 每答完一題，防護盾和混亂藥劑少一回合
+    // 每答完一題，防護盾、混亂藥劑和技能的效果少一回合
     fun endRound() {
         if (shieldTurns > 0) shieldTurns--
         if (confuseTurns > 0) confuseTurns--
+        if (cheerTurns > 0) cheerTurns--
+        if (focusTurns > 0) focusTurns--
+        if (stunTurns > 0) stunTurns--
+    }
+
+    // 答對時技能的加成：粉絲加油多扣 1 格、精神集中多扣半格
+    fun correctBonus() {
+        if (cheerTurns > 0) bonus++
+        if (focusTurns > 0) halfHits++
     }
 
     fun submit() {
@@ -219,6 +249,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         result = ok
         if (ok) {
             correct++
+            correctBonus()
         } else {
             wrong.add(word)
             when {
@@ -227,6 +258,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     bonus++
                     selfHits++
                 }
+                // 怪物昏迷或嚇呆了：不能動，不會攻擊
+                stunTurns > 0 -> lastBlocked = false
                 // 防護盾：怪物照樣攻擊，但被盾擋下不扣血
                 shieldTurns > 0 -> {
                     lastBlocked = true
@@ -245,7 +278,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     // 怪物沒血了，或最後一題答完：結束戰鬥；asked 是真的作答過的題目
     fun win(asked: List<Word>) {
         finished = true
-        val ko = total - correct - bonus <= 0
+        val ko = monsterHalves() <= 0
         vm.finishBattle(bookId, asked, wrong.toList(), total, died = false, monster, practice, knockedOut = ko) { reward = it }
     }
 
@@ -253,7 +286,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         input = ""
         result = null
         // 道具或混亂讓怪物的血先打光了，就直接打倒，不用把題目答完
-        if (index + 1 >= total || total - correct - bonus <= 0) {
+        if (index + 1 >= total || monsterHalves() <= 0) {
             win(questions.take(index + 1))
         } else {
             index++
@@ -264,7 +297,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     fun hitMonster(amount: Int) {
         bonus += amount
         bonusHits++
-        if (total - correct - bonus <= 0) {
+        if (monsterHalves() <= 0) {
             ending = true
             scope.launch {
                 delay(1100)
@@ -285,11 +318,59 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 input = answer
                 result = true
                 correct++
+                correctBonus()
                 endRound()
             }
             type == ItemType.Shield -> shieldTurns = ITEM_TURNS
             type == ItemType.Confusion -> confuseTurns = ITEM_TURNS
             else -> hitMonster(type.monsterDamage(total))
+        }
+    }
+
+    // 這招現在能不能用：學會了、做好了、這場還沒用過、還有次數，而且用了有效果
+    fun canUseSkill(skill: Skill): Boolean {
+        val effect = skill.effect ?: return false
+        if (!answering || skill.level > level || skill in usedSkills || usedSkills.size >= skillUsesPerBattle(level)) return false
+        return when (effect.kind) {
+            SkillKind.Heal -> damage > 0
+            SkillKind.Skip -> index < total - 1
+            SkillKind.Shield -> shieldTurns == 0
+            SkillKind.Stun -> stunTurns == 0
+            SkillKind.Cheer -> cheerTurns == 0
+            SkillKind.Focus -> focusTurns == 0
+            else -> true
+        }
+    }
+
+    fun useSkill(skill: Skill) {
+        val effect = skill.effect ?: return
+        if (!canUseSkill(skill)) return
+        showSkills = false
+        usedSkills.add(skill)
+        skillUse = SkillUse(skill, (skillUse?.id ?: 0) + 1)
+        when (effect.kind) {
+            SkillKind.Damage -> {
+                if (effect.stunTurns > 0) stunTurns = effect.stunTurns
+                hitMonster(effect.amount)
+            }
+            SkillKind.Heal -> damage = (damage - WRONG_DAMAGE * effect.amount).coerceAtLeast(0)
+            SkillKind.Shield -> shieldTurns = maxOf(shieldTurns, effect.turns)
+            SkillKind.Stun -> stunTurns = maxOf(stunTurns, effect.turns)
+            SkillKind.Reveal -> {
+                input = answer
+                result = true
+                correct++
+                correctBonus()
+                endRound()
+            }
+            SkillKind.Skip -> {
+                // 這題移到最後，不被攻擊也沒有經驗值
+                questions.add(questions.removeAt(index))
+                input = ""
+                skips++
+            }
+            SkillKind.Cheer -> cheerTurns = effect.turns
+            SkillKind.Focus -> focusTurns = effect.turns
         }
     }
 
@@ -301,7 +382,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     }
 
     // 每一題先念一次英文發音（魔王戰等出場動畫播完）
-    LaunchedEffect(index, introDone) {
+    LaunchedEffect(index, introDone, skips) {
         if (word != null && !finished && introDone) {
             delay(300)
             sayWord()
@@ -364,8 +445,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     selfHits = selfHits,
                     shielded = shieldTurns > 0 || (lastBlocked && result == false),
                     confused = confuseTurns > 0,
+                    // 血條用半格算，攻擊力 x1.5 時看得到掉一格半
                     monsterHp = monsterHp,
-                    monsterMax = total,
+                    monsterMax = total * 2,
                     heroHp = heroHp,
                     heroMax = HERO_MAX_HP,
                     knockout = knocked,
@@ -375,6 +457,10 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     itemUse = itemUse,
                     prisonBreak = prisonBreak,
                     onPrisonDoor = { openPrisonDoor() },
+                    skillUse = skillUse,
+                    cheering = cheerTurns > 0,
+                    focusing = focusTurns > 0,
+                    stunned = stunTurns > 0,
                     falling = died,
                     onFallEnd = { fallen = true },
                 )
@@ -423,6 +509,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                             onNext = ::nextRound,
                             onBag = { showBag = true },
                             bagEnabled = answering,
+                            onSkill = { showSkills = true },
+                            skillEnabled = answering && level >= skills.first().level,
                         )
                     }
                 }
@@ -442,6 +530,18 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 }
             },
             onUse = ::useItem,
+        )
+    }
+
+    if (showSkills) {
+        SkillDialog(
+            skills = skills,
+            level = level,
+            onDismiss = { showSkills = false },
+            used = usedSkills,
+            usesLeft = (skillUsesPerBattle(level) - usedSkills.size).coerceAtLeast(0),
+            canUse = ::canUseSkill,
+            onUse = ::useSkill,
         )
     }
 
@@ -471,6 +571,8 @@ private fun Question(
     onNext: () -> Unit,
     onBag: () -> Unit,
     bagEnabled: Boolean,
+    onSkill: () -> Unit,
+    skillEnabled: Boolean,
 ) {
     val wrong = result == false
     // 鍵盤跳出來時按鈕縮小一點，整個答題區比較矮
@@ -484,9 +586,12 @@ private fun Question(
         null -> Unit
     }
     if (wrong && meaning.isNotBlank()) Text(meaning, style = MaterialTheme.typography.titleMedium.readable())
-    // 左邊：大聲公再聽一次；中間：道具袋；右邊：劍攻擊，答錯後換成向右箭頭「下一回」
+    // 左邊：大聲公再聽一次；中間：技能、道具袋；右邊：劍攻擊，答錯後換成向右箭頭「下一回」
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         PixelIconButton(IconMegaphone, tr(R.string.speak_again), onClick = onListen, size = buttonSize, palette = ColorIconPalette)
+        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            PixelIconButton(IconSkill, tr(R.string.skill_button), onClick = onSkill, size = buttonSize, palette = ColorIconPalette, enabled = skillEnabled)
+        }
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
             PixelIconButton(IconBag, tr(R.string.battle_items), onClick = onBag, size = buttonSize, palette = ItemPalette, enabled = bagEnabled)
         }
@@ -566,6 +671,10 @@ private fun BattleField(
     itemUse: ItemUse?,
     prisonBreak: Int = 0,
     onPrisonDoor: () -> Unit = {},
+    skillUse: SkillUse? = null,
+    cheering: Boolean = false,
+    focusing: Boolean = false,
+    stunned: Boolean = false,
     falling: Boolean = false,
     onFallEnd: () -> Unit = {},
 ) {
@@ -744,6 +853,15 @@ private fun BattleField(
         }
         val doorTap by rememberUpdatedState(onPrisonDoor)
 
+        // 技能動畫
+        val skillAnim = remember { Animatable(0f) }
+        LaunchedEffect(skillUse?.id) {
+            if (skillUse == null) return@LaunchedEffect
+            skillAnim.snapTo(0f)
+            skillAnim.animateTo(1f, tween(skillDuration(skillUse.skill), easing = LinearEasing))
+            skillAnim.snapTo(0f)
+        }
+
         // 倒下：搖晃一下 → 一格一格往後倒 → 躺在地上變灰
         val fall = remember { Animatable(0f) }
         val fallCallback by rememberUpdatedState(onFallEnd)
@@ -888,6 +1006,13 @@ private fun BattleField(
                     }
                 }
                 if (prisonAnim.value > 0f) drawRiot(prisonAnim.value, ground, prisoners = true)
+                // 技能：持續幾回合的效果一直畫著，剛用的那一招播動畫
+                if (cheering && !knockout) drawCheerFans(spinClock, heroCenter, HeroSize.toPx(), ground)
+                if (focusing && !knockout) drawFocusAura(spinClock, heroCenter, HeroSize.toPx())
+                if (stunned && !knockout) drawStunned(spinClock, monsterCenter, artH.toPx())
+                if (skillUse != null && skillAnim.value > 0f) {
+                    drawSkill(skillUse.skill, skillAnim.value, heroCenter, monsterCenter, HeroSize.toPx(), artH.toPx(), ground)
+                }
                 // 防護盾的光罩、怪物混亂的星星
                 if (shielded || block.value > 0f) {
                     drawShieldBubble(heroCenter, HeroSize.toPx(), bob, block.value)
