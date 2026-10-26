@@ -36,25 +36,45 @@ import kotlin.random.Random
 // 防護盾、混亂藥劑持續幾回合
 const val ITEM_TURNS = 3
 
-// 戰鬥道具：勝利時有一半機率掉寶箱，寶箱裡依機率抽一個道具（weight 加起來是 100）
+// 戰鬥道具：把怪物打飛時有一半機率掉寶箱，寶箱裡依機率抽一個道具（weight 是百分比，加起來是 100）
 // 玩家 HP 是 10 格，每答錯一題扣 2 格（1/5）
 
 const val HERO_MAX_HP = 10
 const val WRONG_DAMAGE = 2
 const val CHEST_CHANCE = 0.5f
+// 呼叫空中支援：B2 轟炸機讓怪物扣 2 格
+const val AIR_SUPPORT_DAMAGE = 2
 
-enum class ItemType(@StringRes private val labelRes: Int, @StringRes private val effectRes: Int, val weight: Int, val icon: List<String>) {
-    SmallPotion(R.string.item_small_potion, R.string.item_small_potion_effect, 20, IconSmallPotion),
-    SmartPill(R.string.item_smart_pill, R.string.item_smart_pill_effect, 12, IconSmartPill),
-    BigPotion(R.string.item_big_potion, R.string.item_big_potion_effect, 10, IconBigPotion),
-    Riot(R.string.item_riot, R.string.item_riot_effect, 15, IconHorn),
-    Elixir(R.string.item_elixir, R.string.item_elixir_effect, 4, IconElixir),
-    Angel(R.string.item_angel, R.string.item_angel_effect, 6, IconBell),
-    Shield(R.string.item_shield, R.string.item_shield_effect, 10, IconShield),
-    Confusion(R.string.item_confusion, R.string.item_confusion_effect, 10, IconConfusion),
-    Catapult(R.string.item_catapult, R.string.item_catapult_effect, 12, IconCatapult);
+// skill：v1.02 的體驗道具，效果和動畫跟那一招技能一樣（讓沒有那個職業的人也能玩到）
+enum class ItemType(
+    @StringRes private val labelRes: Int,
+    @StringRes private val effectRes: Int,
+    val weight: Int,
+    val icon: List<String>,
+    val skill: Skill? = null,
+) {
+    SmallPotion(R.string.item_small_potion, R.string.item_small_potion_effect, 16, IconSmallPotion),
+    SmartPill(R.string.item_smart_pill, R.string.item_smart_pill_effect, 9, IconSmartPill),
+    BigPotion(R.string.item_big_potion, R.string.item_big_potion_effect, 8, IconBigPotion),
+    Riot(R.string.item_riot, R.string.item_riot_effect, 12, IconHorn),
+    Elixir(R.string.item_elixir, R.string.item_elixir_effect, 3, IconElixir),
+    Angel(R.string.item_angel, R.string.item_angel_effect, 5, IconBell),
+    Shield(R.string.item_shield, R.string.item_shield_effect, 8, IconShield),
+    Confusion(R.string.item_confusion, R.string.item_confusion_effect, 8, IconConfusion),
+    Catapult(R.string.item_catapult, R.string.item_catapult_effect, 10, IconCatapult),
+    CatCan(R.string.item_cat_can, R.string.item_cat_can_effect, 3, IconCatCan, Skill.CatStampede),
+    RoyalSummons(R.string.item_royal_summons, R.string.item_royal_summons_effect, 3, IconRoyalSummons, Skill.RoyalSoldiers),
+    CatScore(R.string.item_cat_score, R.string.item_cat_score_effect, 3, IconCatScore, Skill.CatOrchestra),
+    SignalFlag(R.string.item_signal_flag, R.string.item_signal_flag_effect, 3, IconSignalFlag, Skill.Battleship),
+    AirSupport(R.string.item_air_support, R.string.item_air_support_effect, 3, IconAirSupport),
+    OrichalcumOre(R.string.item_orichalcum_ore, R.string.item_orichalcum_ore_effect, 3, IconOrichalcumOre, Skill.Orichalcum),
+    TomePage(R.string.item_tome_page, R.string.item_tome_page_effect, 3, IconTomePage, Skill.AncientTome);
 
     val label: String get() = tr(labelRes)
+
+    // 道具屋的價錢：10 金幣 × 平均要開幾個寶箱才抽得到（100 / 掉落率），取到十位數；賣掉是半價
+    val price: Int get() = (1000 / weight + 5) / 10 * 10
+    val sellPrice: Int get() = price / 2
     val effect: String get() = tr(effectRes)
 
     // 回復多少 HP（不是回復道具就是 0）
@@ -71,6 +91,7 @@ enum class ItemType(@StringRes private val labelRes: Int, @StringRes private val
         Riot -> maxOf(1, (total + 3) / 4)
         Catapult -> maxOf(1, (total + 2) / 3)
         Angel -> maxOf(1, (total + 1) / 2)
+        AirSupport -> AIR_SUPPORT_DAMAGE
         else -> 0
     }
 
@@ -96,6 +117,140 @@ val ItemPalette = ColorIconPalette + mapOf(
     'G' to Color(0xFF40A048),
     'P' to Color(0xFF9058D0),
     'p' to Color(0xFFC8A0F0),
+)
+
+// v1.02 體驗道具的圖示：貓罐頭、王國召集令、貓咪樂譜、戰艦信號旗、B2 轟炸機、奧利哈鋼礦石、魔導書的書頁
+private val IconCatCan = listOf(
+    "................",
+    "...K........K...",
+    "..KYK......KYK..",
+    "..KYYKKKKKKYYK..",
+    ".KMMMMMMMMMMMMK.",
+    ".KmMMMMMMMMMMmK.",
+    ".KKKKKKKKKKKKKK.",
+    ".KYYYYYYYYYYYYK.",
+    ".KYYKYYYYYYKYYK.",
+    ".KYYYYYRRYYYYYK.",
+    ".KYYYYKYYKYYYYK.",
+    ".KYYYYYYYYYYYYK.",
+    ".KKKKKKKKKKKKKK.",
+    ".KmMMMMMMMMMMmK.",
+    "..KKKKKKKKKKKK..",
+    "................",
+)
+
+private val IconRoyalSummons = listOf(
+    "................",
+    "..KKKKKKKKKKKK..",
+    ".KDAAAAAAAAAADK.",
+    "..KKKKKKKKKKKK..",
+    "...KAAAAAAAAK...",
+    "...KAKKKKKAAK...",
+    "...KAAAAAAAAK...",
+    "...KAKKKKAAAK...",
+    "...KAAAAAAAAK...",
+    "...KAKKKRRRAK...",
+    "...KAAAARYRRK...",
+    "..KKKKKKRRRKKK..",
+    ".KDAAAAAAARAADK.",
+    "..KKKKKKKKRRKK..",
+    "..........R.....",
+    "................",
+)
+
+private val IconCatScore = listOf(
+    "................",
+    "..KKKKKKKKKKKK..",
+    "..KWWWWWWWWWWK..",
+    "..KMMMMMMMMMMK..",
+    "..KWWWKKWWWWWK..",
+    "..KMMMKMKMMMMK..",
+    "..KWWWKWWWKKWK..",
+    "..KMMMKMMMKMKK..",
+    "..KWKKKWWWKWWK..",
+    "..KMKKKMKKKMMK..",
+    "..KWWWWWKKKWWK..",
+    "..KWWWWWWWWWWK..",
+    "..KKKKKKKKKKKK..",
+    "....K.K.........",
+    "...KYKYK........",
+    "................",
+)
+
+private val IconSignalFlag = listOf(
+    "................",
+    ".KK.............",
+    ".KYKKKKKKKKKK...",
+    ".KmKRRRRWWWWK...",
+    ".KmKRRRRWWWWK...",
+    ".KmKRRRRWWWWK...",
+    ".KmKBBBBRRRRK...",
+    ".KmKBBBBRRRRK...",
+    ".KmKBBBBRRRRK...",
+    ".KmKKKKKKKKKK...",
+    ".KmK............",
+    ".KmK............",
+    ".KmK............",
+    ".KmK............",
+    "KKKKK...........",
+    "................",
+)
+
+private val IconAirSupport = listOf(
+    "................",
+    "................",
+    ".......KK.......",
+    "......KmmK......",
+    ".....KmLLmK.....",
+    "....KmmmmmmK....",
+    "...KmmmmmmmmK...",
+    "..KmmmmmmmmmmK..",
+    ".KmmmmmmmmmmmmK.",
+    "KmmmmKmmmmKmmmmK",
+    "KKKKK.KmmK.KKKKK",
+    ".......KK.......",
+    "....R...R...R...",
+    "....K...K...K...",
+    "................",
+    "................",
+)
+
+private val IconOrichalcumOre = listOf(
+    "................",
+    "......KK........",
+    ".....KGGK..KK...",
+    "....KGAGGKKGGK..",
+    "....KGAGGKGAGK..",
+    "...KmKGGKKGGK...",
+    "..KmMKGGKmKGK...",
+    "..KmMMKKmMMKK...",
+    ".KmMMMMMMMMMmK..",
+    ".KmMMYMMMMYMmK..",
+    ".KmmMMMMMMMmmK..",
+    "..KmmmmmmmmmK...",
+    "...KKKKKKKKK....",
+    "................",
+    "................",
+    "................",
+)
+
+private val IconTomePage = listOf(
+    "................",
+    "...KKKKKKKKK....",
+    "...KAAAAAAAAK...",
+    "...KAPPAPAAAAK..",
+    "...KAAAAAAAAAK..",
+    "...KAPAPPPAAAK..",
+    "...KAAAAAAAAAK..",
+    "...KAAPKKPAAAK..",
+    "...KAAKPPKAAAK..",
+    "...KAAPKKPAAAK..",
+    "...KAAAAAAAAAK..",
+    "...KAPPAPPAAAK..",
+    "...KAAAAAAAADK..",
+    "...KAAAAAAADK...",
+    "...KKKKKKKKK....",
+    "................",
 )
 
 // 防護盾：藍色盾牌、金色鑲邊、中間白色十字

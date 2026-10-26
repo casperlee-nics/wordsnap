@@ -277,7 +277,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 TestSaves.seed(db)
                 prefs.edit().putBoolean(KEY_TEST_SAVES, true).apply()
             }
-            if (TestSaves.ENABLED) TestSaves.fillMonsterLog(db)
+            if (TestSaves.ENABLED) TestSaves.topUp(db)
             // 目前的語言是日文，字典包有新版（或還沒裝）就先裝好，才查得到解釋
             DictionaryPacks.install(getApplication(), appLanguage(getApplication()))
             fillMissingMeaningsNow()
@@ -312,6 +312,26 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     fun useItem(type: ItemType) {
         val pid = profileId ?: return
         viewModelScope.launch { itemDao.use(pid, type.name) }
+    }
+
+    // 道具屋：用金幣買一個道具（金幣不夠就不會買）
+    fun buyItem(type: ItemType) {
+        val pid = profileId ?: return
+        viewModelScope.launch {
+            db.withTransaction {
+                if (profileDao.spendCoins(pid, type.price) == 1) itemDao.add(pid, type.name)
+            }
+        }
+    }
+
+    // 道具屋：半價賣掉一個道具
+    fun sellItem(type: ItemType) {
+        val pid = profileId ?: return
+        viewModelScope.launch {
+            db.withTransaction {
+                if (itemDao.use(pid, type.name) == 1) profileDao.addCoins(pid, type.sellPrice)
+            }
+        }
     }
 
     fun add(text: String, meaning: String) {

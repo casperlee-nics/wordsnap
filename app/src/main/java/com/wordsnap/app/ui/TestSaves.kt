@@ -12,6 +12,7 @@ object TestSaves {
     const val ENABLED = true
     const val LEVEL = 60
     private const val ITEM_COUNT = 9
+    private const val TEST_COINS = 5000
 
     private val WORDS = listOf(
         "apple", "banana", "castle", "dragon", "forest", "garden", "harbor", "island", "jungle", "knight",
@@ -35,13 +36,18 @@ object TestSaves {
         }
     }
 
-    // 測試存檔的冒險履歷：還沒遇過的怪物都補成遇過、打倒一次（每次開 App 檢查，舊存檔也會補上）
-    suspend fun fillMonsterLog(db: AppDatabase) {
+    // 測試存檔每次開 App 補上後來加的東西：金幣、新道具；冒險履歷還沒遇過的怪物都補成遇過、打倒一次（每次開 App 檢查，舊存檔也會補上）
+    suspend fun topUp(db: AppDatabase) {
         val profiles = db.profileDao()
         val log = db.monsterLogDao()
         val all = NormalMonsters + MidBosses + BigBosses
         Avatar.entries.forEach { avatar ->
             val profile = profiles.findByName("LV$LEVEL${avatar.race.label}".take(12)) ?: return@forEach
+            // 道具屋測試：金幣 5000，後來新增的道具也各補 9 個
+            if (profile.coins == 0) profiles.addCoins(profile.id, TEST_COINS)
+            ItemType.entries.forEach { type ->
+                if (db.itemDao().has(profile.id, type.name) == 0) repeat(ITEM_COUNT) { db.itemDao().add(profile.id, type.name) }
+            }
             if (log.count(profile.id) >= all.size) return@forEach
             all.forEach { log.fill(profile.id, it.key) }
         }

@@ -171,6 +171,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     fun monsterHalves() = (questions.size - correct - bonus) * 2 - halfHits
     // 這場用過的技能、技能動畫、技能視窗
     val usedSkills = remember { mutableStateListOf<Skill>() }
+    // 用體驗道具放出來的招式（不算技能次數，持續效果一樣要畫）
+    val itemSkills = remember { mutableStateListOf<Skill>() }
     var skillUse by remember { mutableStateOf<SkillUse?>(null) }
     var showSkills by remember { mutableStateOf(false) }
     // 粉絲加油、攻擊力加成、怪物不能動、攻擊力減半、被迷住還剩幾回合；跳過幾次（換題時重新念）
@@ -437,11 +439,85 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
+    // 招式的效果（技能和體驗道具共用）：補血、護盾、迷惑…、換音樂、換背景、打怪物
+    fun applySkill(skill: Skill, e: SkillEffect) {
+        if (e.heal > 0) damage = (damage - WRONG_DAMAGE * e.heal).coerceAtLeast(0)
+        if (e.selfHit > 0) damage += WRONG_DAMAGE * e.selfHit
+        if (e.shield > 0) shieldTurns = maxOf(shieldTurns, e.shield)
+        if (e.stun > 0) stunTurns = maxOf(stunTurns, e.stun)
+        if (e.cheer > 0) cheerTurns = e.cheer
+        if (e.boost > 0) {
+            boostTurns = e.boost
+            boostHalves = e.boostHalves
+            boostSkill = skill
+        }
+        if (e.confuse > 0) confuseTurns = maxOf(confuseTurns, e.confuse)
+        if (e.weaken > 0) weakTurns = e.weaken
+        if (e.charm > 0) charmTurns = e.charm
+        if (e.dodge > 0) dodgeTurns = e.dodge
+        if (e.timeStop > 0) timeStopTurns = e.timeStop
+        if (e.guard > 0) guardMult *= (100 - e.guard) / 100f
+        if (e.cute) cute = true
+        if (e.hint > 0) {
+            hintTurns = e.hint
+            fillHint()
+        }
+        when (e.music) {
+            SkillMusic.Classical -> musicOverride = ClassicalTunes.random()
+            SkillMusic.WilliamTell -> musicOverride = R.raw.classical_william_tell
+            SkillMusic.Sailor -> musicOverride = R.raw.sailor_bgm
+            null -> Unit
+        }
+        // 背景在動畫播到一半（煙塵散去、火焰退去）時換掉
+        val newScene = e.scene
+        if (newScene != null) {
+            scope.launch {
+                delay(skillSceneSwap(skill).toLong())
+                scene = newScene
+            }
+        }
+        when {
+            e.reveal > 0 -> {
+                // 先打怪物再給答案；答對後下一題時才檢查怪物倒下，不會結束兩次
+                if (e.damage > 0) {
+                    hitDelay = skillImpact(skill)
+                    bonus += e.damage
+                    bonusHits++
+                }
+                revealAnswer()
+                revealLeft = e.reveal - 1
+            }
+            e.damage > 0 -> hitMonster(e.damage, skillImpact(skill))
+            e.skip -> {
+                // 這題移到最後，不被攻擊也沒有經驗值
+                questions.add(questions.removeAt(index))
+                input = ""
+                skips++
+            }
+        }
+    }
+
     fun useItem(type: ItemType) {
         if (!answering) return
         showBag = false
         vm.useItem(type)
         itemUse = ItemUse(type, (itemUse?.id ?: 0) + 1)
+        // 體驗道具：效果和那招技能一樣，但不算技能使用次數
+        val itemSkill = type.skill
+        if (itemSkill != null) {
+            itemSkills.add(itemSkill)
+            applySkill(itemSkill, itemSkill.effect ?: return)
+            return
+        }
+        // 呼叫空中支援：轟炸完背景變成被炸過的城市
+        if (type == ItemType.AirSupport) {
+            scope.launch {
+                delay((AIR_SUPPORT_DURATION * AIR_SUPPORT_SCENE_AT).toLong())
+                scene = ReviewScene.RuinedCity
+            }
+            hitMonster(AIR_SUPPORT_DAMAGE, (AIR_SUPPORT_DURATION * AIR_SUPPORT_IMPACT_AT).toInt())
+            return
+        }
         when {
             type.heal > 0 -> damage = (damage - type.heal).coerceAtLeast(0)
             // 直接顯示答案，算答對
@@ -506,60 +582,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         usedSkills.add(skill)
         skillThisRound = true
         skillUse = SkillUse(skill, (skillUse?.id ?: 0) + 1)
-        if (e.heal > 0) damage = (damage - WRONG_DAMAGE * e.heal).coerceAtLeast(0)
-        if (e.selfHit > 0) damage += WRONG_DAMAGE * e.selfHit
-        if (e.shield > 0) shieldTurns = maxOf(shieldTurns, e.shield)
-        if (e.stun > 0) stunTurns = maxOf(stunTurns, e.stun)
-        if (e.cheer > 0) cheerTurns = e.cheer
-        if (e.boost > 0) {
-            boostTurns = e.boost
-            boostHalves = e.boostHalves
-            boostSkill = skill
-        }
-        if (e.confuse > 0) confuseTurns = maxOf(confuseTurns, e.confuse)
-        if (e.weaken > 0) weakTurns = e.weaken
-        if (e.charm > 0) charmTurns = e.charm
-        if (e.dodge > 0) dodgeTurns = e.dodge
-        if (e.timeStop > 0) timeStopTurns = e.timeStop
-        if (e.guard > 0) guardMult *= (100 - e.guard) / 100f
-        if (e.cute) cute = true
-        if (e.hint > 0) {
-            hintTurns = e.hint
-            fillHint()
-        }
-        when (e.music) {
-            SkillMusic.Classical -> musicOverride = ClassicalTunes.random()
-            SkillMusic.WilliamTell -> musicOverride = R.raw.classical_william_tell
-            SkillMusic.Sailor -> musicOverride = R.raw.sailor_bgm
-            null -> Unit
-        }
-        // 背景在動畫播到一半（煙塵散去、火焰退去）時換掉
-        val newScene = e.scene
-        if (newScene != null) {
-            scope.launch {
-                delay(skillSceneSwap(skill).toLong())
-                scene = newScene
-            }
-        }
-        when {
-            e.reveal > 0 -> {
-                // 先打怪物再給答案；答對後下一題時才檢查怪物倒下，不會結束兩次
-                if (e.damage > 0) {
-                    hitDelay = skillImpact(skill)
-                    bonus += e.damage
-                    bonusHits++
-                }
-                revealAnswer()
-                revealLeft = e.reveal - 1
-            }
-            e.damage > 0 -> hitMonster(e.damage, skillImpact(skill))
-            e.skip -> {
-                // 這題移到最後，不被攻擊也沒有經驗值
-                questions.add(questions.removeAt(index))
-                input = ""
-                skips++
-            }
-        }
+        applySkill(skill, e)
     }
 
     // 效果還在、要一直畫在戰場上的招式（光芒、醫生、樂團、跟班…）
@@ -672,7 +695,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     cheering = cheerTurns > 0,
                     stunned = stunTurns > 0,
                     charmed = charmTurns > 0,
-                    lasting = usedSkills.filter(::lastingActive),
+                    lasting = (usedSkills + itemSkills).distinct().filter(::lastingActive),
                     frozen = timeStopTurns > 0,
                     dodged = lastDodged,
                     giant = boostSkill == Skill.GoblinKing && boostTurns > 0 && !finished,
@@ -746,6 +769,11 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 answering && when (type) {
                     ItemType.Shield -> shieldTurns == 0
                     ItemType.Confusion -> confuseTurns == 0
+                    // 戰艦會打到自己，血不夠就不能用
+                    ItemType.SignalFlag -> heroHp > WRONG_DAMAGE
+                    ItemType.CatScore -> charmTurns == 0
+                    ItemType.OrichalcumOre -> boostTurns == 0
+                    ItemType.TomePage -> hintTurns == 0
                     else -> type.heal == 0 || damage > 0
                 }
             },
@@ -1078,7 +1106,8 @@ private fun BattleField(
                 ItemType.Elixir -> 1600
                 ItemType.SmartPill -> 1400
                 ItemType.Catapult -> 1200
-                else -> 1100
+                ItemType.AirSupport -> AIR_SUPPORT_DURATION
+                else -> itemUse.type.skill?.let(::skillDuration) ?: 1100
             }
             itemAnim.animateTo(1f, tween(duration, easing = LinearEasing))
             itemAnim.snapTo(0f)
@@ -1301,7 +1330,10 @@ private fun BattleField(
                         ItemType.Angel -> drawAngels(t, monsterCenter)
                         ItemType.Riot -> drawRiot(t, ground)
                         ItemType.Catapult -> drawCatapult(t, ground, monsterCenter)
+                        ItemType.AirSupport -> drawAirSupport(t, monsterCenter)
                         ItemType.Shield, ItemType.Confusion -> Unit
+                        // 體驗道具：播那招技能的動畫
+                        else -> itemUse.type.skill?.let { drawSkill(it, t, heroCenter, monsterCenter, HeroSize.toPx(), artH.toPx(), ground) }
                     }
                 }
                 if (prisonAnim.value > 0f) drawRiot(prisonAnim.value, ground, prisoners = true)

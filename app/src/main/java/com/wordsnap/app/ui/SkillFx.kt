@@ -2190,6 +2190,58 @@ fun DrawScope.drawSneakStab(t: Float, monster: Offset, monsterHeight: Float) {
     drawHit(monster, seg(t, 0.3f, 0.8f), cell)
 }
 
+// 呼叫空中支援（道具）：B2 轟炸機從左邊慢慢飛過，經過怪物上方時一路丟炸彈，最後煙塵蓋住畫面，散開後變成被炸過的城市
+const val AIR_SUPPORT_DURATION = 3600
+const val AIR_SUPPORT_IMPACT_AT = 0.5f
+const val AIR_SUPPORT_SCENE_AT = 0.68f
+
+private val B2Art = listOf(
+    "...........KK...........",
+    "..........KmmK..........",
+    ".........KmLLmK.........",
+    "........KmmmmmmK........",
+    ".......KmmmmmmmmK.......",
+    ".....KKmmmmmmmmmmKK.....",
+    "...KKmmmmmmmmmmmmmmKK...",
+    ".KKmmmmmmmmmmmmmmmmmmKK.",
+    "KmmmmmKmmmmmmmmmmKmmmmmK",
+    ".KKKKK.KmmKKKKmmK.KKKKK.",
+    ".........KK..KK.........",
+)
+
+fun DrawScope.drawAirSupport(t: Float, monster: Offset) {
+    val cell = 3.dp.toPx()
+    val w = B2Art.first().length * cell
+    val y = cell * 9
+    val span = size.width + w * 2
+    val fly = seg(t, 0f, 0.6f)
+    val planeX = -w + fly * span
+    // 飛機的影子先掃過地面
+    drawOval(Color(0xFF202030).copy(alpha = 0.25f), Offset(planeX - w / 2, monster.y + cell * 8), Size(w, cell * 3))
+    spriteCentered(B2Art, Offset(planeX, y), cell)
+    // 炸彈：飛到怪物附近時，一顆接一顆往下掉
+    for (j in 0 until 5) {
+        val bx = monster.x + (j - 2) * cell * 6
+        val dropT = 0.6f * (bx + w) / span
+        val fall = seg(t, dropT, dropT + 0.08f)
+        if (fall > 0f && fall < 1f) {
+            val c = Offset(bx, y + cell * 3 + fall * fall * (monster.y - y))
+            drawRect(Color(0xFF202030), Offset(c.x - cell, c.y - cell * 2), Size(cell * 2, cell * 4))
+            drawRect(Color(0xFF707890), Offset(c.x - cell / 2, c.y - cell * 2), Size(cell, cell * 2))
+        }
+        drawExplosion(Offset(bx, monster.y + (j % 2) * cell * 3), seg(t, dropT + 0.08f, dropT + 0.22f), cell * 1.6f)
+    }
+    // 煙塵蓋住畫面，散開後已經是被炸過的城市
+    val dust = seg(t, 0.6f, 0.66f) * (1f - seg(t, 0.72f, 0.92f))
+    if (dust > 0f) {
+        for (k in 0 until 18) {
+            val x = (k % 6 + 0.5f) * size.width / 6
+            val yy = (k / 6 + 0.5f) * size.height / 3
+            drawCircle(Color(0xFF8A8478).copy(alpha = 0.9f * dust), size.width / 6, Offset(x + sin(t * 9 + k) * cell * 3, yy))
+        }
+    }
+}
+
 // ---- 效果還在時一直畫著的東西 ----
 
 fun DrawScope.drawLasting(skill: Skill, clock: Float, hero: Offset, heroSize: Float, monster: Offset, monsterHeight: Float, ground: Float) {

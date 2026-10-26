@@ -31,6 +31,10 @@ interface ProfileDao {
     @Query("UPDATE profiles SET coins = coins + :amount WHERE id = :id")
     suspend fun addCoins(id: Long, amount: Int)
 
+    // 付錢：金幣夠才扣，回傳 1 表示付成功
+    @Query("UPDATE profiles SET coins = coins - :amount WHERE id = :id AND coins >= :amount")
+    suspend fun spendCoins(id: Long, amount: Int): Int
+
     @Query("UPDATE profiles SET avatar = :avatar, exp = :exp WHERE id = :id")
     suspend fun changeClass(id: Long, avatar: String, exp: Int)
 

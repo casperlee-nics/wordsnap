@@ -70,6 +70,7 @@ fun WordListScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showHero by remember { mutableStateOf(false) }
     var showItems by remember { mutableStateOf(false) }
+    var showShop by remember { mutableStateOf(false) }
     var showSkills by remember { mutableStateOf(false) }
     val itemCounts by vm.items.collectAsState()
     val speaker = rememberSpeaker()
@@ -128,6 +129,7 @@ fun WordListScreen(
                             DropdownMenuItem(text = { Text(tr(R.string.hero_title)) }, onClick = { showMenu = false; showHero = true })
                             DropdownMenuItem(text = { Text(tr(R.string.skill_title)) }, onClick = { showMenu = false; showSkills = true })
                             DropdownMenuItem(text = { Text(tr(R.string.item_shelf)) }, onClick = { showMenu = false; showItems = true })
+                            DropdownMenuItem(text = { Text(tr(R.string.shop_title)) }, onClick = { showMenu = false; showShop = true })
                             DropdownMenuItem(text = { Text(tr(R.string.menu_home)) }, onClick = { showMenu = false; onHome() })
                         }
                     }
@@ -218,6 +220,15 @@ fun WordListScreen(
                 onDismiss = { showSkills = false },
             )
         }
+    }
+    if (showShop) {
+        ShopDialog(
+            counts = itemCounts,
+            coins = profile?.coins ?: 0,
+            onBuy = vm::buyItem,
+            onSell = vm::sellItem,
+            onDismiss = { showShop = false },
+        )
     }
     if (showItems) {
         ItemBagDialog(counts = itemCounts, onDismiss = { showItems = false })
