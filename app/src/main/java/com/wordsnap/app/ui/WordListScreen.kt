@@ -64,6 +64,7 @@ fun WordListScreen(
     val books by vm.books.collectAsState()
     val selectedBookId by vm.selectedBookId.collectAsState()
     val profile by vm.currentProfile.collectAsState()
+    val monsterLog by vm.monsterLog.collectAsState()
     val allWords by vm.allWords.collectAsState()
     val unlock = remember(allWords, selectedBookId) { vm.battleUnlock(selectedBookId) }
     var showMenu by remember { mutableStateOf(false) }
@@ -249,6 +250,7 @@ fun WordListScreen(
                 remembered = allWords.count { w -> w.box >= 1 } + it.keptRemembered,
                 onDismiss = { showHero = false },
                 onClassChange = { avatar -> vm.changeClass(it, avatar) },
+                monsterLog = monsterLog,
             )
         }
     }

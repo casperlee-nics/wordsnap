@@ -222,12 +222,15 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var endShown by remember { mutableStateOf(false) }
     var reward by remember { mutableStateOf<BattleReward?>(null) }
     // 升級動畫看完了，才顯示戰鬥結果
+    // 打倒大魔王：先播專屬的勝利畫面和凱歌
+    var bossWinDone by remember { mutableStateOf(false) }
+    val showingBossWin = endShown && monster.rank == MonsterRank.Big && reward?.passed == true && !bossWinDone
     var levelUpDone by remember { mutableStateOf(false) }
     val leveledUp = reward?.let { it.levelAfter > it.levelBefore } == true
-    val showingLevelUp = endShown && leveledUp && !levelUpDone
+    val showingLevelUp = endShown && !showingBossWin && leveledUp && !levelUpDone
     // 升級之後（沒升級就直接）播放寶箱動畫，最後才顯示戰鬥結果
     var chestDone by remember { mutableStateOf(false) }
-    val showingChest = endShown && !showingLevelUp && reward?.item != null && !chestDone
+    val showingChest = endShown && !showingBossWin && !showingLevelUp && reward?.item != null && !chestDone
 
     val knockedOut = finished && !died && questions.isNotEmpty() && monsterHalves() <= 0
     LoopingMusic(
@@ -237,7 +240,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             MonsterRank.Normal -> R.raw.battle_bgm
         },
         // 打倒怪物時先停掉戰鬥音樂，播勝利號角
-        enabled = musicOn && introDone && !died && !knockedOut && !showingLevelUp && !showingChest,
+        enabled = musicOn && introDone && !died && !knockedOut && !showingBossWin && !showingLevelUp && !showingChest,
         volume = if (quiet) 0.05f else 0.3f,
     )
     // 地表最可愛的貓：背景偶爾「喵～」一聲，直到戰鬥結束
@@ -255,7 +258,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     OneShotSound(R.raw.death_jingle, play = died)
     OneShotSound(R.raw.levelup_jingle, play = showingLevelUp)
     OneShotSound(R.raw.chest_jingle, play = showingChest)
-    OneShotSound(R.raw.victory_jingle, play = knockedOut)
+    OneShotSound(R.raw.victory_jingle, play = knockedOut && monster.rank != MonsterRank.Big)
 
     val total = questions.size
     val word = questions.getOrNull(index)
@@ -750,7 +753,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val done = reward
     if (endShown && done != null) {
         val chestItem = done.item
-        if (showingLevelUp) {
+        if (showingBossWin) {
+            BossVictoryScreen(monster, avatar, tier, musicOn, onClose = { bossWinDone = true })
+        } else if (showingLevelUp) {
             LevelUpScreen(ownAvatar, race, done.levelBefore, done.levelAfter, onClose = { levelUpDone = true })
         } else if (showingChest && chestItem != null) {
             ChestScreen(chestItem, onClose = { chestDone = true })

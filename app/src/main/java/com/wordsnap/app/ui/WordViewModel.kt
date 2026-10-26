@@ -12,6 +12,7 @@ import androidx.room.withTransaction
 import com.wordsnap.app.R
 import com.wordsnap.app.data.AppDatabase
 import com.wordsnap.app.data.Book
+import com.wordsnap.app.data.MonsterLog
 import com.wordsnap.app.data.Profile
 import com.wordsnap.app.data.Word
 import com.wordsnap.app.i18n.appLanguage
@@ -97,6 +98,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     private val profileDao = db.profileDao()
     private val bookDao = db.bookDao()
     private val itemDao = db.itemDao()
+    private val monsterLogDao = db.monsterLogDao()
     private val prefs = application.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     // ---- 暱稱 ----
@@ -154,6 +156,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
             db.withTransaction {
                 dao.deleteForProfile(profile.id)
                 itemDao.deleteForProfile(profile.id)
+                monsterLogDao.deleteForProfile(profile.id)
                 bookDao.deleteForProfile(profile.id)
                 profileDao.delete(profile.id)
             }
@@ -288,6 +291,12 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     val items: StateFlow<Map<ItemType, Int>> = currentProfile
         .flatMapLatest { profile -> if (profile == null) flowOf(emptyList()) else itemDao.getForProfile(profile.id) }
         .map { list -> list.mapNotNull { item -> ItemType.from(item.type)?.let { it to item.count } }.toMap() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    // 冒險履歷：遇過的怪物 key → 紀錄
+    val monsterLog: StateFlow<Map<String, MonsterLog>> = currentProfile
+        .flatMapLatest { profile -> if (profile == null) flowOf(emptyList()) else monsterLogDao.getForProfile(profile.id) }
+        .map { list -> list.associateBy { it.key } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     fun useItem(type: ItemType) {
@@ -458,6 +467,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 if (died) profileDao.addDeath(profile.id)
                 if (passed) bookDao.markCleared(bookId, now)
                 if (item != null) itemDao.add(profile.id, item.name)
+                // 冒險履歷：遇到這隻怪物一次，通過就算打倒
+                monsterLogDao.record(profile.id, monster.key, passed)
                 // 魔王要通過這場戰鬥才算打倒，不然下次還會再出現
                 if (passed && monster.rank != MonsterRank.Normal) {
                     val remembered = rememberedTotal()
