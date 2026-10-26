@@ -77,7 +77,7 @@ data class SkillEffect(
 const val UNTIL_END = 999
 
 // 技能換的背景音樂：古典名曲（隨機一首）、月光奏鳴曲第三樂章、酒醉的水手
-enum class SkillMusic { Classical, Moonlight, Sailor }
+enum class SkillMusic { Classical, Valkyries, Sailor }
 
 // effect 是 null 的招式還沒做好，技能表裡看得到但不能用
 enum class Skill(
@@ -92,7 +92,7 @@ enum class Skill(
     HolyShieldBash(Race.Hero, 30, R.string.skill_holy_shield_bash, R.string.skill_holy_shield_bash_desc, SkillEffect(shield = 1, damage = 1)),
     RoyalSoldiers(Race.Hero, 40, R.string.skill_royal_soldiers, R.string.skill_royal_soldiers_desc, SkillEffect(damage = 1, reveal = 1, heal = 1)),
     CrossSlash(Race.Hero, 50, R.string.skill_cross_slash, R.string.skill_cross_slash_desc, SkillEffect(damage = 3)),
-    OdinWrath(Race.Hero, 60, R.string.skill_odin_wrath, R.string.skill_odin_wrath_desc, SkillEffect(damage = 5, music = SkillMusic.Moonlight)),
+    OdinWrath(Race.Hero, 60, R.string.skill_odin_wrath, R.string.skill_odin_wrath_desc, SkillEffect(damage = 5, music = SkillMusic.Valkyries)),
     MindFocus(Race.Mage, 10, R.string.skill_mind_focus, R.string.skill_mind_focus_desc, SkillEffect(boost = 3, boostHalves = 1)),
     CrystalPeek(Race.Mage, 20, R.string.skill_crystal_peek, R.string.skill_crystal_peek_desc, SkillEffect(reveal = 1)),
     GurgleCurse(Race.Mage, 30, R.string.skill_gurgle_curse, R.string.skill_gurgle_curse_desc, SkillEffect(confuse = 2)),
@@ -137,8 +137,8 @@ enum class Skill(
     FullArsenal(Race.Machine, 60, R.string.skill_full_arsenal, R.string.skill_full_arsenal_desc, SkillEffect(damage = 5, scene = ReviewScene.RuinedCity)),
     Bleh(Race.Demon, 10, R.string.skill_bleh, R.string.skill_bleh_desc, SkillEffect(stun = 1)),
     DarkMist(Race.Demon, 20, R.string.skill_dark_mist, R.string.skill_dark_mist_desc, SkillEffect(dodge = 2)),
-    PlagueDoctor(Race.Demon, 30, R.string.skill_plague_doctor, R.string.skill_plague_doctor_desc, SkillEffect(weaken = 5)),
-    DemonEye(Race.Demon, 40, R.string.skill_demon_eye, R.string.skill_demon_eye_desc, SkillEffect(confuse = 2)),
+    PlagueDoctor(Race.Demon, 30, R.string.skill_plague_doctor, R.string.skill_plague_doctor_desc, SkillEffect(weaken = 3)),
+    DemonEye(Race.Demon, 40, R.string.skill_demon_eye, R.string.skill_demon_eye_desc, SkillEffect(confuse = 3)),
     EnergySip(Race.Demon, 50, R.string.skill_energy_sip, R.string.skill_energy_sip_desc, SkillEffect(damage = 2, heal = 2)),
     Possession(Race.Demon, 60, R.string.skill_possession, R.string.skill_possession_desc, SkillEffect(possess = true));
     val label: String get() = tr(nameRes)
@@ -206,28 +206,6 @@ fun SkillDialog(
             }
         }
         Text(tr(R.string.skill_rule), style = MaterialTheme.typography.bodySmall.readable())
-    }
-}
-
-// 惡魔的附身：選一個別的職業（不能選自己），附身到戰鬥結束
-@Composable
-fun PossessionDialog(self: Race, onPick: (Race) -> Unit, onDismiss: () -> Unit) {
-    PixelWindowDialog(title = tr(R.string.possession_title), onDismiss = onDismiss) {
-        Text(tr(R.string.possession_hint), style = MaterialTheme.typography.bodySmall.readable())
-        Race.entries.filter { it != self }.chunked(4).forEach { row ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                row.forEach { race ->
-                    Column(
-                        Modifier.weight(1f).border(2.dp, PixelInk).background(SkillSlot)
-                            .clickable { onPick(race) }.padding(vertical = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        PixelAvatar(avatarOf(race), size = 44.dp)
-                        Text(avatarOf(race).label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-                    }
-                }
-            }
-        }
     }
 }
 

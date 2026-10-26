@@ -532,7 +532,7 @@
     <string name="skill_cross_slash">聖剣十字斬り</string>
     <string name="skill_cross_slash_desc">敵に3ダメージ</string>
     <string name="skill_odin_wrath">勇者オーディンの怒り</string>
-    <string name="skill_odin_wrath_desc">敵に5ダメージ、BGMが『月光』第3楽章に</string>
+    <string name="skill_odin_wrath_desc">敵に5ダメージ、BGMが『ワルキューレの騎行』に</string>
     <string name="skill_mind_focus">精神統一</string>
     <string name="skill_mind_focus_desc">3ターンの間、正解時の攻撃力が1.5倍</string>
     <string name="skill_crystal_peek">水晶玉でのぞき見</string>
@@ -568,7 +568,7 @@
     <string name="skill_bomb_chain">連鎖ばくだん</string>
     <string name="skill_bomb_chain_desc">敵に2ダメージ</string>
     <string name="skill_stolen_watch">盗んだ懐中時計</string>
-    <string name="skill_stolen_watch_desc">3ターン時間停止：ミスしても攻撃されず、すぐ答え直せる</string>
+    <string name="skill_stolen_watch_desc">3ターン時間停止：ミスしても攻撃されず、3ターン目に敵へこっそり1ダメージ</string>
     <string name="skill_goblin_king">おれさまはゴブリン大王</string>
     <string name="skill_goblin_king_desc">戦闘終了まで受けるダメージ-1/4、攻撃力+1/2</string>
     <string name="skill_pot_lid">鍋ぶたガード</string>
@@ -594,7 +594,7 @@
     <string name="skill_purr_heal">ゴロゴロいやし～ニャ</string>
     <string name="skill_purr_heal_desc">ミス3回分のHPを回復</string>
     <string name="skill_cutest_cat">ネコは地上でいちばんかわいい～ニャ～</string>
-    <string name="skill_cutest_cat_desc">戦闘終了まで、ミスしても半分の確率で攻撃されない</string>
+    <string name="skill_cutest_cat_desc">戦闘終了まで、ミスしても半分の確率で攻撃されない。子ネコが2匹そばに来る</string>
     <string name="skill_sneeze_fire">ぷぷっと小さな火</string>
     <string name="skill_sneeze_fire_desc">敵に1ダメージ</string>
     <string name="skill_dragon_roar">ドラゴンの威嚇！</string>
@@ -617,21 +617,18 @@
     <string name="skill_overclock_desc">3ターンの間、正解時の攻撃力が2倍</string>
     <string name="skill_battleship">戦艦召喚</string>
     <string name="skill_battleship_desc">自分もミス1回分のダメージ、敵に3ダメージ、背景が海上に</string>
-    <string name="skill_full_arsenal">ミッション～殲滅～ピッ～全武器発射！～</string>
+    <string name="skill_full_arsenal">ミッション～殲滅～ピッ～全武器発射！</string>
     <string name="skill_full_arsenal_desc">敵に5ダメージ、背景が焼け野原の街に</string>
     <string name="skill_bleh">小悪魔のあっかんべー</string>
     <string name="skill_bleh_desc">敵が1ターン何もしない</string>
     <string name="skill_dark_mist">黒い霧隠れ</string>
     <string name="skill_dark_mist_desc">2ターンの間、ミスしても敵の攻撃が当たらずHPが減らない</string>
     <string name="skill_plague_doctor">疫病の到来</string>
-    <string name="skill_plague_doctor_desc">5ターンの間、敵の攻撃力が半分</string>
-    <string name="skill_demon_eye">魔眼の混乱</string>
-    <string name="skill_demon_eye_desc">2ターンの間、ミスすると敵が自分を攻撃</string>
+    <string name="skill_plague_doctor_desc">3ターンの間、敵の攻撃力が半分</string>
+    <string name="skill_demon_eye">魔眼の凝視</string>
+    <string name="skill_demon_eye_desc">3ターンの間、ミスすると敵が自分を攻撃</string>
     <string name="skill_energy_sip">チューチューエナジー</string>
     <string name="skill_energy_sip_desc">敵に2ダメージ、ミス2回分のHPを回復</string>
     <string name="skill_possession">悪魔の憑依</string>
-    <string name="skill_possession_desc">ほかの職業に憑依し、戦闘終了までその姿とスキルを使える</string>
-    <string name="possession_title">だれに取りつく？</string>
-    <string name="possession_hint">取りつくと見た目とスキルがその職業になる（戦闘終了まで）</string>
-    <string name="battle_time_stop_retry">時間停止中！もう一度答えよう</string>
+    <string name="skill_possession_desc">ランダムでほかの職業に憑依し、戦闘終了までその姿とスキルを使える。BGMがこわくなる</string>
 </resources>

@@ -538,7 +538,7 @@
     <string name="skill_cross_slash">聖劍十字斬</string>
     <string name="skill_cross_slash_desc">怪物扣 3 格血</string>
     <string name="skill_odin_wrath">勇者奧丁的憤怒</string>
-    <string name="skill_odin_wrath_desc">怪物扣 5 格血，音樂換成月光奏鳴曲第三樂章</string>
+    <string name="skill_odin_wrath_desc">怪物扣 5 格血，音樂換成《女武神的騎行》</string>
     <string name="skill_mind_focus">精神力集中</string>
     <string name="skill_mind_focus_desc">3 回合內答對，攻擊力 x1.5</string>
     <string name="skill_crystal_peek">水晶球偷偷看</string>
@@ -574,7 +574,7 @@
     <string name="skill_bomb_chain">炸彈連環爆</string>
     <string name="skill_bomb_chain_desc">怪物扣 2 格血</string>
     <string name="skill_stolen_watch">偷來的懷錶</string>
-    <string name="skill_stolen_watch_desc">時間暫停 3 回合：答錯不被攻擊，還能馬上重答一次</string>
+    <string name="skill_stolen_watch_desc">時間暫停 3 回合：答錯不被攻擊，第 3 回合偷打怪物 1 格血</string>
     <string name="skill_goblin_king">我是哥布林大王</string>
     <string name="skill_goblin_king_desc">到戰鬥結束，受到的傷害 -1/4、攻擊 +1/2</string>
     <string name="skill_pot_lid">躲到鍋蓋後面</string>
@@ -600,7 +600,7 @@
     <string name="skill_purr_heal">呼嚕呼嚕治癒～喵</string>
     <string name="skill_purr_heal_desc">補回 3 次答錯的血</string>
     <string name="skill_cutest_cat">貓咪是地表最可愛的生物～喵～</string>
-    <string name="skill_cutest_cat_desc">到戰鬥結束，答錯有一半機率不被攻擊</string>
+    <string name="skill_cutest_cat_desc">到戰鬥結束，答錯有一半機率不被攻擊，身邊多兩隻小貓</string>
     <string name="skill_sneeze_fire">小火苗噗噗</string>
     <string name="skill_sneeze_fire_desc">怪物扣 1 格血</string>
     <string name="skill_dragon_roar">龍的威嚇!</string>
@@ -623,21 +623,18 @@
     <string name="skill_overclock_desc">3 回合內答對，攻擊力 x2</string>
     <string name="skill_battleship">戰艦招喚</string>
     <string name="skill_battleship_desc">自己扣 1 次答錯的血，怪物扣 3 格血，背景變成海上</string>
-    <string name="skill_full_arsenal">任務～殲滅～逼～全武器發射!～</string>
+    <string name="skill_full_arsenal">任務～殲滅～逼～全武器發射!</string>
     <string name="skill_full_arsenal_desc">怪物扣 5 格血，背景變成被炸過的城市</string>
     <string name="skill_bleh">小惡魔的鬼臉</string>
     <string name="skill_bleh_desc">怪物 1 回合不攻擊任何人</string>
     <string name="skill_dark_mist">黑霧遁形</string>
     <string name="skill_dark_mist_desc">2 回合內答錯，怪物打不到你，不扣血</string>
     <string name="skill_plague_doctor">瘟疫降臨</string>
-    <string name="skill_plague_doctor_desc">5 回合內怪物攻擊力減半</string>
-    <string name="skill_demon_eye">魔眼混亂</string>
-    <string name="skill_demon_eye_desc">2 回合內答錯，怪物反而打自己</string>
+    <string name="skill_plague_doctor_desc">3 回合內怪物攻擊力減半</string>
+    <string name="skill_demon_eye">魔眼凝視</string>
+    <string name="skill_demon_eye_desc">3 回合內答錯，怪物反而打自己</string>
     <string name="skill_energy_sip">吸吸能量</string>
     <string name="skill_energy_sip_desc">怪物扣 2 格血，同時補回 2 次答錯的血</string>
     <string name="skill_possession">惡魔的附身</string>
-    <string name="skill_possession_desc">附身在別的職業身上，用他的外觀和技能到戰鬥結束</string>
-    <string name="possession_title">要附身在誰身上？</string>
-    <string name="possession_hint">附身後外觀和技能都變成那個職業，直到戰鬥結束</string>
-    <string name="battle_time_stop_retry">時間暫停中！再答一次</string>
+    <string name="skill_possession_desc">隨機附身在別的職業身上，用那個職業的外觀和技能到戰鬥結束，音樂變得很可怕</string>
 </resources>

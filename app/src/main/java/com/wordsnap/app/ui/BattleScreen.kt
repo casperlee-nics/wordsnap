@@ -103,7 +103,8 @@ private val GroundPad = 8.dp
 private data class ItemUse(val type: ItemType, val id: Int)
 
 // 技能使用一次的紀錄；id 每次加一，讓動畫重新播放
-private data class SkillUse(val skill: Skill, val id: Int)
+// target：惡魔的附身抽到的職業（走進來被附身的那個人）
+private data class SkillUse(val skill: Skill, val id: Int, val target: Race? = null)
 
 // 貓咪交響樂團隨機換成其中一首古典名曲（8-bit 版）
 private val ClassicalTunes = listOf(
@@ -128,7 +129,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val race = ownAvatar.race
     // 惡魔的附身：附身的職業（外觀和技能都換成那個職業，戰鬥結束先變回來）
     var possessed by remember { mutableStateOf<Race?>(null) }
-    var choosePossession by remember { mutableStateOf(false) }
     // 戰鬥開始時的稱號階級，決定頭像和招式
     val tier = remember { avatarTier(levelInfo(profile?.exp ?: 0).level) }
     // 戰鬥開始時的等級，決定學會哪些技能、能用幾次
@@ -194,8 +194,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var dodgeTurns by remember { mutableIntStateOf(0) }
     var hintTurns by remember { mutableIntStateOf(0) }
     var timeStopTurns by remember { mutableIntStateOf(0) }
-    // 時間暫停時這題已經重答過了沒；最後一次怪物攻擊是不是被閃掉
-    var retried by remember { mutableStateOf(false) }
+    // 偷來的懷錶在時間暫停的第 3 回合偷打怪物的次數（播動畫）；最後一次怪物攻擊是不是被閃掉
+    var sneakHits by remember { mutableIntStateOf(0) }
     var lastDodged by remember { mutableStateOf(false) }
     // 受到傷害的倍率（哥布林大王 0.75、防具終極強化 0.5），小數累積起來再扣
     var guardMult by remember { mutableFloatStateOf(1f) }
@@ -240,6 +240,17 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         enabled = musicOn && introDone && !died && !knockedOut && !showingLevelUp && !showingChest,
         volume = if (quiet) 0.05f else 0.3f,
     )
+    // 地表最可愛的貓：背景偶爾「喵～」一聲，直到戰鬥結束
+    var meowing by remember { mutableStateOf(false) }
+    LaunchedEffect(cute, finished) {
+        while (cute && !finished) {
+            delay(Random.nextLong(6000, 14000))
+            meowing = true
+            delay(1200)
+            meowing = false
+        }
+    }
+    OneShotSound(R.raw.meow_sfx, play = meowing, volume = 0.5f)
     OneShotSound(R.raw.warning_jingle, play = isBoss && !introDone)
     OneShotSound(R.raw.death_jingle, play = died)
     OneShotSound(R.raw.levelup_jingle, play = showingLevelUp)
@@ -283,7 +294,16 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         if (charmTurns > 0) charmTurns--
         if (dodgeTurns > 0) dodgeTurns--
         if (hintTurns > 0) hintTurns--
-        if (timeStopTurns > 0) timeStopTurns--
+        if (timeStopTurns > 0) {
+            timeStopTurns--
+            // 時間暫停的最後（第 3）回合：趁怪物定格偷打 1 格
+            if (timeStopTurns == 0) {
+                hitDelay = 250
+                bonus++
+                bonusHits++
+                sneakHits++
+            }
+        }
     }
 
     // 被怪物打到：防具、哥布林大王、瘟疫會讓傷害變少，不到 1 的部分累積起來
@@ -320,13 +340,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         if (!answering || input.isBlank() || word == null) return
         // 要拼出整個單字
         val ok = input.trim().equals(answer, ignoreCase = true)
-        // 時間暫停：第一次答錯不算，馬上再答一次
-        if (!ok && timeStopTurns > 0 && !retried) {
-            retried = true
-            input = ""
-            fillHint()
-            return
-        }
         result = ok
         if (ok) {
             correct++
@@ -383,7 +396,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     fun next() {
         input = ""
         result = null
-        retried = false
         skillThisRound = false
         // 道具或混亂讓怪物的血先打光了，就直接打倒，不用把題目答完
         if (index + 1 >= total || monsterHalves() <= 0) {
@@ -456,9 +468,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         val e = skill.effect ?: return
         if (!canUseSkill(skill)) return
         showSkills = false
-        // 附身先選職業，選好了才算用掉
+        // 附身：隨機抽一個別的職業
         if (e.possess) {
-            choosePossession = true
+            possess(Race.entries.filter { it != race }.random())
             return
         }
         usedSkills.add(skill)
@@ -487,7 +499,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
         when (e.music) {
             SkillMusic.Classical -> musicOverride = ClassicalTunes.random()
-            SkillMusic.Moonlight -> musicOverride = R.raw.classical_moonlight
+            SkillMusic.Valkyries -> musicOverride = R.raw.classical_valkyries
             SkillMusic.Sailor -> musicOverride = R.raw.sailor_bgm
             null -> Unit
         }
@@ -531,15 +543,15 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         else -> false
     }
 
-    // 附身：魔族化成黑影鑽進去，動畫播到一半換成那個職業；這回合不能再用技能
+    // 附身：那個職業的人從畫面外走進來，魔族化成黑影鑽進去，換成那個職業；這回合不能再用技能
+    // 背景音樂換成可怕的曲子，直到戰鬥結束
     fun possess(target: Race) {
-        choosePossession = false
-        if (!answering || possessed != null) return
         usedSkills.add(Skill.Possession)
         skillThisRound = true
-        skillUse = SkillUse(Skill.Possession, (skillUse?.id ?: 0) + 1)
+        skillUse = SkillUse(Skill.Possession, (skillUse?.id ?: 0) + 1, target)
+        musicOverride = R.raw.scary_bgm
         scope.launch {
-            delay(skillDuration(Skill.Possession) / 2L)
+            delay((skillDuration(Skill.Possession) * POSSESS_SWAP_AT).toLong())
             possessed = target
         }
     }
@@ -647,6 +659,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     frozen = timeStopTurns > 0,
                     dodged = lastDodged,
                     giant = boostSkill == Skill.GoblinKing && boostTurns > 0 && !finished,
+                    sneakHits = sneakHits,
+                    possessArt = skillUse?.target?.let { avatarOf(it).artFor(tier) },
                     charmHeals = charmHeals,
                     hitDelay = hitDelay,
                     falling = died,
@@ -686,10 +700,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     }
                     !introDone -> Text(tr(R.string.battle_watch_out), style = MaterialTheme.typography.titleMedium)
                     word != null -> {
-                        // 時間暫停：第一次答錯可以馬上再答一次
-                        if (retried && result == null) {
-                            Text(tr(R.string.battle_time_stop_retry), style = MaterialTheme.typography.titleMedium, color = PixelRed)
-                        }
                         Question(
                             answer = answer,
                             meaning = word.meaning,
@@ -723,10 +733,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             },
             onUse = ::useItem,
         )
-    }
-
-    if (choosePossession) {
-        PossessionDialog(self = race, onPick = ::possess, onDismiss = { choosePossession = false })
     }
 
     if (showSkills) {
@@ -875,6 +881,8 @@ private fun BattleField(
     frozen: Boolean = false,
     dodged: Boolean = false,
     giant: Boolean = false,
+    sneakHits: Int = 0,
+    possessArt: List<String>? = null,
     charmHeals: Int = 0,
     hitDelay: Int = 900,
     falling: Boolean = false,
@@ -1096,6 +1104,30 @@ private fun BattleField(
             volley.animateTo(1f, tween(800, easing = LinearEasing))
             volley.snapTo(0f)
         }
+        // 哥布林大王：雞腿吃完才一格一格變大
+        val grow = remember { Animatable(1f) }
+        LaunchedEffect(giant) {
+            if (!giant) {
+                grow.snapTo(1f)
+                return@LaunchedEffect
+            }
+            delay((skillDuration(Skill.GoblinKing) * 0.42f).toLong())
+            grow.animateTo(1.3f, keyframes {
+                durationMillis = 700
+                1.1f at 120
+                1.05f at 240
+                1.2f at 380
+                1.15f at 500
+            })
+        }
+        // 偷來的懷錶：時間暫停的最後一回合偷打怪物
+        val sneak = remember { Animatable(0f) }
+        LaunchedEffect(sneakHits) {
+            if (sneakHits == 0) return@LaunchedEffect
+            sneak.snapTo(0f)
+            sneak.animateTo(1f, tween(700, easing = LinearEasing))
+            sneak.snapTo(0f)
+        }
         // 被迷住的怪物答錯時幫人物補血
         val charmAnim = remember { Animatable(0f) }
         LaunchedEffect(charmHeals) {
@@ -1170,10 +1202,8 @@ private fun BattleField(
                                 transformOrigin = TransformOrigin(0.5f, 1f)
                                 rotationZ = fallAngle
                                 // 哥布林大王：狂吃雞腿變巨大
-                                if (giant) {
-                                    scaleX = 1.3f
-                                    scaleY = 1.3f
-                                }
+                                scaleX = grow.value
+                                scaleY = grow.value
                             },
                         )
                     }
@@ -1263,6 +1293,10 @@ private fun BattleField(
                 }
                 if (doctorLeave.value > 0f) drawDoctorLeave(doctorLeave.value, monsterCenter, artH.toPx(), ground)
                 if (volley.value > 0f) drawElfVolley(volley.value, monsterCenter)
+                if (sneak.value > 0f) drawSneakStab(sneak.value, monsterCenter, artH.toPx())
+                if (skillUse?.skill == Skill.Possession && possessArt != null && skillAnim.value > 0f) {
+                    drawPossession(skillAnim.value, heroCenter, HeroSize.toPx(), possessArt, AvatarPalette, ground)
+                }
                 if (cheering && !knockout) drawCheerFans(spinClock, heroCenter, HeroSize.toPx(), ground)
                 if (stunned && !knockout) drawStunned(spinClock, monsterCenter, artH.toPx())
                 if (charmed && !knockout) drawCharmed(spinClock, monsterCenter, artH.toPx())

@@ -15,7 +15,7 @@ import com.wordsnap.app.R
 import com.wordsnap.app.i18n.tr
 
 // 像素人物：每個字元是一格像素，"." 是透明；大多是 12 x 12 格，貓咪是 16 x 16
-private val palette = mapOf(
+internal val AvatarPalette = mapOf(
     'K' to Color(0xFF202030),
     'S' to Color(0xFFF8C898),
     'H' to Color(0xFF704020),
@@ -305,7 +305,7 @@ private fun buildTierArt(art: List<String>, cloth: Char, clothColor: Char, tier:
 // tier 是頭像階段（見 avatarTier），選角色時用 0
 @Composable
 fun PixelAvatar(avatar: Avatar, size: Dp = 48.dp, modifier: Modifier = Modifier, tier: Int = 0) {
-    PixelArt(avatar.artFor(tier), palette, modifier.size(size))
+    PixelArt(avatar.artFor(tier), AvatarPalette, modifier.size(size))
 }
 
 // 把字元陣列畫成像素圖，寬度跟著版面，高度依比例
