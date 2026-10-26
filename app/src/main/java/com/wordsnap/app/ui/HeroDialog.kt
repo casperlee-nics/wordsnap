@@ -81,14 +81,14 @@ fun HeroDialog(
                     Text(profile.name, style = MaterialTheme.typography.titleLarge)
                     Text(tr(R.string.quoted, race.title(info.level)), style = MaterialTheme.typography.bodyMedium)
                 }
-                // 冒險履歷（藍色的書）和轉職（紅色魔法書）；轉職按鈕一直都在，還沒超過 10 級時按了只會提示還不能轉職
-                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    BookButton(tr(R.string.adventure_log), LogBookColors, onClick = { showLog = true })
+                // 轉職（紅色魔法書）在上、冒險履歷（藍色的書）在下；轉職按鈕一直都在，還沒超過 10 級時按了只會提示還不能轉職
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     if (onClassChange != null) {
                         BookButton(tr(R.string.class_change), SpellBookColors, onClick = {
                             if (info.level >= CLASS_CHANGE_MIN_LEVEL) changingClass = true else classLocked = true
                         })
                     }
+                    BookButton(tr(R.string.adventure_log), LogBookColors, onClick = { showLog = true })
                 }
             }
         },
@@ -179,7 +179,7 @@ private fun Meter(fraction: Float, color: Color) {
 }
 
 // 書本按鈕：一本古典的書（皮革封面、金色書角和鑲邊、書背兩道金環，右邊和下面露出書頁），上方的寶石會一閃一閃
-// 書下面掛一塊小木牌寫字；紅色是轉職的魔法書，藍色是冒險履歷；整個按鈕往左下偏一點，不會擠到標題列的邊
+// 書下面掛一塊小木牌寫字；紅色是轉職的魔法書，藍色是冒險履歷；整個按鈕往左下偏一點，不會擠到視窗的右邊
 @Composable
 private fun BookButton(label: String, colors: BookColors, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
@@ -189,7 +189,7 @@ private fun BookButton(label: String, colors: BookColors, onClick: () -> Unit) {
     )
     Column(
         Modifier
-            .offset(x = (-4).dp, y = 6.dp)
+            .offset(x = (-10).dp, y = 6.dp)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
             .graphicsLayer {
                 val k = if (pressed) 0.92f else 1f

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -118,11 +119,16 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                             modifier = Modifier.weight(1f),
                         )
                     }
-                    Spacer(Modifier.weight(1f))
-                    // 隨機練習的提示放在最下面
+                    // 隨機練習的提示緊貼在按鈕下面，字放大一點
                     if (vm.practiceMode) {
-                        Text(tr(R.string.review_practice_hint), style = MaterialTheme.typography.bodySmall.readable())
+                        Text(
+                            tr(R.string.review_practice_hint),
+                            style = MaterialTheme.typography.titleMedium.readable(),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.offset(y = (-12).dp),
+                        )
                     }
+                    Spacer(Modifier.weight(1f))
                 }
             }
         }

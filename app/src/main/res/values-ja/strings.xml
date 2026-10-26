@@ -39,6 +39,9 @@
     <string name="settings_text_small">小</string>
     <string name="settings_text_large">大</string>
     <string name="settings_text_hint">「大」にすると入力する文字と説明の文字が 1.2 倍になります。ボタンの文字は変わりません</string>
+    <string name="settings_battle_size">1 回のテストの単語数</string>
+    <string name="settings_battle_size_option">%1$d 語</string>
+    <string name="settings_battle_size_hint">1 回のバトルで出す問題数です。出せる単語が足りないときはある分だけ出します</string>
 
     <!-- アイテム -->
     <string name="item_small_potion">小回復薬</string>
@@ -62,18 +65,18 @@
     <string name="item_cat_can">ネコ缶</string>
     <string name="item_cat_can_effect">缶を開けるとネコたちが飛び出し（進撃のネコたち）、敵に2ダメージ</string>
     <string name="item_royal_summons">王国の召集状</string>
-    <string name="item_royal_summons_effect">王国の兵士を召喚：敵に1ダメージ、学者が答えを教え、白魔導士が1回分回復</string>
+    <string name="item_royal_summons_effect">王国の兵士を召喚：敵に1ダメージ、学者が答えを教え、白魔導士がHPを1マス回復</string>
     <string name="item_cat_score">ネコの楽譜</string>
     <string name="item_cat_score_effect">ネコ交響楽団が登場：BGMがクラシックに、3ターンの間ミスすると逆に回復</string>
     <string name="item_signal_flag">戦艦の信号旗</string>
-    <string name="item_signal_flag_effect">戦艦召喚：自分も1回分ダメージ、敵に3ダメージ、背景が海の上に</string>
+    <string name="item_signal_flag_effect">戦艦召喚：自分もHP1マスのダメージ、敵に3ダメージ、背景が海の上に</string>
     <string name="item_air_support">航空支援要請</string>
     <string name="item_air_support_effect">B2爆撃機が飛んできて爆撃、敵に2ダメージ、背景が爆撃された街に</string>
     <string name="item_orichalcum_ore">オリハルコン鉱石</string>
     <string name="item_orichalcum_ore_effect">金の大斧を作る：5ターンの間、正解すると攻撃力1.5倍</string>
     <string name="item_tome_page">魔導書のページ</string>
     <string name="item_tome_page_effect">古代の魔導書：4ターンの間、単語の前半が最初から表示される</string>
-    <string name="shop_title">道具屋</string>
+    <string name="shop_title">旅の商人</string>
     <string name="shop_buy_tab">買う</string>
     <string name="shop_sell_tab">売る</string>
     <string name="shop_buy">買う</string>
@@ -181,7 +184,7 @@
     <string name="help_review_title">復習と読み上げ</string>
     <string name="help_review">「復習」はカードをめくって練習します。覚えていたら電球、覚えていなければハテナを押してください。覚えた単語は数日後にまた出てきます。「読み上げ」は英語と日本語の意味を順番に自動で読み上げます。毎晩 8 時に復習のお知らせが届きます。</string>
     <string name="help_battle_title">バトル</string>
-    <string name="help_battle">1 冊の単語帳で 10 個覚える（または 1 冊全部覚える）とバトルできます。発音を聞いて単語のつづりを入力し、正解ならモンスターを攻撃、間違えると HP が減ります。モンスターの HP をゼロにすれば倒せます。自分の HP がゼロになると教会に運ばれます。1 回のバトルは 5～10 問で、2 回正解した単語はもう出題されません。</string>
+    <string name="help_battle">1 冊の単語帳で 10 個覚える（または 1 冊全部覚える）とバトルできます。発音を聞いて単語のつづりを入力し、正解ならモンスターを攻撃、間違えると HP が減ります。モンスターの HP をゼロにすれば倒せます。自分の HP がゼロになると教会に運ばれます。1 回の問題数はゲーム設定で 10・15・20 問から選べます。</string>
     <string name="help_level_title">レベル、転職、アイテム</string>
     <string name="help_level">バトルで経験値を得るとレベルが上がり、10 レベルごとに称号が変わって、見た目と必殺技も強くなります。Lv 10 を超えると「ステータス」で別の職業に転職できますが、レベルが 10 下がります。バトルに勝つと宝箱が出ることがあり、アイテムはバトル中にアイテム袋から使えます。</string>
     <string name="help_boss_title">魔王</string>
@@ -298,6 +301,7 @@
     <string name="result_exp">経験値 +%1$d</string>
     <string name="result_exp_boss">経験値 +%1$d（魔王ボーナス 2 倍）</string>
     <string name="result_practice">練習バトル：経験値は 1/4、宝箱は出ません</string>
+    <string name="result_halved">このモンスターはもう2回以上倒したので、経験値・ゴールド・宝箱の確率が半分になります</string>
     <string name="result_coins">敵をふっとばして %1$d ゴールド手に入れた！</string>
     <string name="result_chest">宝箱を開けて「%1$s」を手に入れた！</string>
     <string name="result_level_up">レベルアップ！Lv %1$d → Lv %2$d</string>
@@ -662,9 +666,9 @@
     <string name="skill_fan_cheer">ファンの応援団</string>
     <string name="skill_fan_cheer_desc">2ターンの間、正解すると敵に追加で1ダメージ</string>
     <string name="skill_love_bento">勇者の愛情弁当</string>
-    <string name="skill_love_bento_desc">ミス1回分のHPを回復</string>
+    <string name="skill_love_bento_desc">HPを1マス回復</string>
     <string name="skill_royal_soldiers">王国の兵士を召喚</string>
-    <string name="skill_royal_soldiers_desc">兵士の攻撃で敵に1ダメージ、学者が答えを教えてくれ、白魔道士がミス1回分のHPを回復</string>
+    <string name="skill_royal_soldiers_desc">兵士の攻撃で敵に1ダメージ、学者が答えを教えてくれ、白魔道士がHPを1マス回復</string>
     <string name="skill_holy_shield_bash">聖なる盾アタック</string>
     <string name="skill_holy_shield_bash_desc">このターンはミスしてもHPが減らず、敵に1ダメージ</string>
     <string name="skill_cross_slash">聖剣十字斬り</string>
@@ -678,7 +682,7 @@
     <string name="skill_gurgle_curse">ぐるぐる混乱の呪文</string>
     <string name="skill_gurgle_curse_desc">2ターンの間、ミスすると敵が自分を攻撃</string>
     <string name="skill_heal_bubble">いやしのバブル</string>
-    <string name="skill_heal_bubble_desc">ミス2回分のHPを回復</string>
+    <string name="skill_heal_bubble_desc">HPを2マス回復</string>
     <string name="skill_ancient_tome">古代の魔導書</string>
     <string name="skill_ancient_tome_desc">4ターンの間、単語の前半が最初から表示される</string>
     <string name="skill_meteor_call">隕石召喚</string>
@@ -686,13 +690,13 @@
     <string name="skill_swish_arrow">ひゅんっと一矢</string>
     <string name="skill_swish_arrow_desc">敵に1ダメージ</string>
     <string name="skill_elf_spring">妖精の泉</string>
-    <string name="skill_elf_spring_desc">ミス1回分のHPを回復</string>
+    <string name="skill_elf_spring_desc">HPを1マス回復</string>
     <string name="skill_are_we_elves">ぼくらもエルフ？</string>
     <string name="skill_are_we_elves_desc">敵に2ダメージ</string>
     <string name="skill_are_we_elves_caption">すみません、この子たちスタジオを間違えました</string>
     <string name="skill_are_we_elves_action">シーン1、アクション！</string>
     <string name="skill_forest_blessing">森の加護</string>
-    <string name="skill_forest_blessing_desc">ミス2回分のHPを回復し、敵に1ダメージ</string>
+    <string name="skill_forest_blessing_desc">HPを2マス回復し、敵に1ダメージ</string>
     <string name="skill_elf_eye">エルフの瞳</string>
     <string name="skill_elf_eye_desc">5ターンの間、単語の前半が最初から表示される</string>
     <string name="skill_elven_uprising">エルフ族の逆襲</string>
@@ -703,8 +707,8 @@
     <string name="skill_boulder_throw_desc">敵に1ダメージ、2ターン気絶（ミスしても攻撃されない）</string>
     <string name="skill_cheat_sheet">カンニングペーパー</string>
     <string name="skill_cheat_sheet_desc">2問続けて答えがわかる（正解あつかい）</string>
-    <string name="skill_bomb_chain">連鎖ばくだん</string>
-    <string name="skill_bomb_chain_desc">敵に2ダメージ</string>
+    <string name="skill_goblin_raid">ゴブリンの略奪</string>
+    <string name="skill_goblin_raid_desc">となりに村があらわれ、ゴブリンたちが略奪：HPを2マス回復、このバトルで敵を倒したときのゴールドが2倍</string>
     <string name="skill_stolen_watch">盗んだ懐中時計</string>
     <string name="skill_stolen_watch_desc">3ターン時間停止：ミスしても攻撃されず、3ターン目に敵へこっそり1ダメージ</string>
     <string name="skill_goblin_king">おれさまはゴブリン大王</string>
@@ -716,21 +720,21 @@
     <string name="skill_orichalcum">オリハルコン発見</string>
     <string name="skill_orichalcum_desc">5ターンの間、正解時の攻撃力が1.5倍</string>
     <string name="skill_mushroom_stew">ドワーフのきのこシチュー</string>
-    <string name="skill_mushroom_stew_desc">ミス2回分のHPを回復</string>
-    <string name="skill_hot_spring">ドワーフの秘湯</string>
-    <string name="skill_hot_spring_desc">ミス2回分のHPを回復、2ターンの間 正解で攻撃力x1.5</string>
+    <string name="skill_mushroom_stew_desc">HPを2マス回復</string>
+    <string name="skill_viking_fleet">ヴァイキングの戦艦たちよ！</string>
+    <string name="skill_viking_fleet_desc">自分もHP1マスのダメージ、敵に3ダメージ、背景が海上に</string>
     <string name="skill_ultimate_armor">伝説の神の防具</string>
     <string name="skill_ultimate_armor_desc">戦闘終了まで受けるダメージが半分</string>
     <string name="skill_teaser_wand">ねこじゃらしフリフリ～ニャ</string>
     <string name="skill_teaser_wand_desc">敵が1ターン何もしない</string>
     <string name="skill_lick_fur">ペロペロ毛づくろい～ニャ</string>
-    <string name="skill_lick_fur_desc">ミス1回分のHPを回復</string>
+    <string name="skill_lick_fur_desc">HPを1マス回復</string>
     <string name="skill_cat_stampede">進撃のネコたち～ニャ</string>
     <string name="skill_cat_stampede_desc">敵に2ダメージ</string>
     <string name="skill_cat_orchestra">ネコ交響楽団～ニャ</string>
     <string name="skill_cat_orchestra_desc">BGMがクラシックに。3ターンの間、ミスするとHPが回復</string>
-    <string name="skill_purr_heal">ゴロゴロいやし～ニャ</string>
-    <string name="skill_purr_heal_desc">ミス3回分のHPを回復</string>
+    <string name="skill_pot_push">ネコはモノを落としたりしないニャ～</string>
+    <string name="skill_pot_push_desc">敵のうしろに棚があらわれ、ネコが植木鉢を落として敵の頭に命中：敵に3ダメージ</string>
     <string name="skill_cutest_cat">ネコは地上でいちばんかわいい～ニャ～</string>
     <string name="skill_cutest_cat_desc">戦闘終了まで、ミスしても半分の確率で攻撃されない。子ネコが2匹そばに来る</string>
     <string name="skill_sneeze_fire">ぷぷっと小さな火</string>
@@ -739,8 +743,8 @@
     <string name="skill_dragon_roar_desc">敵が2ターン動けない（ミスしても攻撃されない）</string>
     <string name="skill_dragon_flight">群竜の舞</string>
     <string name="skill_dragon_flight_desc">2匹の飛竜を呼んで火をふかせ、敵に2ダメージ</string>
-    <string name="skill_dragon_howl">竜の咆哮</string>
-    <string name="skill_dragon_howl_desc">3ターンの間、正解時の攻撃力が2倍</string>
+    <string name="skill_phoenix">火の鳥の降臨</string>
+    <string name="skill_phoenix_desc">不死鳥が降りてきて憑依、HPを2マス回復。2ターンの間 不死鳥に変身し、ミスで受けるダメージが半分</string>
     <string name="skill_meteor_claw">流星ドラゴンクロー</string>
     <string name="skill_meteor_claw_desc">敵に3ダメージ</string>
     <string name="skill_fire_whisper">火竜のささやき</string>
@@ -753,8 +757,8 @@
     <string name="skill_rocket_launch_desc">敵に2ダメージ</string>
     <string name="skill_overclock">オーバークロック</string>
     <string name="skill_overclock_desc">3ターンの間、正解時の攻撃力が2倍</string>
-    <string name="skill_battleship">戦艦召喚</string>
-    <string name="skill_battleship_desc">自分もミス1回分のダメージ、敵に3ダメージ、背景が海上に</string>
+    <string name="skill_pit_stop">工場で大修理</string>
+    <string name="skill_pit_stop_desc">整備士たちがトンテンカン：HPを2マス回復、2ターンの間 正解で攻撃力x1.5</string>
     <string name="skill_full_arsenal">ミッション～殲滅～ピッ～全武器発射！</string>
     <string name="skill_full_arsenal_desc">敵に5ダメージ、背景が焼け野原の街に</string>
     <string name="skill_bleh">小悪魔のあっかんべー</string>
@@ -765,8 +769,8 @@
     <string name="skill_plague_doctor_desc">3ターンの間、敵の攻撃力が半分</string>
     <string name="skill_demon_eye">魔眼の凝視</string>
     <string name="skill_demon_eye_desc">3ターンの間、ミスすると敵が自分を攻撃</string>
-    <string name="skill_energy_sip">チューチューエナジー</string>
-    <string name="skill_energy_sip_desc">敵に2ダメージ、ミス2回分のHPを回復</string>
+    <string name="skill_soul_steal">魂の強奪</string>
+    <string name="skill_soul_steal_desc">敵の魂を抜き取る：敵に2ダメージ、HPを1マス回復</string>
     <string name="skill_possession">悪魔の憑依</string>
     <string name="skill_possession_desc">ランダムでほかの職業に憑依し、戦闘終了までその姿とスキルを使える。BGMがこわくなる</string>
 </resources>

@@ -35,7 +35,7 @@ import com.wordsnap.app.translate.DictionaryPacks
 import com.wordsnap.app.ui.theme.PixelInk
 import kotlinx.coroutines.launch
 
-// 主畫面的「遊戲設定」：語言、音量、文字大小
+// 主畫面的「遊戲設定」：語言、音量、文字大小、每場考試的題數
 // 換語言時先安裝那個語言的字典，再重新開啟畫面，所有文字都換成新的語言
 @Composable
 fun SettingsDialog(onDismiss: () -> Unit) {
@@ -44,6 +44,7 @@ fun SettingsDialog(onDismiss: () -> Unit) {
     var language by remember { mutableStateOf(appLanguage(context)) }
     var volume by remember { mutableStateOf(musicLevel(context)) }
     var textSize by remember { mutableStateOf(loadTextSize(context)) }
+    var battleSize by remember { mutableStateOf(loadBattleSize(context)) }
     // 正在安裝字典時的進度（null 代表沒有在安裝）
     var installing by remember { mutableStateOf<Float?>(null) }
     // 字典包找不到時，先問一聲再切換
@@ -104,6 +105,18 @@ fun SettingsDialog(onDismiss: () -> Unit) {
             },
         )
         Text(tr(R.string.settings_text_hint), style = MaterialTheme.typography.bodySmall.readable())
+
+        SettingLabel(tr(R.string.settings_battle_size))
+        OptionRow(
+            options = BattleSizes,
+            chosen = battleSize,
+            label = { tr(R.string.settings_battle_size_option, it) },
+            onPick = {
+                battleSize = it
+                saveBattleSize(context, it)
+            },
+        )
+        Text(tr(R.string.settings_battle_size_hint), style = MaterialTheme.typography.bodySmall.readable())
     }
 
     missingPack?.let { target ->

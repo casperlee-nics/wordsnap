@@ -44,8 +44,13 @@ private const val KEY_BOOK = "last_book_"
 private const val KEY_MEANING_CLEANUP = "meaning_cleanup_v1"
 private const val KEY_TESTCOUNT_RESET = "testcount_reset_v1"
 private const val KEY_TEST_SAVES = "test_saves_v1"
+private const val KEY_REVIEW_SET = "review_set_"
 
-// 記住 10 個字就能戰鬥，每場最多 10 題
+// 複習一次最多 30 個字，記住 5 個才換新的 5 個進來
+private const val REVIEW_SET_SIZE = 30
+private const val REVIEW_SET_STEP = 5
+
+// 記住 10 個字就能戰鬥；每場題數預設 10 題，可在遊戲設定改成 15 或 20 題
 const val BATTLE_SIZE = 10
 // 每場最少 5 題，能出的字不夠時用已經記住的字補
 private const val MIN_BATTLE_SIZE = 5
@@ -80,10 +85,15 @@ data class BattleReward(
     val practice: Boolean = false,
     // 把怪物打飛賺到的金幣
     val coins: Int = 0,
+    // 這隻怪物之前已經打倒兩次，獎勵減半
+    val halved: Boolean = false,
 )
 
 // 練習戰的經驗值除以幾
 private const val PRACTICE_EXP_DIVISOR = 4
+
+// 同一隻怪物打倒幾次之後，獎勵減半
+private const val VETERAN_WINS = 2
 
 // 打魔王的經驗值倍數：一般 1 倍、中魔王 2 倍、大魔王 3 倍
 // 把怪物打飛得到的金幣
@@ -436,15 +446,22 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         val pool = allWords.value.filter { it.bookId == bookId && if (practice) it.canPractice() else it.isBattleReady() }
         val fresh = pool.filter { it.testedAt == null }.shuffled()
         val tested = pool.filter { it.testedAt != null }.shuffled()
-        val picked = fresh.take(BATTLE_SIZE)
-        val chosen = picked + tested.take(BATTLE_SIZE - picked.size)
+        // 每場題數在遊戲設定裡選（10、15、20）
+        val size = loadBattleSize(getApplication<Application>())
+        val picked = fresh.take(size)
+        val chosen = picked + tested.take(size - picked.size)
         if (chosen.size >= MIN_BATTLE_SIZE) return chosen.shuffled()
-        // 不到 5 題：先用這本其他記住的字補，還不夠再用別本記住的字補
+        // 不到 5 題：只用這本其他記住的字補，不會拿別本單字簿的字
         val ids = chosen.map { it.id }.toSet()
-        val extra = allWords.value.filter { it.id !in ids && it.canPractice() }
-            .let { list -> list.filter { it.bookId == bookId }.shuffled() + list.filter { it.bookId != bookId }.shuffled() }
+        val extra = allWords.value.filter { it.id !in ids && it.bookId == bookId && it.canPractice() }.shuffled()
         return (chosen + extra.take(MIN_BATTLE_SIZE - chosen.size)).shuffled()
     }
+
+    // 這隻怪物已經打倒兩次以上
+    fun isVeteran(monster: Monster): Boolean = (monsterLog.value[monster.key]?.wins ?: 0) >= VETERAN_WINS
+
+    // 以前遇過這隻怪物（戰鬥中可以點牠看資料）
+    fun hasMet(monster: Monster): Boolean = (monsterLog.value[monster.key]?.met ?: 0) >= 1
 
     // 這次要打的怪物：每記住 100 個字出現一隻大魔王、每 50 個字一隻中魔王，其他時候隨機一般怪物
     fun pickBattleMonster(): Monster {
@@ -469,18 +486,23 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         practice: Boolean,
         // 有沒有把怪物打飛：只有打飛才會掉寶箱
         knockedOut: Boolean,
+        // 哥布林的掠奪：金幣倍數
+        coinMultiplier: Int = 1,
         onDone: (BattleReward) -> Unit,
     ) {
         val profile = currentProfile.value ?: return
         val correct = asked.size - wrong.size
         // 用道具提早把怪物打倒也算通過
         val passed = !died && (knockedOut || correct >= passScore(total))
-        val full = (correct * EXP_PER_WORD + if (passed) EXP_PASS_BONUS else 0) * monster.rank.expMultiplier()
+        // 這隻怪物已經打倒兩次以上：經驗值、金幣、寶箱機率都減半
+        val veteran = isVeteran(monster)
+        val divisor = if (veteran) 2 else 1
+        val full = (correct * EXP_PER_WORD + if (passed) EXP_PASS_BONUS else 0) * monster.rank.expMultiplier() / divisor
         val gained = if (practice) full / PRACTICE_EXP_DIVISOR else full
         // 把怪物打飛時有一半機率掉寶箱；練習戰不會掉，避免一直刷道具
-        val item = if (knockedOut && !practice && Random.nextFloat() < CHEST_CHANCE) ItemType.roll() else null
+        val item = if (knockedOut && !practice && Random.nextFloat() < CHEST_CHANCE / divisor) ItemType.roll() else null
         // 打飛怪物賺金幣；練習戰沒有
-        val coins = if (knockedOut && !practice) monster.rank.coinReward() else 0
+        val coins = if (knockedOut && !practice) monster.rank.coinReward() * coinMultiplier / divisor else 0
         val before = levelInfo(profile.exp).level
         val after = levelInfo(profile.exp + gained).level
         val forgotten = wrong.filter { it.wrongCount + 1 >= 2 && it.box >= 1 }.map { it.text }
@@ -514,7 +536,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             val deaths = profile.deaths + if (died) 1 else 0
-            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths, item, practice, coins))
+            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths, item, practice, coins, veteran))
         }
     }
 
@@ -548,14 +570,29 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
             val due = dao.getDue(pid, System.currentTimeMillis())
                 .filter { bookId == null || it.bookId == bookId }
             practiceMode = due.isEmpty()
-            // 到期的字也打亂順序出現
+            // 到期的字也打亂順序出現；太多時只複習固定的 30 個
             reviewQueue = if (due.isNotEmpty()) {
-                due.shuffled()
+                reviewSet(bookId, due).shuffled()
             } else {
                 allWords.value.filter { bookId == null || it.bookId == bookId }.shuffled()
             }
             reviewLoading = false
         }
+    }
+
+    // 到期的字超過 30 個時，每次都複習同一組 30 個（第一次隨機挑），
+    // 這組裡記住 5 個（就不再到期）才補進新的 5 個，不會每次換一批
+    private fun reviewSet(bookId: Long?, due: List<Word>): List<Word> {
+        if (due.size <= REVIEW_SET_SIZE) return due
+        val key = KEY_REVIEW_SET + (bookId ?: "all")
+        val dueIds = due.map { it.id }.toSet()
+        val saved = prefs.getString(key, null).orEmpty().split(',').mapNotNull { it.toLongOrNull() }
+        val kept = saved.filter { it in dueIds }
+        val room = (REVIEW_SET_SIZE - kept.size) / REVIEW_SET_STEP * REVIEW_SET_STEP
+        val added = due.filter { it.id !in kept }.shuffled().take(room).map { it.id }
+        val set = (kept + added).toSet()
+        prefs.edit().putString(key, set.joinToString(",")).apply()
+        return due.filter { it.id in set }
     }
 
     fun answer(word: Word, remembered: Boolean) {

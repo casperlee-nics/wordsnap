@@ -26,13 +26,13 @@ import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelRed
 
 // 人物技能：每個職業在 LV10、20、30、40、50、60 各學會一招（技能表見專案的「全職業技能表」文件）
-// 「1 格」= 怪物血條 1 個單字量；補血的 amount 是補回幾次答錯的血
+// 「1 格」= 怪物血條 1 個單字量；補血的 amount 是補幾格血（1 格 = 答錯一次扣的血）
 
 // 一招可以同時有好幾個效果，例如聖光盾擊：這回合答錯不扣血，同時怪物扣 1 格
 data class SkillEffect(
     // 怪物扣幾格血
     val damage: Int = 0,
-    // 補回幾次答錯的血
+    // 補幾格血
     val heal: Int = 0,
     // 幾回合內答錯不扣血
     val shield: Int = 0,
@@ -63,7 +63,7 @@ data class SkillEffect(
     val guard: Int = 0,
     // 到戰鬥結束，答錯有一半機率不被攻擊
     val cute: Boolean = false,
-    // 自己扣幾次答錯的血（戰艦打偏）
+    // 自己扣幾格血（戰艦打偏）
     val selfHit: Int = 0,
     // 背景換成這個場景，直到戰鬥結束
     val scene: ReviewScene? = null,
@@ -71,6 +71,10 @@ data class SkillEffect(
     val music: SkillMusic? = null,
     // 附身在別的職業身上（玩家自己選）
     val possess: Boolean = false,
+    // 幾回合內變身不死鳥：答錯被攻擊只扣一半的血
+    val phoenix: Int = 0,
+    // 掠奪：這場戰鬥打飛怪物的金幣變 2 倍
+    val loot: Boolean = false,
 )
 
 // 持續到戰鬥結束的效果用這個當回合數
@@ -108,38 +112,38 @@ enum class Skill(
     BushHide(Race.Goblin, 10, R.string.skill_bush_hide, R.string.skill_bush_hide_desc, SkillEffect(skip = true)),
     BoulderThrow(Race.Goblin, 20, R.string.skill_boulder_throw, R.string.skill_boulder_throw_desc, SkillEffect(damage = 1, stun = 2)),
     CheatSheet(Race.Goblin, 30, R.string.skill_cheat_sheet, R.string.skill_cheat_sheet_desc, SkillEffect(reveal = 2)),
-    BombChain(Race.Goblin, 40, R.string.skill_bomb_chain, R.string.skill_bomb_chain_desc, SkillEffect(damage = 2)),
+    GoblinRaid(Race.Goblin, 40, R.string.skill_goblin_raid, R.string.skill_goblin_raid_desc, SkillEffect(heal = 2, loot = true)),
     StolenWatch(Race.Goblin, 50, R.string.skill_stolen_watch, R.string.skill_stolen_watch_desc, SkillEffect(timeStop = 3)),
     GoblinKing(Race.Goblin, 60, R.string.skill_goblin_king, R.string.skill_goblin_king_desc, SkillEffect(guard = 25, boost = UNTIL_END, boostHalves = 1)),
     PotLid(Race.Dwarf, 10, R.string.skill_pot_lid, R.string.skill_pot_lid_desc, SkillEffect(shield = 1)),
     HammerToss(Race.Dwarf, 20, R.string.skill_hammer_toss, R.string.skill_hammer_toss_desc, SkillEffect(damage = 1)),
     Orichalcum(Race.Dwarf, 30, R.string.skill_orichalcum, R.string.skill_orichalcum_desc, SkillEffect(boost = 5, boostHalves = 1)),
     MushroomStew(Race.Dwarf, 40, R.string.skill_mushroom_stew, R.string.skill_mushroom_stew_desc, SkillEffect(heal = 2)),
-    HotSpring(Race.Dwarf, 50, R.string.skill_hot_spring, R.string.skill_hot_spring_desc, SkillEffect(heal = 2, boost = 2, boostHalves = 1)),
+    VikingFleet(Race.Dwarf, 50, R.string.skill_viking_fleet, R.string.skill_viking_fleet_desc, SkillEffect(selfHit = 1, damage = 3, scene = ReviewScene.Ship, music = SkillMusic.Sailor)),
     UltimateArmor(Race.Dwarf, 60, R.string.skill_ultimate_armor, R.string.skill_ultimate_armor_desc, SkillEffect(guard = 50)),
     TeaserWand(Race.Cat, 10, R.string.skill_teaser_wand, R.string.skill_teaser_wand_desc, SkillEffect(stun = 1)),
     LickFur(Race.Cat, 20, R.string.skill_lick_fur, R.string.skill_lick_fur_desc, SkillEffect(heal = 1)),
     CatStampede(Race.Cat, 30, R.string.skill_cat_stampede, R.string.skill_cat_stampede_desc, SkillEffect(damage = 2)),
     CatOrchestra(Race.Cat, 40, R.string.skill_cat_orchestra, R.string.skill_cat_orchestra_desc, SkillEffect(charm = 3, music = SkillMusic.Classical)),
-    PurrHeal(Race.Cat, 50, R.string.skill_purr_heal, R.string.skill_purr_heal_desc, SkillEffect(heal = 3)),
+    PotPush(Race.Cat, 50, R.string.skill_pot_push, R.string.skill_pot_push_desc, SkillEffect(damage = 3)),
     CutestCat(Race.Cat, 60, R.string.skill_cutest_cat, R.string.skill_cutest_cat_desc, SkillEffect(cute = true)),
     SneezeFire(Race.Dragon, 10, R.string.skill_sneeze_fire, R.string.skill_sneeze_fire_desc, SkillEffect(damage = 1)),
     DragonRoar(Race.Dragon, 20, R.string.skill_dragon_roar, R.string.skill_dragon_roar_desc, SkillEffect(stun = 2)),
     DragonFlight(Race.Dragon, 30, R.string.skill_dragon_flight, R.string.skill_dragon_flight_desc, SkillEffect(damage = 2)),
-    DragonHowl(Race.Dragon, 40, R.string.skill_dragon_howl, R.string.skill_dragon_howl_desc, SkillEffect(boost = 3, boostHalves = 2)),
+    PhoenixDescent(Race.Dragon, 40, R.string.skill_phoenix, R.string.skill_phoenix_desc, SkillEffect(heal = 2, phoenix = 2)),
     MeteorClaw(Race.Dragon, 50, R.string.skill_meteor_claw, R.string.skill_meteor_claw_desc, SkillEffect(damage = 3)),
     FireWhisper(Race.Dragon, 60, R.string.skill_fire_whisper, R.string.skill_fire_whisper_desc, SkillEffect(damage = 5, scene = ReviewScene.Lava)),
     BarrierOn(Race.Machine, 10, R.string.skill_barrier_on, R.string.skill_barrier_on_desc, SkillEffect(shield = 1)),
     DataSearch(Race.Machine, 20, R.string.skill_data_search, R.string.skill_data_search_desc, SkillEffect(reveal = 1)),
     RocketLaunch(Race.Machine, 30, R.string.skill_rocket_launch, R.string.skill_rocket_launch_desc, SkillEffect(damage = 2)),
     Overclock(Race.Machine, 40, R.string.skill_overclock, R.string.skill_overclock_desc, SkillEffect(boost = 3, boostHalves = 2)),
-    Battleship(Race.Machine, 50, R.string.skill_battleship, R.string.skill_battleship_desc, SkillEffect(selfHit = 1, damage = 3, scene = ReviewScene.Ship, music = SkillMusic.Sailor)),
+    PitStop(Race.Machine, 50, R.string.skill_pit_stop, R.string.skill_pit_stop_desc, SkillEffect(heal = 2, boost = 2, boostHalves = 1)),
     FullArsenal(Race.Machine, 60, R.string.skill_full_arsenal, R.string.skill_full_arsenal_desc, SkillEffect(damage = 5, scene = ReviewScene.RuinedCity)),
     Bleh(Race.Demon, 10, R.string.skill_bleh, R.string.skill_bleh_desc, SkillEffect(stun = 1)),
     DarkMist(Race.Demon, 20, R.string.skill_dark_mist, R.string.skill_dark_mist_desc, SkillEffect(dodge = 2)),
     PlagueDoctor(Race.Demon, 30, R.string.skill_plague_doctor, R.string.skill_plague_doctor_desc, SkillEffect(weaken = 3)),
     DemonEye(Race.Demon, 40, R.string.skill_demon_eye, R.string.skill_demon_eye_desc, SkillEffect(confuse = 3)),
-    EnergySip(Race.Demon, 50, R.string.skill_energy_sip, R.string.skill_energy_sip_desc, SkillEffect(damage = 2, heal = 2)),
+    SoulSteal(Race.Demon, 50, R.string.skill_soul_steal, R.string.skill_soul_steal_desc, SkillEffect(damage = 2, heal = 1)),
     Possession(Race.Demon, 60, R.string.skill_possession, R.string.skill_possession_desc, SkillEffect(possess = true));
     val label: String get() = tr(nameRes)
     val description: String get() = tr(descRes)

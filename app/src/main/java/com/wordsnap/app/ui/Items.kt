@@ -65,7 +65,7 @@ enum class ItemType(
     CatCan(R.string.item_cat_can, R.string.item_cat_can_effect, 3, IconCatCan, Skill.CatStampede),
     RoyalSummons(R.string.item_royal_summons, R.string.item_royal_summons_effect, 3, IconRoyalSummons, Skill.RoyalSoldiers),
     CatScore(R.string.item_cat_score, R.string.item_cat_score_effect, 3, IconCatScore, Skill.CatOrchestra),
-    SignalFlag(R.string.item_signal_flag, R.string.item_signal_flag_effect, 3, IconSignalFlag, Skill.Battleship),
+    SignalFlag(R.string.item_signal_flag, R.string.item_signal_flag_effect, 3, IconSignalFlag, Skill.VikingFleet),
     AirSupport(R.string.item_air_support, R.string.item_air_support_effect, 3, IconAirSupport),
     OrichalcumOre(R.string.item_orichalcum_ore, R.string.item_orichalcum_ore_effect, 3, IconOrichalcumOre, Skill.Orichalcum),
     TomePage(R.string.item_tome_page, R.string.item_tome_page_effect, 3, IconTomePage, Skill.AncientTome);

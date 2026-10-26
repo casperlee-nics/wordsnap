@@ -10,12 +10,12 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-// 離線英漢字典：ECDICT（MIT 授權）挑出最常用的 5 萬個字，加上約 2 萬個常見組合字（floor lamp、alley cat），事先用 OpenCC 轉成台灣繁體，放在 assets/ecdict.db；v4 再補上雅思、托福、多益詞彙表裡缺的字
+// 離線英漢字典：ECDICT（MIT 授權）挑出最常用的 5 萬個字，加上約 2 萬個常見組合字（floor lamp、alley cat），事先用 OpenCC 轉成台灣繁體，放在 assets/ecdict.db；v4 再補上雅思、托福、多益詞彙表裡缺的字；v5 補台灣高中 7000 字、Oxford 5000 裡缺的字
 // 遊戲語言是日文時，解釋改從字典包（DictionaryPacks）查；變化形、片語還是用 ecdict.db
 // 查不到的字再交給 WordTranslator（ML Kit）翻譯
 object WordDictionary {
     // 換新版字典檔時把版本加一，App 會重新複製
-    private const val VERSION = 4
+    private const val VERSION = 5
     private const val ASSET = "ecdict.db"
 
     private val lock = Mutex()

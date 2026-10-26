@@ -45,6 +45,9 @@
     <string name="settings_text_small">小</string>
     <string name="settings_text_large">大</string>
     <string name="settings_text_hint">「大」會把輸入的字和講解文字放大 1.2 倍，按鈕上的字不變</string>
+    <string name="settings_battle_size">每次考試單字量</string>
+    <string name="settings_battle_size_option">%1$d 個</string>
+    <string name="settings_battle_size_hint">每場戰鬥出幾題；能出的字不夠時，就只出現有的字</string>
 
     <!-- 道具 -->
     <string name="item_small_potion">小回復劑</string>
@@ -68,18 +71,18 @@
     <string name="item_cat_can">貓罐頭</string>
     <string name="item_cat_can_effect">打開罐頭，貓咪們衝出來（進擊的貓貓們），怪物扣 2 格血</string>
     <string name="item_royal_summons">王國召集令</string>
-    <string name="item_royal_summons_effect">招喚王國的士兵：怪物扣 1 格血、學者告訴你這題答案、白魔法師補回 1 次答錯的血</string>
+    <string name="item_royal_summons_effect">招喚王國的士兵：怪物扣 1 格血、學者告訴你這題答案、白魔法師補 1 格血</string>
     <string name="item_cat_score">貓咪樂譜</string>
     <string name="item_cat_score_effect">貓咪交響樂團登場：音樂換成古典名曲，3 回合內答錯反而補血</string>
     <string name="item_signal_flag">戰艦信號旗</string>
-    <string name="item_signal_flag_effect">戰艦招喚：自己扣 1 次答錯的血，怪物扣 3 格血，背景變成海上</string>
+    <string name="item_signal_flag_effect">戰艦招喚：自己扣 1 格血，怪物扣 3 格血，背景變成海上</string>
     <string name="item_air_support">呼叫空中支援</string>
     <string name="item_air_support_effect">B2 轟炸機飛過來轟炸，怪物扣 2 格血，背景變成被炸過的城市</string>
     <string name="item_orichalcum_ore">奧利哈鋼礦石</string>
     <string name="item_orichalcum_ore_effect">打造金色巨斧：5 回合內答對，攻擊力 x1.5</string>
     <string name="item_tome_page">魔導書的書頁</string>
     <string name="item_tome_page_effect">古代魔導書：4 回合內題目先顯示前一半字母</string>
-    <string name="shop_title">道具屋</string>
+    <string name="shop_title">旅行商人</string>
     <string name="shop_buy_tab">購買</string>
     <string name="shop_sell_tab">販售</string>
     <string name="shop_buy">買</string>
@@ -187,7 +190,7 @@
     <string name="help_review_title">複習與朗讀</string>
     <string name="help_review">「複習」用翻卡的方式練習，記得就按燈泡、不記得按問號，記住的字會隔幾天再出現。「朗讀」會自動依序念出英文和中文解釋。每天晚上 8 點會提醒你複習。</string>
     <string name="help_battle_title">戰鬥</string>
-    <string name="help_battle">一本單字簿記住 10 個字（或整本都記住）就能戰鬥。聽發音拼出單字，答對攻擊怪物、答錯被打掉 HP。最後把怪物的血打光就能打倒牠；HP 歸零會被拖回教堂。每場 5～10 題，答對 2 次的字就不再出題。</string>
+    <string name="help_battle">一本單字簿記住 10 個字（或整本都記住）就能戰鬥。聽發音拼出單字，答對攻擊怪物、答錯被打掉 HP。最後把怪物的血打光就能打倒牠；HP 歸零會被拖回教堂。每場題數可在遊戲設定選 10、15 或 20 題。</string>
     <string name="help_level_title">等級、轉職與道具</string>
     <string name="help_level">戰鬥拿到經驗值會升級，每 10 級換一個稱號，頭像和必殺技也會變強。超過 10 級可以在「人物能力」轉職成別的職業，但會降 10 級。戰鬥勝利有機會開到寶箱，道具在戰鬥中從道具袋使用。</string>
     <string name="help_boss_title">魔王</string>
@@ -304,6 +307,7 @@
     <string name="result_exp">得到經驗值 +%1$d</string>
     <string name="result_exp_boss">得到經驗值 +%1$d（魔王加倍）</string>
     <string name="result_practice">練習戰：經驗值只有 1/4，不會掉寶箱</string>
+    <string name="result_halved">這隻怪物已經打倒兩次以上，經驗值、金幣和寶箱機率都減半</string>
     <string name="result_coins">把怪物打飛，獲得 %1$d 金幣！</string>
     <string name="result_chest">打開寶箱，獲得「%1$s」！</string>
     <string name="result_level_up">升級！Lv %1$d → Lv %2$d</string>
@@ -668,9 +672,9 @@
     <string name="skill_fan_cheer">女粉絲啦啦隊</string>
     <string name="skill_fan_cheer_desc">2 回合內答對，怪物多扣 1 格血</string>
     <string name="skill_love_bento">勇者的愛心便當</string>
-    <string name="skill_love_bento_desc">補回 1 次答錯的血</string>
+    <string name="skill_love_bento_desc">補 1 格血</string>
     <string name="skill_royal_soldiers">招喚王國的士兵</string>
-    <string name="skill_royal_soldiers_desc">士兵攻擊讓怪物扣 1 格血、學者告訴你這題答案、白魔法師補回 1 次答錯的血</string>
+    <string name="skill_royal_soldiers_desc">士兵攻擊讓怪物扣 1 格血、學者告訴你這題答案、白魔法師補 1 格血</string>
     <string name="skill_holy_shield_bash">聖光盾擊</string>
     <string name="skill_holy_shield_bash_desc">這回合答錯不扣血，同時怪物扣 1 格血</string>
     <string name="skill_cross_slash">聖劍十字斬</string>
@@ -684,7 +688,7 @@
     <string name="skill_gurgle_curse">咕嚕咕嚕混亂咒</string>
     <string name="skill_gurgle_curse_desc">2 回合內答錯，怪物反而打自己</string>
     <string name="skill_heal_bubble">治癒泡泡</string>
-    <string name="skill_heal_bubble_desc">補回 2 次答錯的血</string>
+    <string name="skill_heal_bubble_desc">補 2 格血</string>
     <string name="skill_ancient_tome">古代魔導書</string>
     <string name="skill_ancient_tome_desc">4 回合內題目先顯示前一半字母</string>
     <string name="skill_meteor_call">隕石招喚</string>
@@ -692,13 +696,13 @@
     <string name="skill_swish_arrow">一箭咻咻</string>
     <string name="skill_swish_arrow_desc">怪物扣 1 格血</string>
     <string name="skill_elf_spring">精靈泉水</string>
-    <string name="skill_elf_spring_desc">補回 1 次答錯的血</string>
+    <string name="skill_elf_spring_desc">補 1 格血</string>
     <string name="skill_are_we_elves">我們都是精靈?</string>
     <string name="skill_are_we_elves_desc">怪物扣 2 格血</string>
     <string name="skill_are_we_elves_caption">抱歉，他們跑錯攝影棚了</string>
     <string name="skill_are_we_elves_action">第 1 場，開拍！</string>
     <string name="skill_forest_blessing">森林的庇護</string>
-    <string name="skill_forest_blessing_desc">補回 2 次答錯的血，同時怪物扣 1 格血</string>
+    <string name="skill_forest_blessing_desc">補 2 格血，同時怪物扣 1 格血</string>
     <string name="skill_elf_eye">精靈之眼</string>
     <string name="skill_elf_eye_desc">5 回合內題目先顯示前一半字母</string>
     <string name="skill_elven_uprising">精靈族的逆襲</string>
@@ -709,8 +713,8 @@
     <string name="skill_boulder_throw_desc">怪物扣 1 格血並昏迷 2 回合，答錯不會被攻擊</string>
     <string name="skill_cheat_sheet">偷看小抄</string>
     <string name="skill_cheat_sheet_desc">連續 2 題直接給答案，算答對</string>
-    <string name="skill_bomb_chain">炸彈連環爆</string>
-    <string name="skill_bomb_chain_desc">怪物扣 2 格血</string>
+    <string name="skill_goblin_raid">哥布林的掠奪</string>
+    <string name="skill_goblin_raid_desc">旁邊出現村莊，哥布林們衝進去掠奪：補 2 格血，這場戰鬥打飛怪物的金幣變 2 倍</string>
     <string name="skill_stolen_watch">偷來的懷錶</string>
     <string name="skill_stolen_watch_desc">時間暫停 3 回合：答錯不被攻擊，第 3 回合偷打怪物 1 格血</string>
     <string name="skill_goblin_king">我是哥布林大王</string>
@@ -722,21 +726,21 @@
     <string name="skill_orichalcum">奧利哈鋼發現</string>
     <string name="skill_orichalcum_desc">5 回合內答對，攻擊力 x1.5</string>
     <string name="skill_mushroom_stew">矮人蘑菇燉湯</string>
-    <string name="skill_mushroom_stew_desc">補回 2 次答錯的血</string>
-    <string name="skill_hot_spring">矮人秘境溫泉</string>
-    <string name="skill_hot_spring_desc">補回 2 次答錯的血，2 回合內答對攻擊力 x1.5</string>
+    <string name="skill_mushroom_stew_desc">補 2 格血</string>
+    <string name="skill_viking_fleet">維京人的戰艦們啊！</string>
+    <string name="skill_viking_fleet_desc">自己扣 1 格血，怪物扣 3 格血，背景變成海上</string>
     <string name="skill_ultimate_armor">傳說神的防具</string>
     <string name="skill_ultimate_armor_desc">到戰鬥結束，受到的傷害減半</string>
     <string name="skill_teaser_wand">逗貓棒搖搖～喵</string>
     <string name="skill_teaser_wand_desc">怪物 1 回合不攻擊任何人</string>
     <string name="skill_lick_fur">舔舔毛毛～喵</string>
-    <string name="skill_lick_fur_desc">補回 1 次答錯的血</string>
+    <string name="skill_lick_fur_desc">補 1 格血</string>
     <string name="skill_cat_stampede">進擊的貓貓們～喵</string>
     <string name="skill_cat_stampede_desc">怪物扣 2 格血</string>
     <string name="skill_cat_orchestra">貓咪交響樂團～喵</string>
     <string name="skill_cat_orchestra_desc">音樂換成古典名曲，3 回合內答錯反而補血</string>
-    <string name="skill_purr_heal">呼嚕呼嚕治癒～喵</string>
-    <string name="skill_purr_heal_desc">補回 3 次答錯的血</string>
+    <string name="skill_pot_push">貓貓才不會推倒東西呢～喵</string>
+    <string name="skill_pot_push_desc">怪物後面出現櫃子，貓咪跳上去把花盆撥下來砸到怪物頭上：怪物扣 3 格血</string>
     <string name="skill_cutest_cat">貓咪是地表最可愛的生物～喵～</string>
     <string name="skill_cutest_cat_desc">到戰鬥結束，答錯有一半機率不被攻擊，身邊多兩隻小貓</string>
     <string name="skill_sneeze_fire">小火苗噗噗</string>
@@ -745,8 +749,8 @@
     <string name="skill_dragon_roar_desc">怪物嚇到 2 回合不能動，答錯不會被攻擊</string>
     <string name="skill_dragon_flight">群龍飛舞</string>
     <string name="skill_dragon_flight_desc">招喚兩隻飛龍飛過去吐火，怪物扣 2 格血</string>
-    <string name="skill_dragon_howl">龍之咆哮</string>
-    <string name="skill_dragon_howl_desc">3 回合內答對，攻擊力 x2</string>
+    <string name="skill_phoenix">火鳳凰的降臨</string>
+    <string name="skill_phoenix_desc">不死鳥降臨附身，補 2 格血；2 回合內變身不死鳥，答錯被攻擊只扣一半的血</string>
     <string name="skill_meteor_claw">流星龍爪</string>
     <string name="skill_meteor_claw_desc">怪物扣 3 格血</string>
     <string name="skill_fire_whisper">火龍的呢喃</string>
@@ -759,8 +763,8 @@
     <string name="skill_rocket_launch_desc">怪物扣 2 格血</string>
     <string name="skill_overclock">超頻模式</string>
     <string name="skill_overclock_desc">3 回合內答對，攻擊力 x2</string>
-    <string name="skill_battleship">戰艦招喚</string>
-    <string name="skill_battleship_desc">自己扣 1 次答錯的血，怪物扣 3 格血，背景變成海上</string>
+    <string name="skill_pit_stop">進廠大維修</string>
+    <string name="skill_pit_stop_desc">維修工進場敲敲打打：補 2 格血，2 回合內答對攻擊力 x1.5</string>
     <string name="skill_full_arsenal">任務～殲滅～逼～全武器發射!</string>
     <string name="skill_full_arsenal_desc">怪物扣 5 格血，背景變成被炸過的城市</string>
     <string name="skill_bleh">小惡魔的鬼臉</string>
@@ -771,8 +775,8 @@
     <string name="skill_plague_doctor_desc">3 回合內怪物攻擊力減半</string>
     <string name="skill_demon_eye">魔眼凝視</string>
     <string name="skill_demon_eye_desc">3 回合內答錯，怪物反而打自己</string>
-    <string name="skill_energy_sip">吸吸能量</string>
-    <string name="skill_energy_sip_desc">怪物扣 2 格血，同時補回 2 次答錯的血</string>
+    <string name="skill_soul_steal">靈魂奪取</string>
+    <string name="skill_soul_steal_desc">抽出怪物的靈魂：怪物扣 2 格血，補 1 格血</string>
     <string name="skill_possession">惡魔的附身</string>
     <string name="skill_possession_desc">隨機附身在別的職業身上，用那個職業的外觀和技能到戰鬥結束，音樂變得很可怕</string>
 </resources>
