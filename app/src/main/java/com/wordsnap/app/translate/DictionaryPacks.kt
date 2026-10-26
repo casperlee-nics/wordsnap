@@ -5,6 +5,8 @@ import com.wordsnap.app.i18n.AppLanguage
 import java.io.File
 import java.io.InputStream
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 // 日文字典包：英文單字 → 日文解釋
@@ -24,6 +26,9 @@ object DictionaryPacks {
 
     var source: DictionarySource = BundledAssetSource
 
+    // 開 App 和設定畫面可能同時要安裝，一次只裝一個，免得兩邊寫同一個暫存檔
+    private val installing = Mutex()
+
     fun needsPack(language: AppLanguage): Boolean = language != AppLanguage.Chinese
 
     fun file(context: Context, language: AppLanguage): File =
@@ -35,7 +40,15 @@ object DictionaryPacks {
     // 安裝字典包；onProgress 是 0 到 1 的進度。找不到字典包（還沒準備好）回傳 false
     suspend fun install(context: Context, language: AppLanguage, onProgress: (Float) -> Unit = {}): Boolean {
         if (isInstalled(context, language)) return true
-        return withContext(Dispatchers.IO) {
+        return installing.withLock {
+            // 等鎖的時候另一邊可能已經裝好了
+            if (isInstalled(context, language)) return@withLock true
+            copy(context, language, onProgress)
+        }
+    }
+
+    private suspend fun copy(context: Context, language: AppLanguage, onProgress: (Float) -> Unit): Boolean =
+        withContext(Dispatchers.IO) {
             runCatching {
                 val target = file(context, language)
                 // 舊版的字典包刪掉，省空間
@@ -58,7 +71,6 @@ object DictionaryPacks {
                 tmp.renameTo(target)
             }.getOrDefault(false)
         }
-    }
 }
 
 // 字典包的來源：回傳檔案內容和大小（不知道大小就給 -1）；找不到回傳 null

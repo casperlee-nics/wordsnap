@@ -13,9 +13,6 @@ interface WordDao {
     @Query("SELECT * FROM words WHERE profileId = :profileId ORDER BY createdAt DESC")
     fun getAll(profileId: Long): Flow<List<Word>>
 
-    @Query("SELECT text FROM words WHERE profileId = :profileId")
-    suspend fun getAllTexts(profileId: Long): List<String>
-
     @Query("SELECT * FROM words WHERE meaning = ''")
     suspend fun getWithoutMeaning(): List<Word>
 

@@ -79,7 +79,7 @@ fun ScanScreen(
 ) {
     val context = LocalContext.current
     // 捕捉怪物專屬的音樂（打開相機或選檔案時 App 到背景，音樂會自動暫停）
-    LoopingMusic(R.raw.hunt_bgm, enabled = true, volume = 0.45f)
+    LoopingMusic(R.raw.hunt_bgm, volume = 0.45f)
     val scope = rememberCoroutineScope()
     var scanning by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf<String?>(null) }
@@ -89,7 +89,8 @@ fun ScanScreen(
     var unclear by remember { mutableStateOf<List<String>>(emptyList()) }
     var showUnclear by remember { mutableStateOf(false) }
     val selected = remember { mutableStateListOf<String>() }
-    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    // 相機開著時 App 可能被系統收掉，照片位置要存起來，回來才找得到照片
+    var photoUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var showAimHint by remember { mutableStateOf(false) }
     // 要存進哪一本單字簿，預設是單字本畫面目前選的那本
     var targetBookId by remember { mutableStateOf(defaultBookId ?: books.firstOrNull()?.id) }
@@ -208,13 +209,21 @@ fun ScanScreen(
                     val words = all.filter { ' ' in it || !TextScanner.isCommon(it) }
                     val skipped = all.size - words.size
                     // 要存的那本已經有的字不能選；別本有的字可以選，但標出來提醒
-                    fun owned(word: String) = existing[word]?.contains(targetBookId) == true
-                    fun inOtherBook(word: String) = !owned(word) && existing[word]?.isNotEmpty() == true
+                    // existing 用小寫查（片語可能有大寫，例如 TV stand）
+                    fun owned(word: String) = existing[word.lowercase()]?.contains(targetBookId) == true
+                    fun inOtherBook(word: String) = !owned(word) && existing[word.lowercase()]?.isNotEmpty() == true
                     fun label(word: String) = when {
                         owned(word) -> tr(R.string.scan_owned, word)
                         inOtherBook(word) -> tr(R.string.scan_in_other_book, word)
                         else -> word
                     }
+                    @Composable
+                    fun chip(word: String) = FilterChip(
+                        selected = word in selected && !owned(word),
+                        onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
+                        label = { Text(label(word), style = MaterialTheme.typography.labelLarge.readable()) },
+                        enabled = !owned(word),
+                    )
                     val selectable = words.filter { !owned(it) }
                     val allSelected = selectable.isNotEmpty() && selectable.all { it in selected }
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -246,14 +255,7 @@ fun ScanScreen(
                                 .verticalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            words.forEach { word ->
-                                FilterChip(
-                                    selected = word in selected && !owned(word),
-                                    onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
-                                    label = { Text(label(word), style = MaterialTheme.typography.labelLarge.readable()) },
-                                    enabled = !owned(word),
-                                )
-                            }
+                            words.forEach { chip(it) }
                             // 字典查不到的字收在最後，點一下才展開
                             if (unclear.isNotEmpty()) {
                                 TextButton(onClick = { showUnclear = !showUnclear }, modifier = Modifier.fillMaxWidth()) {
@@ -263,14 +265,7 @@ fun ScanScreen(
                                     )
                                 }
                                 if (showUnclear) {
-                                    unclear.forEach { word ->
-                                        FilterChip(
-                                            selected = word in selected && !owned(word),
-                                            onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
-                                            label = { Text(label(word), style = MaterialTheme.typography.labelLarge.readable()) },
-                                            enabled = !owned(word),
-                                        )
-                                    }
+                                    unclear.forEach { chip(it) }
                                 }
                             }
                         }

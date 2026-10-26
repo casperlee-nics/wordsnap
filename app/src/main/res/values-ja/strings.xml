@@ -56,7 +56,7 @@
     <string name="item_elixir">聖なる霊薬</string>
     <string name="item_elixir_effect">HP を全回復</string>
     <string name="item_angel">天使召喚</string>
-    <string name="item_angel_effect">天使が舞い降りて、モンスターの HP を 1/2 にする</string>
+    <string name="item_angel_effect">天使が舞い降りて、モンスターに 5 ダメージ</string>
     <string name="item_shield">守りの盾</string>
     <string name="item_shield_effect">3 ターンの間、間違えて攻撃されてもダメージを受けない</string>
     <string name="item_confusion">混乱の薬</string>
@@ -666,8 +666,6 @@
     <string name="skill_button">スキル</string>
     <string name="skill_title">スキル</string>
     <string name="skill_uses_left">このバトルであと %1$d 回スキルが使える</string>
-    <string name="skill_learn_at">LV%1$d で習得</string>
-    <string name="skill_coming">次のバージョンで解放</string>
     <string name="skill_used">このバトルでは使用済み</string>
     <string name="skill_none_yet">最初のスキルは LV10 で覚えるよ。がんばろう！</string>
     <string name="skill_rule">1回のバトルで使えるスキルの回数：LV10～29 は1回、LV30～49 は2回、LV50 以上は3回。同じスキルは1バトルに1回まで。</string>

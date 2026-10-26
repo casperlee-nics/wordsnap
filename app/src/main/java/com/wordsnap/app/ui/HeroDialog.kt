@@ -57,7 +57,7 @@ fun HeroDialog(
     profile: Profile,
     remembered: Int,
     onDismiss: () -> Unit,
-    onClassChange: ((Avatar) -> Unit)? = null,
+    onClassChange: (Avatar) -> Unit,
     monsterLog: Map<String, MonsterLog> = emptyMap(),
 ) {
     var changingClass by remember { mutableStateOf(false) }
@@ -87,11 +87,9 @@ fun HeroDialog(
                 // 兩本書並排放在名字下面、左右平均分開：紅色魔法書是轉職、藍色的書是冒險履歷
                 // 轉職按鈕一直都在，還沒超過 10 級時按了只會提示還不能轉職
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    if (onClassChange != null) {
-                        BookButton(tr(R.string.class_change), SpellBookColors, onClick = {
-                            if (info.level >= CLASS_CHANGE_MIN_LEVEL) changingClass = true else classLocked = true
-                        })
-                    }
+                    BookButton(tr(R.string.class_change), SpellBookColors, onClick = {
+                        if (info.level >= CLASS_CHANGE_MIN_LEVEL) changingClass = true else classLocked = true
+                    })
                     BookButton(tr(R.string.adventure_log), LogBookColors, onClick = { showLog = true })
                 }
             }
@@ -128,7 +126,7 @@ fun HeroDialog(
 
     if (showLog) AdventureLogDialog(monsterLog, onDismiss = { showLog = false })
 
-    if (changingClass && onClassChange != null) {
+    if (changingClass) {
         ClassChangeDialog(
             current = avatar,
             level = info.level,
@@ -319,7 +317,7 @@ private val BookLabelInk = Color(0xFF2A1A0A)
 // 冒險履歷：遇過的怪物（一般怪物、中魔王、大魔王依序），每隻的圖、遇到和打倒的次數、簡介
 @Composable
 private fun AdventureLogDialog(log: Map<String, MonsterLog>, onDismiss: () -> Unit) {
-    val all = NormalMonsters + MidBosses + BigBosses
+    val all = AllMonsters
     val met = all.filter { (log[it.key]?.met ?: 0) > 0 }
     PixelWindowDialog(title = tr(R.string.adventure_log), onDismiss = onDismiss) {
         Text(tr(R.string.adventure_log_summary, met.size, all.size, met.sumOf { log[it.key]?.wins ?: 0 }))
@@ -331,11 +329,7 @@ private fun AdventureLogDialog(log: Map<String, MonsterLog>, onDismiss: () -> Un
                     PixelArt(monster.art, ScenePalette, Modifier.width(if (monster.rank == MonsterRank.Normal) 36.dp else 46.dp))
                 }
                 Column(Modifier.weight(1f).padding(start = 8.dp)) {
-                    val rank = when (monster.rank) {
-                        MonsterRank.Big -> tr(R.string.boss_big) + "・"
-                        MonsterRank.Mid -> tr(R.string.boss_mid) + "・"
-                        MonsterRank.Normal -> ""
-                    }
+                    val rank = if (monster.rank == MonsterRank.Normal) "" else bossRank(monster) + "・"
                     Text(rank + monster.name, style = MaterialTheme.typography.titleSmall, color = if (monster.rank == MonsterRank.Normal) PixelInk else PixelRed)
                     Text(tr(R.string.adventure_log_counts, record.met, record.wins), style = MaterialTheme.typography.bodySmall)
                     Text(monster.desc, style = MaterialTheme.typography.bodySmall.readable())

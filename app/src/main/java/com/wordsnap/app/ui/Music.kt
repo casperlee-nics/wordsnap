@@ -17,8 +17,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.wordsnap.app.R
+import com.wordsnap.app.data.gamePrefs
 
-private const val PREFS = "wordsnap"
 private const val KEY_MUSIC = "music_on"
 private const val KEY_LEVEL = "music_level"
 
@@ -34,7 +34,7 @@ private var currentLevel by mutableStateOf<MusicLevel?>(null)
 
 fun musicLevel(context: Context): MusicLevel {
     currentLevel?.let { return it }
-    val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    val prefs = context.gamePrefs()
     val saved = prefs.getString(KEY_LEVEL, null)?.let { name -> MusicLevel.entries.find { it.name == name } }
     // 還沒調過音量就用小聲；舊版只有開/關：關 → 關
     val level = saved ?: if (prefs.getBoolean(KEY_MUSIC, true)) MusicLevel.Low else MusicLevel.Off
@@ -44,15 +44,13 @@ fun musicLevel(context: Context): MusicLevel {
 
 fun setMusicLevel(context: Context, level: MusicLevel) {
     currentLevel = level
-    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_LEVEL, level.name).apply()
+    context.gamePrefs().edit().putString(KEY_LEVEL, level.name).apply()
 }
-
-fun isMusicOn(context: Context): Boolean = musicLevel(context) != MusicLevel.Off
 
 // 循環播放一段 8-bit 音樂；App 切到背景時暫停，離開畫面時停止
 // paused 為 true 時暫時停住（例如戰鬥念單字時），變回 false 從停住的地方接著播
 @Composable
-fun LoopingMusic(@RawRes resId: Int, enabled: Boolean, volume: Float, paused: Boolean = false) {
+fun LoopingMusic(@RawRes resId: Int, volume: Float, enabled: Boolean = true, paused: Boolean = false) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var player by remember { mutableStateOf<MediaPlayer?>(null) }

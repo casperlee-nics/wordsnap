@@ -7,6 +7,7 @@ import android.os.LocaleList
 import androidx.annotation.ArrayRes
 import androidx.annotation.StringRes
 import com.google.mlkit.nl.translate.TranslateLanguage
+import com.wordsnap.app.data.gamePrefs
 import java.util.Locale
 
 // 遊戲可以選的語言：介面文字和單字解釋都會換成這個語言
@@ -29,17 +30,16 @@ enum class AppLanguage(val tag: String, val nativeName: String, val translateTar
     }
 }
 
-private const val PREFS = "wordsnap"
 private const val KEY_LANGUAGE = "language"
 
 // 目前選的語言：還沒手動選過就跟著手機系統
 fun appLanguage(context: Context): AppLanguage {
-    val saved = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_LANGUAGE, null)
+    val saved = context.gamePrefs().getString(KEY_LANGUAGE, null)
     return AppLanguage.entries.find { it.name == saved } ?: AppLanguage.fromSystem()
 }
 
 fun saveAppLanguage(context: Context, language: AppLanguage) {
-    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_LANGUAGE, language.name).commit()
+    context.gamePrefs().edit().putString(KEY_LANGUAGE, language.name).commit()
     Strings.init(context)
 }
 

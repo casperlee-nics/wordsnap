@@ -69,7 +69,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -152,9 +151,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     // 隕石招喚、火龍的呢喃這些招會把背景換掉，直到戰鬥結束
     var scene by remember { mutableStateOf(ReviewScene.entries.random()) }
     val speaker = rememberSpeaker()
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val musicOn = remember { isMusicOn(context) }
     var index by remember { mutableIntStateOf(0) }
     var correct by remember { mutableIntStateOf(0) }
     val wrong = remember { mutableStateListOf<Word>() }
@@ -244,10 +241,10 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     // 結束動畫（打飛怪物或拖棺材）播完了，可以顯示結果
     var endShown by remember { mutableStateOf(false) }
     var reward by remember { mutableStateOf<BattleReward?>(null) }
-    // 升級動畫看完了，才顯示戰鬥結果
     // 打倒大魔王：先播專屬的勝利畫面和凱歌
     var bossWinDone by remember { mutableStateOf(false) }
     val showingBossWin = endShown && monster.rank == MonsterRank.Big && reward?.passed == true && !bossWinDone
+    // 升級動畫看完了，才顯示戰鬥結果
     var levelUpDone by remember { mutableStateOf(false) }
     val leveledUp = reward?.let { it.levelAfter > it.levelBefore } == true
     val showingLevelUp = endShown && !showingBossWin && leveledUp && !levelUpDone
@@ -263,7 +260,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             MonsterRank.Normal -> R.raw.battle_bgm
         },
         // 打倒怪物時先停掉戰鬥音樂，播勝利號角
-        enabled = musicOn && introDone && !died && !knockedOut && !showingBossWin && !showingLevelUp && !showingChest,
+        enabled = introDone && !died && !knockedOut && !showingBossWin && !showingLevelUp && !showingChest,
         volume = if (quiet) 0.05f else 0.3f,
     )
     // 地表最可愛的貓：背景偶爾「喵～」一聲，直到戰鬥結束
@@ -290,7 +287,6 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val answer = word?.text?.trim().orEmpty()
     val heroHp = (HERO_MAX_HP - damage).coerceAtLeast(0)
     val monsterHp = monsterHalves().coerceAtLeast(0)
-    val knocked = knockedOut
     // 道具把怪物的血打光：等道具動畫打到怪物，再結束戰鬥
     var ending by remember { mutableStateOf(false) }
     // 偷看小抄還有題目要自動作答時，不能自己作答或用道具技能
@@ -533,7 +529,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         val itemSkill = type.skill
         if (itemSkill != null) {
             itemSkills.add(itemSkill)
-            applySkill(itemSkill, itemSkill.effect ?: return)
+            applySkill(itemSkill, itemSkill.effect)
             return
         }
         // 呼叫空中支援：轟炸完背景變成被炸過的城市
@@ -558,9 +554,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     // 附身不算在使用次數裡
     fun usesLeft() = (skillUsesPerBattle(level) - usedSkills.count { it != Skill.Possession }).coerceAtLeast(0)
 
-    // 這招現在能不能用：學會了、做好了、這場還沒用過、還有次數、這回合還沒用過，而且用了有效果
+    // 這招現在能不能用：學會了、這場還沒用過、還有次數、這回合還沒用過，而且用了有效果
     fun canUseSkill(skill: Skill): Boolean {
-        val e = skill.effect ?: return false
+        val e = skill.effect
         if (!answering || skillThisRound || skill.level > level || skill in usedSkills) return false
         if (!e.possess && usesLeft() <= 0) return false
         // 只有單一效果的招式，效果還在身上時不能再用（不然浪費一次）
@@ -600,7 +596,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     }
 
     fun useSkill(skill: Skill) {
-        val e = skill.effect ?: return
+        val e = skill.effect
         if (!canUseSkill(skill)) return
         showSkills = false
         // 附身：隨機抽一個別的職業
@@ -707,7 +703,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     }
     // 怪物還有血：留在原地，稍等一下就顯示結果
     LaunchedEffect(finished) {
-        if (finished && !died && !knocked) {
+        if (finished && !died && !knockedOut) {
             delay(900)
             endShown = true
         }
@@ -749,7 +745,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     monsterMax = total * 2,
                     heroHp = heroHp,
                     heroMax = HERO_MAX_HP,
-                    knockout = knocked,
+                    knockout = knockedOut,
                     onKnockoutEnd = { endShown = true },
                     intro = !introDone,
                     onIntroEnd = { introDone = true },
@@ -803,7 +799,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                         Text(tr(R.string.battle_dragged))
                         reward?.let { Text(tr(R.string.battle_death_count, it.deaths), color = PixelRed) }
                     }
-                    knocked -> {
+                    knockedOut -> {
                         Text(tr(R.string.battle_finisher, race.finisher.label(tier)), style = MaterialTheme.typography.headlineSmall)
                         Text(tr(R.string.battle_knocked, monster.name))
                     }
@@ -875,13 +871,13 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     if (endShown && done != null) {
         val chestItem = done.item
         if (showingBossWin) {
-            BossVictoryScreen(monster, avatar, tier, musicOn, onClose = { bossWinDone = true })
+            BossVictoryScreen(monster, avatar, tier, onClose = { bossWinDone = true })
         } else if (showingLevelUp) {
             LevelUpScreen(ownAvatar, race, done.levelBefore, done.levelAfter, onClose = { levelUpDone = true })
         } else if (showingChest && chestItem != null) {
             ChestScreen(chestItem, onClose = { chestDone = true })
         } else {
-            ResultDialog(done, monster, race, knocked, onClose = onBack)
+            ResultDialog(done, monster, race, knockedOut, onClose = onBack)
         }
     }
 }
@@ -2141,10 +2137,6 @@ private val SlabStoneDark = Color(0xFF1A1C28)
 private val SlabGold = Color(0xFFC89A3A)
 private val SlabGoldLight = Color(0xFFF0D080)
 private val SlabGoldDark = Color(0xFF7A5418)
-
-// 魔王的等級名稱：大魔王、中魔王
-private fun bossRank(monster: Monster): String =
-    tr(if (monster.rank == MonsterRank.Big) R.string.boss_big else R.string.boss_mid)
 
 // 以前遇過的怪物：戰鬥中點牠，看圖、簡介和遇到／打倒的次數
 @Composable

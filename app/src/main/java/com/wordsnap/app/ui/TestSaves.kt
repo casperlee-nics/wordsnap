@@ -20,10 +20,13 @@ object TestSaves {
         "valley", "window", "yellow", "zebra", "bridge", "candle", "desert", "engine", "flower", "galaxy",
     )
 
+    // 測試冒險者的暱稱，例如「LV60勇者」
+    private fun nameOf(avatar: Avatar) = "LV$LEVEL${avatar.race.label}".take(12)
+
     // 重新產生測試存檔：先把舊的測試冒險者（單字、道具、冒險履歷、單字簿）整個刪掉，再重新建立
     suspend fun reset(db: AppDatabase) {
         Avatar.entries.forEach { avatar ->
-            val profile = db.profileDao().findByName("LV$LEVEL${avatar.race.label}".take(12)) ?: return@forEach
+            val profile = db.profileDao().findByName(nameOf(avatar)) ?: return@forEach
             db.wordDao().deleteForProfile(profile.id)
             db.itemDao().deleteForProfile(profile.id)
             db.monsterLogDao().deleteForProfile(profile.id)
@@ -37,7 +40,7 @@ object TestSaves {
         val profiles = db.profileDao()
         val now = System.currentTimeMillis()
         Avatar.entries.forEachIndexed { i, avatar ->
-            val name = "LV$LEVEL${avatar.race.label}".take(12)
+            val name = nameOf(avatar)
             if (profiles.findByName(name) != null) return@forEachIndexed
             // createdAt 依序排，存檔畫面照職業順序列出
             val id = profiles.insert(Profile(name = name, avatar = avatar.name, exp = totalExpForLevel(LEVEL), createdAt = now + i))
@@ -53,16 +56,15 @@ object TestSaves {
     suspend fun topUp(db: AppDatabase) {
         val profiles = db.profileDao()
         val log = db.monsterLogDao()
-        val all = NormalMonsters + MidBosses + BigBosses
         Avatar.entries.forEach { avatar ->
-            val profile = profiles.findByName("LV$LEVEL${avatar.race.label}".take(12)) ?: return@forEach
+            val profile = profiles.findByName(nameOf(avatar)) ?: return@forEach
             // 道具屋測試：金幣 5000，後來新增的道具也各補 9 個
             if (profile.coins == 0) profiles.addCoins(profile.id, TEST_COINS)
             ItemType.entries.forEach { type ->
                 if (db.itemDao().has(profile.id, type.name) == 0) repeat(ITEM_COUNT) { db.itemDao().add(profile.id, type.name) }
             }
-            if (log.count(profile.id) >= all.size) return@forEach
-            all.forEach { log.fill(profile.id, it.key) }
+            if (log.count(profile.id) >= AllMonsters.size) return@forEach
+            AllMonsters.forEach { log.fill(profile.id, it.key) }
         }
     }
 }

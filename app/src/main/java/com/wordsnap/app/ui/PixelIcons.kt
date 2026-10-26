@@ -261,26 +261,6 @@ val IconOldBook = listOf(
     "................",
 )
 
-// 主畫面：遊戲說明（問號）
-val IconHelp = listOf(
-    "................",
-    "................",
-    ".....KKKKKK.....",
-    "....KYYYYYYK....",
-    "...KYYKKKKYYK...",
-    "...KYK....KYK...",
-    "....K.....KYK...",
-    ".........KYYK...",
-    "........KYYK....",
-    ".......KYYK.....",
-    ".......KYK......",
-    ".......KKK......",
-    "................",
-    ".......KYK......",
-    ".......KKK......",
-    "................",
-)
-
 // 主畫面右下角：插在草地上、寫著問號的小木牌（有木紋和裂縫）
 val IconHelpSign = listOf(
     "....................",
@@ -453,7 +433,6 @@ fun PixelIconButton(
 ) {
     PixelSurface(
         color = color,
-        unit = 2.dp,
         modifier = Modifier
             .size(size)
             // 不能按的時候變淡

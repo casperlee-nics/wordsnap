@@ -58,17 +58,22 @@ object TextScanner {
                     for (i in 0 until pages) {
                         withContext(Dispatchers.Main) { onPage(i + 1, pages) }
                         val bitmap = renderer.openPage(i).use { page ->
-                            // 寬度放大到約 1600 像素，小字也認得出來
-                            val scale = PDF_RENDER_WIDTH.toFloat() / page.width
+                            // 寬度放大到約 1600 像素，小字也認得出來；特別長的頁面限制高度，免得記憶體不夠
+                            val scale = minOf(PDF_RENDER_WIDTH.toFloat() / page.width, PDF_MAX_HEIGHT.toFloat() / page.height)
                             val bitmap = Bitmap.createBitmap(
-                                PDF_RENDER_WIDTH, (page.height * scale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888,
+                                (page.width * scale).toInt().coerceAtLeast(1),
+                                (page.height * scale).toInt().coerceAtLeast(1),
+                                Bitmap.Config.ARGB_8888,
                             )
                             bitmap.eraseColor(Color.WHITE)
                             page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                             bitmap
                         }
-                        val result = recognizer.process(InputImage.fromBitmap(bitmap, 0)).await()
-                        bitmap.recycle()
+                        val result = try {
+                            recognizer.process(InputImage.fromBitmap(bitmap, 0)).await()
+                        } finally {
+                            bitmap.recycle()
+                        }
                         // PDF 的頁面是完整的，不會有被切掉的字
                         pagesText += linesOf(result, 0, 0)
                     }
@@ -107,6 +112,7 @@ object TextScanner {
     private const val EDGE_MARGIN = 0.015f
     private const val MAX_PDF_PAGES = 20
     private const val PDF_RENDER_WIDTH = 1600
+    private const val PDF_MAX_HEIGHT = PDF_RENDER_WIDTH * 4
 
     // 太基本的字，拍照時自動略過
     private val commonWords = setOf(

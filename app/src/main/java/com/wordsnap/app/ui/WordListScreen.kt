@@ -33,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -84,9 +83,7 @@ fun WordListScreen(
     var choosingAdd by remember { mutableStateOf(startWithAddChoice) }
     LaunchedEffect(Unit) { if (startWithAddChoice) onAddChoiceShown() }
     // 單字簿頁面播放清淡的背景音樂，念單字時調小聲
-    val context = LocalContext.current
-    val musicOn = remember { isMusicOn(context) }
-    LoopingMusic(R.raw.book_bgm, enabled = musicOn, volume = if (speaker.speaking) 0.05f else 0.35f)
+    LoopingMusic(R.raw.book_bgm, volume = if (speaker.speaking) 0.05f else 0.35f)
     var editing by remember { mutableStateOf<Word?>(null) }
     // 整本都答對兩次了，進戰鬥前先提醒是練習戰
     var confirmPractice by remember { mutableStateOf(false) }
@@ -174,9 +171,9 @@ fun WordListScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f).padding(horizontal = 16.dp, vertical = 6.dp),
                 )
-                // 剛剛在這本刪掉的字可以復原：放在播放和垃圾桶的正上方
+                // 剛剛在這本（或選「全部」時任何一本）刪掉的字可以復原：放在播放和垃圾桶的正上方
                 val lastDeleted = vm.deletedWords.lastOrNull()
-                if (lastDeleted != null && lastDeleted.bookId == selectedBookId) {
+                if (lastDeleted != null && lastDeleted.profileId == profile?.id && (selectedBookId == null || lastDeleted.bookId == selectedBookId)) {
                     Row(
                         Modifier.padding(end = 16.dp).width(88.dp).clickable { vm.undoDelete() },
                         verticalAlignment = Alignment.CenterVertically,
@@ -273,7 +270,7 @@ fun WordListScreen(
         profile?.let {
             HeroDialog(
                 it,
-                remembered = allWords.count { w -> w.box >= 1 } + it.keptRemembered,
+                remembered = vm.rememberedTotal(),
                 onDismiss = { showHero = false },
                 onClassChange = { avatar -> vm.changeClass(it, avatar) },
                 monsterLog = monsterLog,

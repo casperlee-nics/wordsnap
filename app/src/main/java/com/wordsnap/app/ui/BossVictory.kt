@@ -44,8 +44,8 @@ import kotlin.math.sin
 // 大魔王討伐成功：整個畫面換成夜空，魔王一格一格碎掉往下掉，天上放煙火，
 // 人物站在中間跳起來舉手歡呼，金色字「大魔王討伐成功！」閃閃發亮；播專屬的勝利凱歌
 @Composable
-fun BossVictoryScreen(monster: Monster, hero: Avatar, tier: Int, musicOn: Boolean, onClose: () -> Unit) {
-    LoopingMusic(R.raw.bigboss_victory, enabled = musicOn, volume = 0.4f)
+fun BossVictoryScreen(monster: Monster, hero: Avatar, tier: Int, onClose: () -> Unit) {
+    LoopingMusic(R.raw.bigboss_victory, volume = 0.4f)
     // 前 3 秒：魔王碎掉；之後一直放煙火
     val intro = remember { Animatable(0f) }
     LaunchedEffect(Unit) { intro.animateTo(1f, tween(3000, easing = LinearEasing)) }

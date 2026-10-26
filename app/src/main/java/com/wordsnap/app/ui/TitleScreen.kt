@@ -58,16 +58,16 @@ fun TitleScreen(
 ) {
     // 每次進主畫面從 5 首裡隨機挑一首
     val music = remember { TitleMusic.random() }
-    LoopingMusic(music, enabled = true, volume = 0.6f)
+    LoopingMusic(music, volume = 0.6f)
     // 依手機時間：早上 6 點到晚上 6 點是白天的城堡，其他時間是夜晚燈火通明的城堡
     val night = remember { isNight() }
     // 夜晚的小彩蛋：點城堡會放煙火
     var fireworksShow by remember { mutableIntStateOf(0) }
     var fireworksOn by remember { mutableStateOf(false) }
     OneShotSound(R.raw.fireworks_sfx, play = fireworksOn, volume = 0.7f)
-    // 白天的小彩蛋：點城堡，公主走出來迎接，四個人物往兩邊讓開，響起王家號角
     var showHelp by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    // 白天的小彩蛋：點城堡，公主走出來迎接，四個人物往兩邊讓開，響起王家號角
     var princessShow by remember { mutableIntStateOf(0) }
     var princessOn by remember { mutableStateOf(false) }
     val princess = remember { Animatable(0f) }

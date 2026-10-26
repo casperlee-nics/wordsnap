@@ -9,8 +9,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import com.wordsnap.app.R
+import com.wordsnap.app.data.gamePrefs
 
-private const val PREFS = "wordsnap"
 private const val KEY_LARGE_TEXT = "large_text"
 
 // 文字大小：小（原本的大小）、大（放大 1.2 倍）
@@ -25,13 +25,13 @@ private var currentTextSize by mutableStateOf<TextSize?>(null)
 
 fun loadTextSize(context: Context): TextSize {
     currentTextSize?.let { return it }
-    val large = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_LARGE_TEXT, false)
+    val large = context.gamePrefs().getBoolean(KEY_LARGE_TEXT, false)
     return (if (large) TextSize.Large else TextSize.Small).also { currentTextSize = it }
 }
 
 fun setTextSize(context: Context, size: TextSize) {
     currentTextSize = size
-    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_LARGE_TEXT, size == TextSize.Large).apply()
+    context.gamePrefs().edit().putBoolean(KEY_LARGE_TEXT, size == TextSize.Large).apply()
 }
 
 // 輸入框和講解文字用：設定成「大」時字放大 1.2 倍

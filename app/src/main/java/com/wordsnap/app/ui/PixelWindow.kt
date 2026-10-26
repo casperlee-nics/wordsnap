@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -49,8 +48,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -227,12 +224,11 @@ fun Modifier.woodFrame(fill: Color): Modifier = drawBehind {
     drawWoodFrame()
 }
 
-// 有木紋細框的卡片，取代單線黑框的 Surface（unit 留著相容舊的呼叫，木框粗細固定）
+// 有木紋細框的卡片，取代單線黑框的 Surface
 @Composable
 fun PixelSurface(
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.surfaceContainer,
-    unit: Dp = 3.dp,
     content: @Composable () -> Unit,
 ) {
     Surface(
@@ -347,20 +343,6 @@ fun RetroButtonWithIcon(
             )
             PixelArt(icon, palette, Modifier.padding(start = 4.dp).size(iconSize))
         }
-    }
-}
-
-// 只有像素圖示的復古按鈕（例如打開冒險日誌清單）
-@Composable
-fun RetroIconButton(
-    icon: List<String>,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    palette: Map<Char, Color> = ColorIconPalette,
-) {
-    RetroButtonFrame(onClick, modifier.width(48.dp).semantics { this.contentDescription = contentDescription }, true) { lift ->
-        PixelArt(icon, palette, Modifier.offset(x = 1.5.dp - lift, y = 1.5.dp - lift).size(30.dp))
     }
 }
 

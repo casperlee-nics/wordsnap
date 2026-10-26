@@ -1538,6 +1538,13 @@ val BigBosses = listOf(
     "冰霜巨人", "深海巨妖", "混沌巫師王", "機械泰坦", "文字吞噬者", "魔王",
 ).map(::base)
 
+// 冒險履歷和測試存檔用：全部怪物（一般怪物、中魔王、大魔王依序）
+val AllMonsters = NormalMonsters + MidBosses + BigBosses
+
+// 魔王的等級名稱：大魔王、中魔王
+fun bossRank(monster: Monster): String =
+    tr(if (monster.rank == MonsterRank.Big) R.string.boss_big else R.string.boss_mid)
+
 // 怪物名稱的翻譯（中文名稱 → 介面文字）
 private val MonsterNames = mapOf(
     "史萊姆" to R.string.monster_slime,

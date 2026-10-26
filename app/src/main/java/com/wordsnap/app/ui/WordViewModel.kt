@@ -1,7 +1,6 @@
 package com.wordsnap.app.ui
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -16,6 +15,7 @@ import com.wordsnap.app.data.Book
 import com.wordsnap.app.data.MonsterLog
 import com.wordsnap.app.data.Profile
 import com.wordsnap.app.data.Word
+import com.wordsnap.app.data.gamePrefs
 import com.wordsnap.app.i18n.appLanguage
 import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.translate.DictionaryPacks
@@ -39,7 +39,6 @@ private const val DAY = 24 * 60 * 60 * 1000L
 // 記得一次就升一格，每格下次複習的間隔：馬上、1、3、7、14、30 天
 private val INTERVALS = longArrayOf(0, 1 * DAY, 3 * DAY, 7 * DAY, 14 * DAY, 30 * DAY)
 
-private const val PREFS = "wordsnap"
 private const val KEY_PROFILE = "current_profile_id"
 private const val KEY_BOOK = "last_book_"
 private const val KEY_MEANING_CLEANUP = "meaning_cleanup_v1"
@@ -97,7 +96,6 @@ private const val PRACTICE_EXP_DIVISOR = 4
 // 同一隻怪物打倒幾次之後，獎勵減半
 private const val VETERAN_WINS = 2
 
-// 打魔王的經驗值倍數：一般 1 倍、中魔王 2 倍、大魔王 3 倍
 // 把怪物打飛得到的金幣
 fun MonsterRank.coinReward(): Int = when (this) {
     MonsterRank.Normal -> 10
@@ -105,6 +103,7 @@ fun MonsterRank.coinReward(): Int = when (this) {
     MonsterRank.Big -> 30
 }
 
+// 打魔王的經驗值倍數：一般 1 倍、中魔王 2 倍、大魔王 3 倍
 private fun MonsterRank.expMultiplier(): Int = when (this) {
     MonsterRank.Normal -> 1
     MonsterRank.Mid -> 2
@@ -120,7 +119,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     private val bookDao = db.bookDao()
     private val itemDao = db.itemDao()
     private val monsterLogDao = db.monsterLogDao()
-    private val prefs = application.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    private val prefs = application.gamePrefs()
 
     // ---- 暱稱 ----
 
@@ -173,6 +172,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     // 刪除冒險者：這個冒險者的單字、單字簿、道具和暱稱一起刪掉
     fun deleteProfile(profile: Profile) {
+        // 這位冒險者刪掉的字也不能再復原
+        deletedWords.removeAll { it.profileId == profile.id }
         viewModelScope.launch {
             db.withTransaction {
                 dao.deleteForProfile(profile.id)
@@ -242,6 +243,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     // 刪除一本單字簿和裡面的單字；至少要留一本
     fun deleteBook(book: Book) {
         if (books.value.size <= 1) return
+        // 單字簿不在了，之前從這本刪掉的字也不能再復原
+        deletedWords.removeAll { it.bookId == book.id }
         viewModelScope.launch {
             db.withTransaction {
                 profileDao.addKeptRemembered(book.profileId, dao.countRememberedInBook(book.id))
@@ -292,7 +295,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
             if (TestSaves.ENABLED) TestSaves.topUp(db)
             // 目前的語言是日文，字典包有新版（或還沒裝）就先裝好，才查得到解釋
             DictionaryPacks.install(getApplication(), appLanguage(getApplication()))
-            fillMissingMeaningsNow()
+            fillMissingMeanings()
         }
     }
 
@@ -350,7 +353,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         val pid = profileId ?: return
         viewModelScope.launch {
             dao.insert(Word(text = text.trim(), meaning = meaning.trim(), profileId = pid, bookId = bookForNewWords))
-            fillMissingMeaningsNow()
+            fillMissingMeanings()
         }
     }
 
@@ -362,14 +365,14 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
             val newWords = texts.filter { it.lowercase() !in existing }
                 .map { Word(text = it, meaning = "", profileId = pid, bookId = bookId) }
             dao.insertAll(newWords)
-            fillMissingMeaningsNow()
+            fillMissingMeanings()
         }
     }
 
     fun update(word: Word, text: String, meaning: String) {
         viewModelScope.launch {
             dao.update(word.copy(text = text.trim(), meaning = meaning.trim()))
-            fillMissingMeaningsNow()
+            fillMissingMeanings()
         }
     }
 
@@ -411,14 +414,12 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         allWords.value.count { it.box >= 1 } + (currentProfile.value?.keptRemembered ?: 0)
 
     // 下載失敗後讓使用者按「重試」
-    fun retryTranslation() = fillMissingMeanings()
-
-    private fun fillMissingMeanings() {
-        viewModelScope.launch { fillMissingMeaningsNow() }
+    fun retryTranslation() {
+        viewModelScope.launch { fillMissingMeanings() }
     }
 
     // 沒有中文意思的單字自動填上：先查離線字典，查不到才用 ML Kit 翻譯
-    private suspend fun fillMissingMeaningsNow() {
+    private suspend fun fillMissingMeanings() {
         var canTranslate = true
         for (word in dao.getWithoutMeaning()) {
             val meaning = WordDictionary.lookup(getApplication(), word.text)

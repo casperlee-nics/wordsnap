@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.wordsnap.app.R
 import com.wordsnap.app.data.Profile
@@ -43,10 +42,8 @@ fun SaveSlotScreen(
 ) {
     var confirm by remember { mutableStateOf<Profile?>(null) }
     var renaming by remember { mutableStateOf<Profile?>(null) }
-    val context = LocalContext.current
-    val musicOn = remember { isMusicOn(context) }
     // 讀取遊戲和記錄管理各有自己的音樂
-    LoopingMusic(if (managing) R.raw.manage_bgm else R.raw.load_bgm, enabled = musicOn, volume = 0.5f)
+    LoopingMusic(if (managing) R.raw.manage_bgm else R.raw.load_bgm, volume = 0.5f)
 
     Scaffold(
         topBar = {

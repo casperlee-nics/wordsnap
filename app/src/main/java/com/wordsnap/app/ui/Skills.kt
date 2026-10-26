@@ -83,13 +83,12 @@ const val UNTIL_END = 999
 // 技能換的背景音樂：古典名曲（隨機一首）、月光奏鳴曲第三樂章、酒醉的水手
 enum class SkillMusic { Classical, WilliamTell, Sailor }
 
-// effect 是 null 的招式還沒做好，技能表裡看得到但不能用
 enum class Skill(
     val race: Race,
     val level: Int,
     @StringRes private val nameRes: Int,
     @StringRes private val descRes: Int,
-    val effect: SkillEffect?,
+    val effect: SkillEffect,
 ) {
     FanCheer(Race.Hero, 10, R.string.skill_fan_cheer, R.string.skill_fan_cheer_desc, SkillEffect(cheer = 2)),
     LoveBento(Race.Hero, 20, R.string.skill_love_bento, R.string.skill_love_bento_desc, SkillEffect(heal = 1)),
@@ -147,7 +146,6 @@ enum class Skill(
     Possession(Race.Demon, 60, R.string.skill_possession, R.string.skill_possession_desc, SkillEffect(possess = true));
     val label: String get() = tr(nameRes)
     val description: String get() = tr(descRes)
-    val ready: Boolean get() = effect != null
 
     companion object {
         fun of(race: Race): List<Skill> = entries.filter { it.race == race }
@@ -180,8 +178,7 @@ fun SkillDialog(
             onUse != null -> Text(tr(R.string.skill_uses_left, usesLeft), style = MaterialTheme.typography.titleSmall, color = PixelRed)
         }
         skills.filter { it.level <= level }.forEachIndexed { index, skill ->
-            val learned = true
-            val enabled = if (onUse != null) canUse(skill) else learned && skill.ready
+            val enabled = onUse == null || canUse(skill)
             if (index > 0) Box(Modifier.fillMaxWidth().height(2.dp).background(SkillDivider))
             Row(
                 Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.45f)
@@ -192,7 +189,7 @@ fun SkillDialog(
             ) {
                 // 左邊的小格子寫學會的等級
                 Box(
-                    Modifier.size(48.dp).border(2.dp, PixelInk).background(if (learned) SkillSlot else SkillSlotLocked),
+                    Modifier.size(48.dp).border(2.dp, PixelInk).background(SkillSlot),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text("LV${skill.level}", style = MaterialTheme.typography.labelMedium)
@@ -200,12 +197,7 @@ fun SkillDialog(
                 Column(Modifier.weight(1f)) {
                     Text(skill.label, style = MaterialTheme.typography.titleMedium)
                     Text(skill.description, style = MaterialTheme.typography.bodySmall.readable())
-                    val status = when {
-                        !skill.ready -> tr(R.string.skill_coming)
-                        skill in used -> tr(R.string.skill_used)
-                        else -> null
-                    }
-                    if (status != null) Text(status, style = MaterialTheme.typography.labelMedium, color = PixelRed)
+                    if (skill in used) Text(tr(R.string.skill_used), style = MaterialTheme.typography.labelMedium, color = PixelRed)
                 }
             }
         }
@@ -217,7 +209,6 @@ fun SkillDialog(
 fun avatarOf(race: Race): Avatar = Avatar.entries.first { it.race == race }
 
 private val SkillSlot = Color(0xFFF8E0A0)
-private val SkillSlotLocked = Color(0xFFC8C0B0)
 private val SkillDivider = Color(0x40202030)
 
 // 戰鬥的技能按鈕：閃亮的星星

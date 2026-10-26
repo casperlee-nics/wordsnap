@@ -100,66 +100,6 @@ val TitleGround = listOf(
     "ddddeeeeddddddddddddddddeeeeddddddddddddddddeeeedddddddddddddddd",
 )
 
-// 選字畫面上方的怪物
-val Monsters = listOf(
-    listOf(
-        "............",
-        "............",
-        ".....KK.....",
-        "....KBBK....",
-        "...KBLBBK...",
-        "..KBLBBBBK..",
-        "..KBKBBKBK..",
-        ".KBBBBBBBBK.",
-        ".KBBBPPBBBK.",
-        "KBBBBBBBBBBK",
-        "KBBBBBBBBBBK",
-        ".KKKKKKKKKK.",
-    ),
-    listOf(
-        "............",
-        "............",
-        ".K........K.",
-        "KpK..KK..KpK",
-        "KppKKppKKppK",
-        "KpppqppqpppK",
-        ".KppKppKppK.",
-        "..KppppppK..",
-        "...KpWWpK...",
-        "....KppK....",
-        ".....KK.....",
-        "............",
-    ),
-    listOf(
-        "....KKKK....",
-        "...KwwwwK...",
-        "..KwwwwwwK..",
-        ".KwwKwwKwwK.",
-        ".KwwKwwKwwK.",
-        ".KwwwwwwwwK.",
-        ".KwwwKKwwwK.",
-        ".KwwwwwwwwK.",
-        ".KwwwwwwwwK.",
-        ".KwwwwwwwwK.",
-        ".KwKwwKwwKK.",
-        "..K.KK.KK...",
-    ),
-    listOf(
-        "....KKKK....",
-        "..KKRRRRKK..",
-        ".KRRWWRRRRK.",
-        "KRRWWRRWWRRK",
-        "KRRRRRRWWRRK",
-        "KRWWRRRRRRRK",
-        ".KKKKKKKKKK.",
-        "...KooooK...",
-        "...KoKoKK...",
-        "...KooooK...",
-        "...KooooK...",
-        "....KKKK....",
-    ),
-)
-
 // 中間放選單的草地顏色，和天空圖最下面一列相同
 val SceneGrass = ScenePalette.getValue('G')
 

@@ -1,12 +1,8 @@
 package com.wordsnap.app.ui.theme
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -76,27 +72,7 @@ private val shapes = Shapes(
     extraLarge = CutCornerShape(8.dp),
 )
 
-// 遊戲對話框那種黑色粗框
-val PixelBorder = BorderStroke(3.dp, PixelInk)
-
 @Composable
 fun PixelTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = colors, typography = typography, shapes = shapes, content = content)
 }
-
-// 深藍標題列，文字和圖示是白色
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun pixelTopBarColors() = TopAppBarDefaults.topAppBarColors(
-    containerColor = PixelBlue,
-    titleContentColor = Color.White,
-    navigationIconContentColor = Color.White,
-    actionIconContentColor = Color.White,
-)
-
-// 標題列上的文字按鈕
-@Composable
-fun pixelTopBarButtonColors() = ButtonDefaults.textButtonColors(
-    contentColor = Color.White,
-    disabledContentColor = Color.White.copy(alpha = 0.5f),
-)

@@ -44,6 +44,8 @@ const val WRONG_DAMAGE = 2
 const val CHEST_CHANCE = 0.5f
 // 呼叫空中支援：B2 轟炸機讓怪物扣 2 格
 const val AIR_SUPPORT_DAMAGE = 2
+// 天使召喚：怪物扣 5 格
+const val ANGEL_DAMAGE = 5
 
 // skill：v1.02 的體驗道具，效果和動畫跟那一招技能一樣（讓沒有那個職業的人也能玩到）
 enum class ItemType(
@@ -86,11 +88,11 @@ enum class ItemType(
             else -> 0
         }
 
-    // 讓怪物多扣多少血（總題數的幾分之幾，至少 1）
+    // 讓怪物多扣多少血（村民、投石車是總題數的幾分之幾，至少 1；天使、轟炸機是固定格數）
     fun monsterDamage(total: Int): Int = when (this) {
         Riot -> maxOf(1, (total + 3) / 4)
         Catapult -> maxOf(1, (total + 2) / 3)
-        Angel -> maxOf(1, (total + 1) / 2)
+        Angel -> ANGEL_DAMAGE
         AirSupport -> AIR_SUPPORT_DAMAGE
         else -> 0
     }
@@ -433,7 +435,7 @@ private val IconHorn = listOf(
     "................",
 )
 
-// IconBag
+// 戰鬥畫面的道具按鈕：道具袋
 val IconBag = listOf(
     "................",
     "......KKKK......",
@@ -452,7 +454,6 @@ val IconBag = listOf(
     "....KKKKKKKK....",
     "................",
 )
-
 
 // 道具袋：列出擁有的道具（圖示、名稱、說明、數量）
 // 戰鬥中傳 onUse，點一下就使用；單字簿的「道具欄」只能看不能用
@@ -497,7 +498,7 @@ fun ItemBagDialog(
 private val ItemSlot = Color(0xFFE8D8B0)
 private val ItemDivider = Color(0x40202030)
 
-// 在戰鬥畫面上畫道具的效果動畫，t 從 0 到 1
+// 戰鬥畫面上道具效果動畫用的小圖（下面的 draw 函式裡 t 從 0 到 1）
 internal val SpritePalette = ScenePalette + mapOf('S' to Color(0xFFF8C898), 'H' to Color(0xFF704020))
 
 private val AngelArt = listOf(

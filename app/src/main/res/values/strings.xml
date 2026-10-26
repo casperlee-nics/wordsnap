@@ -62,7 +62,7 @@
     <string name="item_elixir">聖靈藥</string>
     <string name="item_elixir_effect">HP 全部回滿</string>
     <string name="item_angel">天使召喚</string>
-    <string name="item_angel_effect">天使從天而降，怪物損血 1/2</string>
+    <string name="item_angel_effect">天使從天而降，怪物扣 5 格血</string>
     <string name="item_shield">防護盾</string>
     <string name="item_shield_effect">3 回合內答錯，被攻擊也不會扣血</string>
     <string name="item_confusion">混亂藥劑</string>
@@ -672,8 +672,6 @@
     <string name="skill_button">技能</string>
     <string name="skill_title">人物技能</string>
     <string name="skill_uses_left">這場還能用 %1$d 次技能</string>
-    <string name="skill_learn_at">LV%1$d 學會</string>
-    <string name="skill_coming">下一版開放</string>
     <string name="skill_used">這場用過了</string>
     <string name="skill_none_yet">到 LV10 才會學會第一個技能，加油！</string>
     <string name="skill_rule">每場戰鬥能用的技能次數：LV10–29 一次、LV30–49 兩次、LV50 以上三次；同一招每場只能用一次。</string>
