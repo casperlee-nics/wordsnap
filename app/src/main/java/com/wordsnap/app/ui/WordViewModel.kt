@@ -268,6 +268,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 TestSaves.seed(db)
                 prefs.edit().putBoolean(KEY_TEST_SAVES, true).apply()
             }
+            if (TestSaves.ENABLED) TestSaves.fillMonsterLog(db)
             // 目前的語言是日文，字典包有新版（或還沒裝）就先裝好，才查得到解釋
             DictionaryPacks.install(getApplication(), appLanguage(getApplication()))
             fillMissingMeaningsNow()

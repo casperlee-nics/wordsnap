@@ -1260,14 +1260,17 @@ private val CrownArt = listOf(
     "YYYYYYY",
 )
 
-private val DrumstickArt = listOf(
-    "..dddd",
-    ".dddddd",
-    ".ddddd.",
-    "W.ddd..",
-    ".W.....",
-    "W.W....",
-).map { it.padEnd(7, '.') }
+// 漫畫肉：一根骨頭穿過一大團烤肉
+private val MeatArt = listOf(
+    "...KKKKK....",
+    "..KeddddK...",
+    ".KedddoddK..",
+    "WKeddddoddKW",
+    "WWKddddddKWW",
+    ".WKeddddddK.",
+    "..KeeddddK..",
+    "...KKKKKK...",
+)
 
 // 招喚王國的士兵：士兵、學者、白魔法師走進來，士兵戳怪物、學者舉黑板寫答案、白魔法師灑光補血
 private fun DrawScope.drawRoyalSoldiers(t: Float, hero: Offset, heroSize: Float, monster: Offset, ground: Float, cell: Float) {
@@ -1711,16 +1714,19 @@ private fun DrawScope.drawStolenWatch(t: Float, hero: Offset, heroSize: Float, c
     if (t in 0.45f..0.5f) drawRect(Color.White.copy(alpha = 0.4f))
 }
 
-// 我是哥布林大王：雞腿一支支飛進嘴裡，變巨大、戴上王冠，兩隻小跟班跳出來
+// 我是哥布林大王：三根漫畫肉一根根飛過來，大口咬掉，變巨大、戴上王冠，兩隻小跟班跳出來
 private fun DrawScope.drawGoblinKing(t: Float, hero: Offset, heroSize: Float, ground: Float, cell: Float) {
     val mouth = Offset(hero.x, hero.y - heroSize * 0.1f)
-    for (k in 0 until 4) {
-        val p = seg(t, k * 0.1f, 0.15f + k * 0.1f)
-        if (p <= 0f || p >= 1f) continue
+    for (k in 0 until 3) {
+        val p = seg(t, k * 0.12f, 0.12f + k * 0.12f)
+        if (p <= 0f) continue
+        // 飛到嘴邊後咬三口，肉一格一格變小
+        val bite = seg(t, 0.12f + k * 0.12f, 0.24f + k * 0.12f)
+        if (bite >= 1f) continue
         val from = Offset(hero.x + heroSize * (1.2f + k * 0.2f), hero.y - heroSize * 0.9f)
-        val c = lerp(from, mouth, p) - Offset(0f, sin(p * PI.toFloat()) * cell * 8)
-        spriteCentered(DrumstickArt, c, cell)
-        if (p > 0.85f) pixelStar(mouth + Offset(cell * 4, -cell * 3), cell, Color.White)
+        val c = lerp(from, mouth + Offset(heroSize * 0.3f, 0f), p) - Offset(0f, sin(p * PI.toFloat()) * cell * 8)
+        spriteCentered(MeatArt, c, cell * 1.3f * (1f - stepped(bite, 3) * 0.6f))
+        if (p >= 1f && (t * 16).toInt() % 2 == 0) pixelStar(mouth + Offset(cell * 6, -cell * 4), cell, Color.White)
     }
     if (t > 0.45f) {
         val drop = seg(t, 0.45f, 0.6f)
@@ -1773,30 +1779,54 @@ private val ArmorArt = listOf(
     "..KKKKK..",
 )
 
-// 防具終極強化：在鐵砧上敲打盔甲，盔甲飛到身上，整個人變成發光的金色
+// 傳說神的防具：天空裂開一道光柱，神的盔甲從天而降，套上身的瞬間金光爆開，頭上出現天使光環
 private fun DrawScope.drawUltimateArmor(t: Float, hero: Offset, heroSize: Float, ground: Float, cell: Float) {
-    val spot = Offset(hero.x + heroSize * 0.8f, ground)
-    if (t < 0.5f) {
-        val top = spot.y - cell * 5
-        drawRect(Color(0xFF202030), Offset(spot.x - cell * 6, top - cell / 2), Size(cell * 12, cell * 3))
-        drawRect(Color(0xFF707890), Offset(spot.x - cell * 5.5f, top), Size(cell * 11, cell * 2))
-        drawRect(Color(0xFF707890), Offset(spot.x - cell * 2, top + cell * 2), Size(cell * 4, cell * 3))
-        spriteCentered(ArmorArt, Offset(spot.x, top - cell * 4), cell)
-        val beat = seg(t, 0f, 0.48f) * 4 % 1f
-        val lift = abs(cos(beat * PI.toFloat())) * cell * 8
-        drawRect(Color(0xFF805030), Offset(spot.x + cell * 4, top - cell * 12 - lift), Size(cell, cell * 7))
-        drawRect(Color(0xFF707890), Offset(spot.x + cell * 2, top - cell * 14 - lift), Size(cell * 5, cell * 3))
-        if (beat < 0.25f) for (k in 0 until 5) drawRect(Color(0xFFF8D030), Offset(spot.x + (k - 2) * cell * 3 * (1 + beat * 4), top - cell * 6 - beat * cell * 10), Size(cell, cell))
-    } else {
-        val fly = seg(t, 0.5f, 0.65f)
-        val c = lerp(Offset(spot.x, spot.y - cell * 9), hero + Offset(0f, heroSize * 0.15f), fly)
-        if (fly < 1f) spriteCentered(ArmorArt, c, cell * (1f + fly * 0.4f))
-        val shine = seg(t, 0.65f, 0.8f)
-        if (shine > 0f) {
-            drawGoldGlow(t * 3, hero, heroSize, cell, shine)
-            if (t < 0.75f) drawRect(Color(0xFFF8E8A0).copy(alpha = 0.3f))
+    // 光柱從天上打下來
+    val beam = seg(t, 0f, 0.15f) * (1f - seg(t, 0.7f, 0.85f))
+    if (beam > 0f) {
+        drawRect(Color(0xFF202030).copy(alpha = 0.35f * beam))
+        val w = heroSize * 1.2f * beam
+        drawRect(Color(0xFFF8E8A0).copy(alpha = 0.5f), Offset(hero.x - w / 2, 0f), Size(w, ground))
+        drawRect(Color.White.copy(alpha = 0.6f), Offset(hero.x - w / 6, 0f), Size(w / 3, ground))
+        // 光粒往上飄
+        for (k in 0 until 10) {
+            val p = (t * 3 + k / 10f) % 1f
+            drawRect(Color(0xFFF8D030).copy(alpha = beam), Offset(hero.x + (k - 4.5f) * w / 10, ground - p * ground), Size(cell, cell))
         }
     }
+    // 盔甲慢慢降下來，邊轉邊發光
+    val fall = seg(t, 0.15f, 0.5f)
+    if (fall > 0f && fall < 1f) {
+        val c = Offset(hero.x, -cell * 10 + fall * (hero.y + heroSize * 0.15f + cell * 10))
+        drawCircle(Color(0xFFF8E8A0).copy(alpha = 0.6f), cell * 8, c)
+        spriteCentered(ArmorArt, c, cell * 1.4f, recolor = mapOf('M' to 'Y', 'm' to 'N'))
+        if ((t * 12).toInt() % 2 == 0) pixelStar(c + Offset(cell * 7, -cell * 5), cell, Color.White)
+    }
+    // 套上的瞬間：金光爆開，光芒四射
+    val burst = seg(t, 0.5f, 0.75f)
+    if (burst > 0f && burst < 1f) {
+        if (t < 0.56f) drawRect(Color.White.copy(alpha = 0.7f))
+        for (k in 0 until 12) {
+            val a = k * TAU / 12
+            val r1 = heroSize * (0.3f + burst * 0.6f)
+            val r2 = r1 + heroSize * 0.4f * (1f - burst)
+            drawLine(Color(0xFFF8D030).copy(alpha = 1f - burst), hero + Offset(cos(a) * r1, sin(a) * r1), hero + Offset(cos(a) * r2, sin(a) * r2), cell)
+        }
+    }
+    if (t > 0.5f) {
+        drawGoldGlow(t * 3, hero, heroSize, cell, seg(t, 0.5f, 0.65f))
+        drawHalo(t, hero, heroSize, cell, seg(t, 0.6f, 0.8f))
+    }
+}
+
+// 天使光環：頭上一圈金色的環，上下輕輕浮動
+private fun DrawScope.drawHalo(clock: Float, hero: Offset, heroSize: Float, cell: Float, appear: Float = 1f) {
+    if (appear <= 0f) return
+    val bob = if ((clock * 4).toInt() % 2 == 0) 0f else cell / 2
+    val c = Offset(hero.x, hero.y - heroSize * 0.68f - bob - (1f - appear) * cell * 10)
+    val w = heroSize * 0.55f
+    drawOval(Color(0xFFF8E8A0).copy(alpha = 0.4f * appear), Offset(c.x - w / 2 - cell, c.y - cell * 2.5f), Size(w + cell * 2, cell * 5))
+    drawOval(Color(0xFFF8D030).copy(alpha = appear), Offset(c.x - w / 2, c.y - cell * 1.5f), Size(w, cell * 3), style = Stroke(cell))
 }
 
 private fun DrawScope.drawGoldGlow(clock: Float, hero: Offset, heroSize: Float, cell: Float, power: Float = 1f) {
@@ -2195,7 +2225,10 @@ fun DrawScope.drawLasting(skill: Skill, clock: Float, hero: Offset, heroSize: Fl
             drawSick(clock, monster, monsterHeight)
         }
         Skill.CatOrchestra -> drawCatBand(clock, hero, heroSize, ground)
-        Skill.UltimateArmor -> drawGoldGlow(clock, hero, heroSize, cell)
+        Skill.UltimateArmor -> {
+            drawGoldGlow(clock, hero, heroSize, cell)
+            drawHalo(clock, hero, heroSize, cell)
+        }
         Skill.CutestCat -> {
             drawHeartEyes(monster, monsterHeight, cell * 1.2f)
             drawRisingHearts(clock, monster, monsterHeight, cell)

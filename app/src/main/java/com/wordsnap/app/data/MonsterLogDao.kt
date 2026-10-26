@@ -23,6 +23,13 @@ abstract class MonsterLogDao {
         bump(profileId, key, if (won) 1 else 0)
     }
 
+    // 測試存檔用：直接記成遇過、打倒過一次（已經有紀錄的不動）
+    @Query("INSERT OR IGNORE INTO monster_log (profileId, `key`, met, wins) VALUES (:profileId, :key, 1, 1)")
+    abstract suspend fun fill(profileId: Long, key: String)
+
+    @Query("SELECT COUNT(*) FROM monster_log WHERE profileId = :profileId")
+    abstract suspend fun count(profileId: Long): Int
+
     @Query("DELETE FROM monster_log WHERE profileId = :profileId")
     abstract suspend fun deleteForProfile(profileId: Long)
 }

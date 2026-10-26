@@ -77,7 +77,7 @@ data class SkillEffect(
 const val UNTIL_END = 999
 
 // 技能換的背景音樂：古典名曲（隨機一首）、月光奏鳴曲第三樂章、酒醉的水手
-enum class SkillMusic { Classical, Valkyries, Sailor }
+enum class SkillMusic { Classical, WilliamTell, Sailor }
 
 // effect 是 null 的招式還沒做好，技能表裡看得到但不能用
 enum class Skill(
@@ -92,7 +92,7 @@ enum class Skill(
     HolyShieldBash(Race.Hero, 30, R.string.skill_holy_shield_bash, R.string.skill_holy_shield_bash_desc, SkillEffect(shield = 1, damage = 1)),
     RoyalSoldiers(Race.Hero, 40, R.string.skill_royal_soldiers, R.string.skill_royal_soldiers_desc, SkillEffect(damage = 1, reveal = 1, heal = 1)),
     CrossSlash(Race.Hero, 50, R.string.skill_cross_slash, R.string.skill_cross_slash_desc, SkillEffect(damage = 3)),
-    OdinWrath(Race.Hero, 60, R.string.skill_odin_wrath, R.string.skill_odin_wrath_desc, SkillEffect(damage = 5, music = SkillMusic.Valkyries)),
+    OdinWrath(Race.Hero, 60, R.string.skill_odin_wrath, R.string.skill_odin_wrath_desc, SkillEffect(damage = 5, music = SkillMusic.WilliamTell)),
     MindFocus(Race.Mage, 10, R.string.skill_mind_focus, R.string.skill_mind_focus_desc, SkillEffect(boost = 3, boostHalves = 1)),
     CrystalPeek(Race.Mage, 20, R.string.skill_crystal_peek, R.string.skill_crystal_peek_desc, SkillEffect(reveal = 1)),
     GurgleCurse(Race.Mage, 30, R.string.skill_gurgle_curse, R.string.skill_gurgle_curse_desc, SkillEffect(confuse = 2)),
@@ -101,9 +101,9 @@ enum class Skill(
     MeteorCall(Race.Mage, 60, R.string.skill_meteor_call, R.string.skill_meteor_call_desc, SkillEffect(damage = 5, scene = ReviewScene.Moon)),
     SwishArrow(Race.Archer, 10, R.string.skill_swish_arrow, R.string.skill_swish_arrow_desc, SkillEffect(damage = 1)),
     ElfSpring(Race.Archer, 20, R.string.skill_elf_spring, R.string.skill_elf_spring_desc, SkillEffect(heal = 1)),
-    AreWeElves(Race.Archer, 30, R.string.skill_are_we_elves, R.string.skill_are_we_elves_desc, SkillEffect(damage = 2, stun = 1)),
+    AreWeElves(Race.Archer, 30, R.string.skill_are_we_elves, R.string.skill_are_we_elves_desc, SkillEffect(damage = 2)),
     ForestBlessing(Race.Archer, 40, R.string.skill_forest_blessing, R.string.skill_forest_blessing_desc, SkillEffect(heal = 2, damage = 1)),
-    ElfEye(Race.Archer, 50, R.string.skill_elf_eye, R.string.skill_elf_eye_desc, SkillEffect(hint = 4)),
+    ElfEye(Race.Archer, 50, R.string.skill_elf_eye, R.string.skill_elf_eye_desc, SkillEffect(hint = 5)),
     ElvenUprising(Race.Archer, 60, R.string.skill_elven_uprising, R.string.skill_elven_uprising_desc, SkillEffect(boost = UNTIL_END, boostHalves = 1, scene = ReviewScene.DeepForest)),
     BushHide(Race.Goblin, 10, R.string.skill_bush_hide, R.string.skill_bush_hide_desc, SkillEffect(skip = true)),
     BoulderThrow(Race.Goblin, 20, R.string.skill_boulder_throw, R.string.skill_boulder_throw_desc, SkillEffect(damage = 1, stun = 2)),

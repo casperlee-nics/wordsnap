@@ -197,6 +197,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     // 偷來的懷錶在時間暫停的第 3 回合偷打怪物的次數（播動畫）；最後一次怪物攻擊是不是被閃掉
     var sneakHits by remember { mutableIntStateOf(0) }
     var lastDodged by remember { mutableStateOf(false) }
+    // 答錯時顯示的那句話：真的被打才說「被怪物攻擊了！」，技能擋下來就說發生了什麼事
+    var wrongNote by remember { mutableIntStateOf(R.string.battle_hurt) }
     // 受到傷害的倍率（哥布林大王 0.75、防具終極強化 0.5），小數累積起來再扣
     var guardMult by remember { mutableFloatStateOf(1f) }
     var hurtCarry by remember { mutableFloatStateOf(0f) }
@@ -350,6 +352,13 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         } else {
             wrong.add(word)
             lastDodged = false
+            wrongNote = when {
+                timeStopTurns > 0 -> R.string.battle_note_time_stop
+                charmTurns > 0 -> R.string.battle_note_charmed
+                confuseTurns > 0 -> R.string.battle_note_confused
+                stunTurns > 0 -> R.string.battle_note_stunned
+                else -> R.string.battle_hurt
+            }
             when {
                 // 時間暫停：怪物定格，不會攻擊
                 timeStopTurns > 0 -> lastBlocked = false
@@ -367,16 +376,21 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 // 怪物昏迷或嚇呆了：不能動，不會攻擊
                 stunTurns > 0 -> lastBlocked = false
                 // 被貓咪可愛到：一半機率不攻擊
-                cute && Random.nextBoolean() -> lastBlocked = false
+                cute && Random.nextBoolean() -> {
+                    lastBlocked = false
+                    wrongNote = R.string.battle_note_cute
+                }
                 // 黑霧遁形：怪物撲過來但打不到
                 dodgeTurns > 0 -> {
                     lastBlocked = false
                     lastDodged = true
+                    wrongNote = R.string.battle_note_dodged
                     monsterAttacks++
                 }
                 // 防護盾：怪物照樣攻擊，但被盾擋下不扣血
                 shieldTurns > 0 -> {
                     lastBlocked = true
+                    wrongNote = R.string.battle_note_blocked
                     monsterAttacks++
                 }
                 else -> {
@@ -515,7 +529,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
         when (e.music) {
             SkillMusic.Classical -> musicOverride = ClassicalTunes.random()
-            SkillMusic.Valkyries -> musicOverride = R.raw.classical_valkyries
+            SkillMusic.WilliamTell -> musicOverride = R.raw.classical_william_tell
             SkillMusic.Sailor -> musicOverride = R.raw.sailor_bgm
             null -> Unit
         }
@@ -716,6 +730,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                             bagEnabled = answering,
                             onSkill = { showSkills = true },
                             skillEnabled = answering && level >= skills.first().level,
+                            wrongNote = tr(wrongNote),
                         )
                     }
                 }
@@ -780,6 +795,7 @@ private fun Question(
     bagEnabled: Boolean,
     onSkill: () -> Unit,
     skillEnabled: Boolean,
+    wrongNote: String,
 ) {
     val wrong = result == false
     // 鍵盤跳出來時按鈕縮小一點，整個答題區比較矮
@@ -789,7 +805,7 @@ private fun Question(
     // 輸入框放在最下面，畫面捲到底時它就緊貼在鍵盤上方，按鈕在它正上方，都不會被鍵盤蓋住
     when (result) {
         true -> Text(tr(R.string.battle_hit), style = MaterialTheme.typography.titleLarge, color = PixelRed)
-        false -> Text(tr(R.string.battle_hurt), style = MaterialTheme.typography.titleMedium, color = PixelRed)
+        false -> Text(wrongNote, style = MaterialTheme.typography.titleMedium, color = PixelRed)
         null -> Unit
     }
     if (wrong && meaning.isNotBlank()) Text(meaning, style = MaterialTheme.typography.titleMedium.readable())
@@ -1116,7 +1132,7 @@ private fun BattleField(
                 grow.snapTo(1f)
                 return@LaunchedEffect
             }
-            delay((skillDuration(Skill.GoblinKing) * 0.42f).toLong())
+            delay((skillDuration(Skill.GoblinKing) * 0.48f).toLong())
             grow.animateTo(1.3f, keyframes {
                 durationMillis = 700
                 1.1f at 120
