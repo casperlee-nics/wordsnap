@@ -131,6 +131,7 @@
     <string name="adventure_log_summary">出会った怪物 %1$d / %2$d 種類、倒した回数 %3$d 回</string>
     <string name="adventure_log_counts">出会った %1$d 回・倒した %2$d 回</string>
     <string name="adventure_log_empty">まだ怪物に出会っていません。さあ、戦いに行こう！</string>
+    <string name="hero_wallet">さいふ：%1$d ゴールド</string>
     <string name="class_change">転職</string>
     <string name="class_change_message">どの職業に転職しますか？転職するとレベルが Lv %1$d から Lv %2$d に下がります。</string>
     <string name="class_change_locked">転職は LV%1$d から！今は LV%2$d です。単語を覚えてレベルを上げよう。</string>
@@ -274,6 +275,7 @@
     <string name="result_exp">経験値 +%1$d</string>
     <string name="result_exp_boss">経験値 +%1$d（魔王ボーナス 2 倍）</string>
     <string name="result_practice">練習バトル：経験値は 1/4、宝箱は出ません</string>
+    <string name="result_coins">敵をふっとばして %1$d ゴールド手に入れた！</string>
     <string name="result_chest">宝箱を開けて「%1$s」を手に入れた！</string>
     <string name="result_level_up">レベルアップ！Lv %1$d → Lv %2$d</string>
     <string name="new_title">新しい称号「%1$s」を手に入れた！</string>

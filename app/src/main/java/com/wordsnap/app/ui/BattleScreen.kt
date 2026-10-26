@@ -1600,6 +1600,7 @@ private fun ResultDialog(reward: BattleReward, monster: Monster, race: Race, kno
                 }
                 Text(tr(R.string.result_score, reward.correct, reward.total, passScore(reward.total)))
                 Text(tr(if (monster.rank != MonsterRank.Normal) R.string.result_exp_boss else R.string.result_exp, reward.exp))
+                if (reward.coins > 0) Text(tr(R.string.result_coins, reward.coins), color = PixelRed)
                 if (reward.practice) Text(tr(R.string.result_practice), style = MaterialTheme.typography.bodySmall)
                 reward.item?.let { item ->
                     Row(verticalAlignment = Alignment.CenterVertically) {

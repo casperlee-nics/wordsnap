@@ -95,6 +95,7 @@ fun HeroDialog(
     ) {
         Text(tr(R.string.hero_class_level, race.label, info.level))
         Text(tr(R.string.hero_remembered, remembered))
+        Text(tr(R.string.hero_wallet, profile.coins))
         if (info.level < MAX_LEVEL) {
             Text(tr(R.string.hero_exp, info.current, info.needed), style = MaterialTheme.typography.bodySmall)
             Meter(info.current.toFloat() / info.needed, PixelBlue)

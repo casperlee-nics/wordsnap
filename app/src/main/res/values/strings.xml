@@ -137,6 +137,7 @@
     <string name="adventure_log_summary">遇過 %1$d / %2$d 種怪物，共打倒 %3$d 次</string>
     <string name="adventure_log_counts">遇到 %1$d 次・打倒 %2$d 次</string>
     <string name="adventure_log_empty">還沒有遇過任何怪物，快去戰鬥吧！</string>
+    <string name="hero_wallet">錢包：%1$d 金幣</string>
     <string name="class_change">轉職</string>
     <string name="class_change_message">要轉成哪一種職業？轉職後等級會從 Lv %1$d 降到 Lv %2$d。</string>
     <string name="class_change_locked">要到 LV%1$d 才能轉職喔！現在是 LV%2$d，再努力背單字升級吧。</string>
@@ -280,6 +281,7 @@
     <string name="result_exp">得到經驗值 +%1$d</string>
     <string name="result_exp_boss">得到經驗值 +%1$d（魔王加倍）</string>
     <string name="result_practice">練習戰：經驗值只有 1/4，不會掉寶箱</string>
+    <string name="result_coins">把怪物打飛，獲得 %1$d 金幣！</string>
     <string name="result_chest">打開寶箱，獲得「%1$s」！</string>
     <string name="result_level_up">升級！Lv %1$d → Lv %2$d</string>
     <string name="new_title">獲得新稱號「%1$s」！</string>

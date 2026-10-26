@@ -78,12 +78,21 @@ data class BattleReward(
     val item: ItemType? = null,
     // 練習戰：經驗值只有 1/4、不會掉道具
     val practice: Boolean = false,
+    // 把怪物打飛賺到的金幣
+    val coins: Int = 0,
 )
 
 // 練習戰的經驗值除以幾
 private const val PRACTICE_EXP_DIVISOR = 4
 
 // 打魔王的經驗值倍數：一般 1 倍、中魔王 2 倍、大魔王 3 倍
+// 把怪物打飛得到的金幣
+fun MonsterRank.coinReward(): Int = when (this) {
+    MonsterRank.Normal -> 10
+    MonsterRank.Mid -> 20
+    MonsterRank.Big -> 30
+}
+
 private fun MonsterRank.expMultiplier(): Int = when (this) {
     MonsterRank.Normal -> 1
     MonsterRank.Mid -> 2
@@ -450,6 +459,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         val gained = if (practice) full / PRACTICE_EXP_DIVISOR else full
         // 把怪物打飛時有一半機率掉寶箱；練習戰不會掉，避免一直刷道具
         val item = if (knockedOut && !practice && Random.nextFloat() < CHEST_CHANCE) ItemType.roll() else null
+        // 打飛怪物賺金幣；練習戰沒有
+        val coins = if (knockedOut && !practice) monster.rank.coinReward() else 0
         val before = levelInfo(profile.exp).level
         val after = levelInfo(profile.exp + gained).level
         val forgotten = wrong.filter { it.wrongCount + 1 >= 2 && it.box >= 1 }.map { it.text }
@@ -468,6 +479,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 if (died) profileDao.addDeath(profile.id)
                 if (passed) bookDao.markCleared(bookId, now)
                 if (item != null) itemDao.add(profile.id, item.name)
+                if (coins > 0) profileDao.addCoins(profile.id, coins)
                 // 冒險履歷：遇到這隻怪物一次，通過就算打倒
                 monsterLogDao.record(profile.id, monster.key, passed)
                 // 魔王要通過這場戰鬥才算打倒，不然下次還會再出現
@@ -482,7 +494,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             val deaths = profile.deaths + if (died) 1 else 0
-            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths, item, practice))
+            onDone(BattleReward(passed, correct, total, gained, before, after, died, forgotten, deaths, item, practice, coins))
         }
     }
 
