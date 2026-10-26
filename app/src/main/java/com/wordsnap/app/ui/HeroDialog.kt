@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,7 +51,7 @@ import com.wordsnap.app.ui.theme.PixelInk
 import com.wordsnap.app.ui.theme.PixelRed
 import kotlin.math.floor
 
-// 人物能力：等級、稱號、經驗值、已記住的單字數和四項能力
+// 角色資料：等級、稱號、經驗值、已記住的單字數和四項能力
 @Composable
 fun HeroDialog(
     profile: Profile,
@@ -64,6 +63,8 @@ fun HeroDialog(
     var changingClass by remember { mutableStateOf(false) }
     var showLog by remember { mutableStateOf(false) }
     var classLocked by remember { mutableStateOf(false) }
+    // 轉職特效：從哪個職業變成哪個職業（播完就關掉）
+    var transform by remember { mutableStateOf<ClassChange?>(null) }
     val avatar = Avatar.from(profile.avatar)
     val race = avatar.race
     val info = levelInfo(profile.exp)
@@ -75,14 +76,17 @@ fun HeroDialog(
         title = tr(R.string.hero_title),
         onDismiss = onDismiss,
         header = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                PixelAvatar(avatar, size = 56.dp, tier = tier)
-                Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text(profile.name, style = MaterialTheme.typography.titleLarge)
-                    Text(tr(R.string.quoted, race.title(info.level)), style = MaterialTheme.typography.bodyMedium)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PixelAvatar(avatar, size = 56.dp, tier = tier)
+                    Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                        Text(profile.name, style = MaterialTheme.typography.titleLarge)
+                        Text(tr(R.string.quoted, race.title(info.level)), style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
-                // 轉職（紅色魔法書）在上、冒險履歷（藍色的書）在下；轉職按鈕一直都在，還沒超過 10 級時按了只會提示還不能轉職
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                // 兩本書並排放在名字下面、左右平均分開：紅色魔法書是轉職、藍色的書是冒險履歷
+                // 轉職按鈕一直都在，還沒超過 10 級時按了只會提示還不能轉職
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     if (onClassChange != null) {
                         BookButton(tr(R.string.class_change), SpellBookColors, onClick = {
                             if (info.level >= CLASS_CHANGE_MIN_LEVEL) changingClass = true else classLocked = true
@@ -131,10 +135,14 @@ fun HeroDialog(
             onDismiss = { changingClass = false },
             onConfirm = { picked ->
                 changingClass = false
+                // 轉職後的等級要先算好：畫面上的資料等一下就會換成轉職後的
+                transform = ClassChange(avatar, picked, tier, avatarTier((info.level - CLASS_CHANGE_PENALTY).coerceAtLeast(1)))
                 onClassChange(picked)
             },
         )
     }
+
+    transform?.let { ClassChangeScreen(it, onClose = { transform = null }) }
 }
 
 // 轉職：選一個別的職業，確認會降 10 級
@@ -179,7 +187,7 @@ private fun Meter(fraction: Float, color: Color) {
 }
 
 // 書本按鈕：一本古典的書（皮革封面、金色書角和鑲邊、書背兩道金環，右邊和下面露出書頁），上方的寶石會一閃一閃
-// 書下面掛一塊小木牌寫字；紅色是轉職的魔法書，藍色是冒險履歷；整個按鈕往左下偏一點，不會擠到視窗的右邊
+// 書下面掛一塊小木牌寫字；紅色是轉職的魔法書，藍色是冒險履歷
 @Composable
 private fun BookButton(label: String, colors: BookColors, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
@@ -189,7 +197,6 @@ private fun BookButton(label: String, colors: BookColors, onClick: () -> Unit) {
     )
     Column(
         Modifier
-            .offset(x = (-10).dp, y = 6.dp)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
             .graphicsLayer {
                 val k = if (pressed) 0.92f else 1f

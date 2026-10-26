@@ -7,7 +7,7 @@ import com.wordsnap.app.data.Word
 
 // 測試用的存檔：9 個職業各一位 LV60 冒險者，道具每種 9 個，附一本已經記住 30 個字的單字簿（可以直接戰鬥），
 // 冒險履歷裡 85 種怪物都遇過（舊的測試存檔沒有履歷時也會補上）
-// 只建立一次；刪掉了不會再出現。正式上架前把 ENABLED 改成 false（或整個檔案刪掉）
+// 只建立一次（KEY_TEST_SAVES 換版本時整個重新產生）；刪掉了不會再出現。正式上架前把 ENABLED 改成 false（或整個檔案刪掉）
 object TestSaves {
     const val ENABLED = true
     const val LEVEL = 60
@@ -19,6 +19,19 @@ object TestSaves {
         "ladder", "magic", "number", "ocean", "palace", "queen", "river", "silver", "tiger", "umbrella",
         "valley", "window", "yellow", "zebra", "bridge", "candle", "desert", "engine", "flower", "galaxy",
     )
+
+    // 重新產生測試存檔：先把舊的測試冒險者（單字、道具、冒險履歷、單字簿）整個刪掉，再重新建立
+    suspend fun reset(db: AppDatabase) {
+        Avatar.entries.forEach { avatar ->
+            val profile = db.profileDao().findByName("LV$LEVEL${avatar.race.label}".take(12)) ?: return@forEach
+            db.wordDao().deleteForProfile(profile.id)
+            db.itemDao().deleteForProfile(profile.id)
+            db.monsterLogDao().deleteForProfile(profile.id)
+            db.bookDao().deleteForProfile(profile.id)
+            db.profileDao().delete(profile.id)
+        }
+        seed(db)
+    }
 
     suspend fun seed(db: AppDatabase) {
         val profiles = db.profileDao()

@@ -58,16 +58,16 @@ fun ShopDialog(
                     RetroButton(
                         tr(R.string.shop_buy_tab),
                         onClick = { selling = false; note = null },
-                        modifier = Modifier.width(92.dp).alpha(if (selling) 0.5f else 1f),
+                        modifier = Modifier.width(60.dp).alpha(if (selling) 0.5f else 1f),
                         textStyle = MaterialTheme.typography.bodyMedium,
-                        textPadding = 4.dp,
+                        textPadding = 2.dp,
                     )
                     RetroButton(
                         tr(R.string.shop_sell_tab),
                         onClick = { selling = true; note = null },
-                        modifier = Modifier.width(92.dp).alpha(if (selling) 1f else 0.5f),
+                        modifier = Modifier.width(60.dp).alpha(if (selling) 1f else 0.5f),
                         textStyle = MaterialTheme.typography.bodyMedium,
-                        textPadding = 4.dp,
+                        textPadding = 2.dp,
                     )
                     WalkingMerchant(Modifier.weight(1f).height(60.dp))
                 }

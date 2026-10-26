@@ -55,7 +55,7 @@
     <string name="item_elixir">聖なる霊薬</string>
     <string name="item_elixir_effect">HP を全回復</string>
     <string name="item_angel">天使召喚</string>
-    <string name="item_angel_effect">天使が舞い降りて、モンスターの HP を半分にする</string>
+    <string name="item_angel_effect">天使が舞い降りて、モンスターの HP を 1/2 にする</string>
     <string name="item_shield">守りの盾</string>
     <string name="item_shield_effect">3 ターンの間、間違えて攻撃されてもダメージを受けない</string>
     <string name="item_confusion">混乱の薬</string>
@@ -63,7 +63,7 @@
     <string name="item_catapult">投石機召喚</string>
     <string name="item_catapult_effect">投石機が大岩を投げ、モンスターに 1/3 のダメージ</string>
     <string name="item_cat_can">ネコ缶</string>
-    <string name="item_cat_can_effect">缶を開けるとネコたちが飛び出し（進撃のネコたち）、敵に2ダメージ</string>
+    <string name="item_cat_can_effect">缶を開けるとネコたちが飛び出し（進撃のネコたち）、敵に3ダメージ、1ターン攻撃できない</string>
     <string name="item_royal_summons">王国の召集状</string>
     <string name="item_royal_summons_effect">王国の兵士を召喚：敵に1ダメージ、学者が答えを教え、白魔導士がHPを1マス回復</string>
     <string name="item_cat_score">ネコの楽譜</string>
@@ -86,7 +86,7 @@
     <string name="shop_sold">「%1$s」を売って %2$d ゴールド手に入れた！</string>
     <string name="shop_nothing_to_sell">アイテム袋は空っぽで、売るものがありません。</string>
     <string name="item_bag">アイテム袋</string>
-    <string name="item_shelf">アイテム一覧</string>
+    <string name="item_shelf">ポケットを開く</string>
     <string name="item_bag_empty">アイテム袋は空っぽです。モンスターを倒すと宝箱からアイテムが手に入ることがあります！</string>
 
     <!-- ぼうけんの書（単語帳）メニュー -->
@@ -142,7 +142,7 @@
     <string name="name_taken">「%1$s」という冒険者はもういます</string>
 
     <!-- ステータス、転職 -->
-    <string name="hero_title">ステータス</string>
+    <string name="hero_title">キャラクター情報</string>
     <string name="quoted">「%1$s」</string>
     <string name="hero_class_level">職業：%1$s　Lv %2$d</string>
     <string name="hero_remembered">覚えた単語：%1$d 個</string>
@@ -162,6 +162,7 @@
     <string name="class_change_message">どの職業に転職しますか？転職するとレベルが Lv %1$d から Lv %2$d に下がります。</string>
     <string name="class_change_locked">転職は LV%1$d から！今は LV%2$d です。単語を覚えてレベルを上げよう。</string>
     <string name="class_change_to">%1$s に転職</string>
+    <string name="class_change_done">転職成功！%1$sになった</string>
 
     <!-- 職業の物語、職業選択 -->
     <string name="story_hero">王国の辺境で生まれた若者。先祖伝来の長剣を手に、文字を奪った魔王を倒し、王国に再び読書の声を響かせると誓った。</string>
@@ -186,11 +187,13 @@
     <string name="help_battle_title">バトル</string>
     <string name="help_battle">1 冊の単語帳で 10 個覚える（または 1 冊全部覚える）とバトルできます。発音を聞いて単語のつづりを入力し、正解ならモンスターを攻撃、間違えると HP が減ります。モンスターの HP をゼロにすれば倒せます。自分の HP がゼロになると教会に運ばれます。1 回の問題数はゲーム設定で 10・15・20 問から選べます。</string>
     <string name="help_level_title">レベル、転職、アイテム</string>
-    <string name="help_level">バトルで経験値を得るとレベルが上がり、10 レベルごとに称号が変わって、見た目と必殺技も強くなります。Lv 10 を超えると「ステータス」で別の職業に転職できますが、レベルが 10 下がります。バトルに勝つと宝箱が出ることがあり、アイテムはバトル中にアイテム袋から使えます。</string>
+    <string name="help_level">バトルで経験値を得るとレベルが上がり、10 レベルごとに称号が変わって、見た目と必殺技も強くなります。Lv 10 を超えると「キャラクター情報」で別の職業に転職できますが、レベルが 10 下がります。バトルに勝つと宝箱が出ることがあり、アイテムはバトル中にアイテム袋から使えます。</string>
     <string name="help_boss_title">魔王</string>
     <string name="help_boss">単語を 50 個覚えるごとに中ボス、100 個覚えるごとに大魔王が現れます。魔王を倒すとたくさんの経験値がもらえます。</string>
     <string name="help_tips_title">ヒント</string>
     <string name="help_tips">メイン画面の「ゲーム設定」で、言語の切り替え、BGM の音量（オフ／小／大、単語の読み上げには影響しません）、文字の大きさを変えられます。</string>
+    <string name="help_free_title">無料版と完全版</string>
+    <string name="help_free">無料版で遊べる職業は勇者・魔法使い・エルフの射手の 3 つで、単語帳は 2 冊まで、1 冊 100 語までです。大魔王は出現せず、職業スキルから生まれた特別なアイテム（ネコ缶、王国の召集状、ネコの楽譜、戦艦の信号旗、航空支援要請、オリハルコン鉱石、魔導書のページ）も出ません。完全版にはこの制限がありません。</string>
     <string name="help_about_title">このアプリについて</string>
     <string name="help_about">『ピクセル単語』は Make It Fun Studio が制作しました。一緒に冒険してくれてありがとう！日本語辞書の一部は EJDict-hand（CC0）のデータを使用しています。</string>
     <string name="help_version">バージョン：v%1$s</string>
@@ -263,6 +266,7 @@
 
     <!-- バトル -->
     <string name="battle_title">バトル：%1$s</string>
+    <string name="battle_remaining">残り %1$d 問</string>
     <string name="battle_flee">にげる</string>
     <string name="boss_victory_title">大魔王討伐成功！</string>
     <string name="boss_victory_message">%1$s をたおした！王国のみんながきみをたたえている！</string>
@@ -695,10 +699,10 @@
     <string name="skill_are_we_elves_desc">敵に2ダメージ</string>
     <string name="skill_are_we_elves_caption">すみません、この子たちスタジオを間違えました</string>
     <string name="skill_are_we_elves_action">シーン1、アクション！</string>
-    <string name="skill_forest_blessing">森の加護</string>
-    <string name="skill_forest_blessing_desc">HPを2マス回復し、敵に1ダメージ</string>
-    <string name="skill_elf_eye">エルフの瞳</string>
-    <string name="skill_elf_eye_desc">5ターンの間、単語の前半が最初から表示される</string>
+    <string name="skill_treant_grip">幽冥の樹精あらわる！</string>
+    <string name="skill_treant_grip_desc">2体の樹精が敵の右からあらわれ、敵に2ダメージを与えてつかまえる：2ターンの間 敵は攻撃できない</string>
+    <string name="skill_elder_blessing">エルフの長老の加護</string>
+    <string name="skill_elder_blessing_desc">2人のエルフの長老がうしろから見守る：4ターンの間、単語の前半が最初から表示される</string>
     <string name="skill_elven_uprising">エルフ族の逆襲</string>
     <string name="skill_elven_uprising_desc">背景が森の奥に。以後、正解時の攻撃力が1.5倍</string>
     <string name="skill_bush_hide">草むらに隠れる</string>
@@ -730,11 +734,11 @@
     <string name="skill_lick_fur">ペロペロ毛づくろい～ニャ</string>
     <string name="skill_lick_fur_desc">HPを1マス回復</string>
     <string name="skill_cat_stampede">進撃のネコたち～ニャ</string>
-    <string name="skill_cat_stampede_desc">敵に2ダメージ</string>
+    <string name="skill_cat_stampede_desc">敵に3ダメージ、1ターンの間 敵は攻撃できない</string>
     <string name="skill_cat_orchestra">ネコ交響楽団～ニャ</string>
     <string name="skill_cat_orchestra_desc">BGMがクラシックに。3ターンの間、ミスするとHPが回復</string>
     <string name="skill_pot_push">ネコはモノを落としたりしないニャ～</string>
-    <string name="skill_pot_push_desc">敵のうしろに棚があらわれ、ネコが植木鉢を落として敵の頭に命中：敵に3ダメージ</string>
+    <string name="skill_pot_push_desc">敵のうしろに棚があらわれ、ネコが植木鉢を落として敵の頭に命中：敵に2ダメージ</string>
     <string name="skill_cutest_cat">ネコは地上でいちばんかわいい～ニャ～</string>
     <string name="skill_cutest_cat_desc">戦闘終了まで、ミスしても半分の確率で攻撃されない。子ネコが2匹そばに来る</string>
     <string name="skill_sneeze_fire">ぷぷっと小さな火</string>

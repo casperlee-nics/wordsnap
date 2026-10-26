@@ -103,7 +103,7 @@ fun WordListScreen(
                     Modifier.fillMaxWidth().padding(start = 2.dp, end = 8.dp, top = 0.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // 點人物打開選單：人物能力、道具欄、回到主畫面
+                    // 點人物打開選單：角色資料、打開口袋、旅行商人、回到主畫面
                     Box(Modifier.weight(1f)) {
                         Row(
                             Modifier.clickable { showMenu = true },

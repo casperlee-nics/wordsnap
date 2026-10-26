@@ -22,15 +22,17 @@ fun skillDuration(skill: Skill): Int = when (skill) {
     Skill.AreWeElves -> 6000
     Skill.OdinWrath, Skill.MeteorCall, Skill.FireWhisper, Skill.VikingFleet, Skill.FullArsenal, Skill.Possession -> 3000
     Skill.CheatSheet -> 3200
-    Skill.PotPush, Skill.GoblinRaid -> 2600
+    Skill.PotPush -> 3600
+    Skill.GoblinRaid, Skill.TreantGrip -> 2600
+    Skill.ElderBlessing -> 2200
     Skill.Orichalcum, Skill.PlagueDoctor, Skill.ElvenUprising -> 2600
     Skill.RoyalSoldiers, Skill.GoblinKing, Skill.UltimateArmor, Skill.PitStop, Skill.PhoenixDescent -> 2400
     Skill.CatStampede -> 2200
     Skill.CatOrchestra, Skill.RocketLaunch, Skill.DragonFlight, Skill.CutestCat, Skill.SoulSteal -> 2000
     Skill.FanCheer, Skill.BoulderThrow, Skill.DragonRoar, Skill.DataSearch, Skill.MushroomStew,
     Skill.CrossSlash, Skill.AncientTome, Skill.StolenWatch, Skill.MeteorClaw -> 1800
-    Skill.SneezeFire, Skill.BushHide, Skill.DarkMist, Skill.HolyShieldBash, Skill.ForestBlessing,
-    Skill.GurgleCurse, Skill.HealBubble, Skill.Overclock, Skill.DemonEye, Skill.ElfEye -> 1600
+    Skill.SneezeFire, Skill.BushHide, Skill.DarkMist, Skill.HolyShieldBash,
+    Skill.GurgleCurse, Skill.HealBubble, Skill.Overclock, Skill.DemonEye -> 1600
     else -> 1400
 }
 
@@ -44,7 +46,8 @@ fun skillImpact(skill: Skill): Int {
         Skill.PotPush -> POT_IMPACT_AT
         Skill.MeteorClaw, Skill.FullArsenal -> 0.55f
         Skill.SwishArrow, Skill.SneezeFire, Skill.RocketLaunch, Skill.OdinWrath -> 0.6f
-        Skill.BoulderThrow, Skill.ForestBlessing -> 0.68f
+        Skill.BoulderThrow -> 0.68f
+        Skill.TreantGrip -> TREANT_HIT_AT
         else -> 0.6f
     }
     return (skillDuration(skill) * at).toInt()
@@ -72,9 +75,14 @@ const val POSSESS_HIDE_FROM = 0.3f
 const val POSSESS_SWAP_AT = 0.86f
 
 // 貓貓才不會推倒東西呢：人物消失到重新出現的時間、花盆砸到怪物的時間
+// 撥花盆的動作放慢；伸爪子時「喵～」一聲
 const val POT_HIDE_FROM = 0.1f
-const val POT_HIDE_UNTIL = 0.9f
-const val POT_IMPACT_AT = 0.72f
+const val POT_HIDE_UNTIL = 0.94f
+const val POT_IMPACT_AT = 0.8f
+const val POT_MEOW_AT = 0.4f
+
+// 幽冥樹精出現！：樹精打中怪物的時間
+const val TREANT_HIT_AT = 0.45f
 
 // 火鳳凰的降臨：不死鳥鑽進龍身體、變身的時間
 const val PHOENIX_AT = 0.55f
@@ -112,7 +120,7 @@ fun DrawScope.drawSkill(skill: Skill, t: Float, hero: Offset, monster: Offset, h
         Skill.GurgleCurse -> drawGurgle(t, hero, heroSize, monster, monsterHeight, cell)
         Skill.HealBubble -> drawHealBubbles(t, hero, heroSize, ground, cell)
         Skill.AreWeElves -> drawElves(t, monster, monsterHeight, ground, cell)
-        Skill.ForestBlessing -> drawForestBlessing(t, hero, heroSize, monster, cell)
+        Skill.TreantGrip -> drawTreantGrip(t, monster, monsterHeight, ground)
         Skill.CheatSheet -> drawCheatSheet(t, hero, heroSize, cell)
         Skill.GoblinRaid -> drawGoblinRaid(t, hero, heroSize, monster, ground, cell)
         Skill.Orichalcum -> drawOrichalcum(t, hero, heroSize, ground, cell)
@@ -129,7 +137,7 @@ fun DrawScope.drawSkill(skill: Skill, t: Float, hero: Offset, monster: Offset, h
         Skill.OdinWrath -> drawOdinWrath(t, monster, cell)
         Skill.AncientTome -> drawAncientTome(t, hero, heroSize, cell)
         Skill.MeteorCall -> drawMeteorCall(t, monster, cell)
-        Skill.ElfEye -> drawElfEye(t, hero, heroSize, cell)
+        Skill.ElderBlessing -> drawElders(t, hero, heroSize, ground, entering = true)
         Skill.ElvenUprising -> drawElvenUprising(t, cell)
         Skill.StolenWatch -> drawStolenWatch(t, hero, heroSize, cell)
         Skill.GoblinKing -> drawGoblinKing(t, hero, heroSize, ground, cell)
@@ -1395,22 +1403,6 @@ private fun DrawScope.drawElves(t: Float, monster: Offset, monsterHeight: Float,
     }
 }
 
-// 森林的庇護：樹葉繞著人物轉、補血，再射出一支綠色的箭
-private fun DrawScope.drawForestBlessing(t: Float, hero: Offset, heroSize: Float, monster: Offset, cell: Float) {
-    val gather = seg(t, 0f, 0.35f)
-    val fade = 1f - seg(t, 0.85f, 1f)
-    for (k in 0 until 10) {
-        val a = k * TAU / 10 + (1f - gather) * TAU + t * 3
-        val r = heroSize * (1.2f - 0.55f * gather)
-        val c = Offset(hero.x + cos(a) * r, hero.y + sin(a) * r * 0.7f)
-        val color = if (k % 2 == 0) Color(0xFF40A048) else Color(0xFF70C058)
-        drawRect(color.copy(alpha = fade), Offset(c.x - cell, c.y - cell / 2), Size(cell * 2, cell))
-        drawRect(color.copy(alpha = fade), Offset(c.x - cell / 2, c.y - cell), Size(cell, cell * 2))
-    }
-    if (t > 0.15f) drawHeal(ItemType.SmallPotion, seg(t, 0.15f, 0.7f), hero, heroSize)
-    if (t > 0.3f) drawArrowShot(seg(t, 0.3f, 1f), hero, monster, cell)
-}
-
 // 群龍飛舞：兩隻小飛龍從左邊飛過天空，經過怪物上方時往下吐火
 private fun DrawScope.drawDragonFlight(t: Float, monster: Offset, cell: Float) {
     val c4 = cell * 1.3f
@@ -1621,30 +1613,6 @@ private fun DrawScope.drawMeteorCall(t: Float, monster: Offset, cell: Float) {
             val y = (k / 6 + 0.5f) * size.height / 3
             drawCircle(Color(0xFFB8B0A0).copy(alpha = 0.9f * dust), size.width / 6, Offset(x + sin(t * 9 + k) * cell * 3, y))
         }
-    }
-}
-
-// 精靈之眼：眼睛發出綠光，下面一排字母一個個亮起來
-private fun DrawScope.drawElfEye(t: Float, hero: Offset, heroSize: Float, cell: Float) {
-    val glow = seg(t, 0f, 0.2f) * (1f - seg(t, 0.85f, 1f))
-    val eyeY = hero.y - heroSize * 0.12f
-    for (side in listOf(-1, 1)) {
-        val e = Offset(hero.x + side * heroSize * 0.12f, eyeY)
-        drawCircle(Color(0xFF70E070).copy(alpha = 0.5f * glow), cell * 3, e)
-        drawRect(Color(0xFFA0F8A0).copy(alpha = glow), Offset(e.x - cell, e.y - cell / 2), Size(cell * 2, cell))
-    }
-    // 綠色的光掃過畫面
-    if (t in 0.15f..0.5f) {
-        val p = seg(t, 0.15f, 0.5f)
-        val x = hero.x + p * (size.width - hero.x)
-        drawLine(Color(0xFF70E070).copy(alpha = 0.5f), Offset(hero.x, eyeY), Offset(x, size.height), cell * 2)
-    }
-    val lit = stepped(seg(t, 0.35f, 0.8f), 6)
-    for (k in 0 until 6) {
-        val c = Offset(size.width / 2 + (k - 2.5f) * cell * 6, size.height - cell * 4)
-        val on = k < lit * 6
-        drawRect(Color(0xFF202030).copy(alpha = glow), Offset(c.x - cell * 2.5f, c.y - cell * 3), Size(cell * 5, cell * 6))
-        drawRect((if (on && k < 3) Color(0xFFA0F8A0) else Color(0xFF465A3A)).copy(alpha = glow), Offset(c.x - cell * 2, c.y - cell * 2.5f), Size(cell * 4, cell * 5))
     }
 }
 
@@ -2278,10 +2246,16 @@ fun DrawScope.drawLasting(skill: Skill, clock: Float, hero: Offset, heroSize: Fl
             drawRect(Color(0xFFF0E0C0), Offset(c.x - cell * 3.5f, c.y - cell * 2.5f), Size(cell * 7, cell * 5))
             drawRect(Color(0xFF202030), Offset(c.x - cell / 4, c.y - cell * 2.5f), Size(cell / 2, cell * 5))
         }
-        Skill.ElfEye -> for (side in listOf(-1, 1)) {
-            val e = Offset(hero.x + side * heroSize * 0.12f, hero.y - heroSize * 0.12f)
-            drawCircle(Color(0xFF70E070).copy(alpha = 0.35f), cell * 2.5f, e)
+        // 精靈長老的庇護：兩位長老站在人物後面，法杖的寶石一閃一閃，人物眼睛發綠光
+        Skill.ElderBlessing -> {
+            drawElders(clock, hero, heroSize, ground, entering = false)
+            for (side in listOf(-1, 1)) {
+                val e = Offset(hero.x + side * heroSize * 0.12f, hero.y - heroSize * 0.12f)
+                drawCircle(Color(0xFF70E070).copy(alpha = 0.35f), cell * 2.5f, e)
+            }
         }
+        // 幽冥樹精：兩個樹精抓著怪物不放
+        Skill.TreantGrip -> drawTreantsHolding(clock, monster, monsterHeight, ground)
         Skill.MindFocus -> drawFocusAura(clock, hero, heroSize)
         else -> Unit
     }
@@ -2695,7 +2669,7 @@ private val FlowerPotArt = listOf(
 // 貓咪（人物）「咻」地消失，出現在櫃子上花盆的右邊，看一眼、伸爪子撥一下，花盆掉下去砸在怪物頭上
 fun DrawScope.drawPotPush(t: Float, hero: Offset, heroSize: Float, art: List<String>, colors: Map<Char, Color>, monster: Offset, monsterHeight: Float, ground: Float) {
     val cell = 3.dp.toPx()
-    val appear = seg(t, 0f, 0.12f) * (1f - seg(t, 0.9f, 1f))
+    val appear = seg(t, 0f, 0.12f) * (1f - seg(t, 0.94f, 1f))
     // 櫃子在怪物右後方，頂板往左伸到怪物頭上
     val head = monster.y - monsterHeight / 2
     val boardY = head - cell * 16
@@ -2715,14 +2689,14 @@ fun DrawScope.drawPotPush(t: Float, hero: Offset, heroSize: Float, art: List<Str
     val potCell = cell * 0.9f
     val potH = FlowerPotArt.size * potCell
     val potRest = Offset(monster.x, boardY - potH / 2)
-    val tip = seg(t, 0.52f, 0.58f)
-    val fall = seg(t, 0.58f, POT_IMPACT_AT)
+    val tip = seg(t, 0.6f, 0.68f)
+    val fall = seg(t, 0.68f, POT_IMPACT_AT)
     if (t < POT_IMPACT_AT) {
         val c = Offset(potRest.x - tip * cell * 3, potRest.y + fall * fall * (head - potRest.y))
         rotate(-tip * 30f - fall * 200f, c) { spriteCentered(FlowerPotArt, c, potCell, alpha = appear) }
-    } else if (t < 0.92f) {
+    } else if (t < 0.95f) {
         // 碎掉：盆的碎片和土往兩邊噴，花彈起來
-        val p = seg(t, POT_IMPACT_AT, 0.92f)
+        val p = seg(t, POT_IMPACT_AT, 0.95f)
         for (k in 0 until 6) {
             val dir = (k - 2.5f) / 2.5f
             val c = Offset(monster.x + dir * p * cell * 14, head - sin(p * PI.toFloat()) * cell * (6 + k % 3 * 2) + p * cell * 4)
@@ -2737,22 +2711,153 @@ fun DrawScope.drawPotPush(t: Float, hero: Offset, heroSize: Float, art: List<Str
     val artCell = small / art.first().length
     val catX = potRest.x + cell * 9
     val catTop = boardY - small
-    if (t in 0.2f..0.86f) {
+    if (t in 0.2f..0.9f) {
         // 伸爪子撥花盆：往左一伸一縮
-        val paw = seg(t, 0.4f, 0.52f)
-        val swipe = if (paw > 0f && paw < 1f) sin(paw * PI.toFloat() * 2).coerceAtLeast(0f) else 0f
+        val paw = seg(t, 0.36f, 0.6f)
+        // 慢慢伸出去、停一下、再一撥
+        val swipe = if (paw > 0f && paw < 1f) sin(paw * PI.toFloat()).coerceAtLeast(0f) else 0f
         // 貓咪原本面向右，這裡面向左邊的花盆
         scale(-1f, 1f, Offset(catX, catTop + small / 2)) { drawArt(art, colors, catX - small / 2, catTop, artCell) }
         if (paw > 0f) drawRect(colors['S'] ?: Color(0xFFF8C898), Offset(catX - small / 2 - swipe * cell * 4, catTop + small * 0.55f), Size(cell * 2 + swipe * cell * 4, cell * 1.5f))
         // 看到花盆掉下去：頭上冒音符
-        if (t > 0.6f) spriteCentered(NoteArt, Offset(catX + small * 0.4f, catTop - cell * 3 - seg(t, 0.6f, 0.86f) * cell * 6), cell * 0.8f, alpha = 1f - seg(t, 0.75f, 0.86f))
+        if (t > 0.68f) spriteCentered(NoteArt, Offset(catX + small * 0.4f, catTop - cell * 3 - seg(t, 0.68f, 0.9f) * cell * 6), cell * 0.8f, alpha = 1f - seg(t, 0.82f, 0.9f))
     }
-    for ((at, c) in listOf(POT_HIDE_FROM to hero, 0.2f to Offset(catX, catTop + small / 2), 0.86f to Offset(catX, catTop + small / 2), POT_HIDE_UNTIL to hero)) {
+    for ((at, c) in listOf(POT_HIDE_FROM to hero, 0.2f to Offset(catX, catTop + small / 2), 0.9f to Offset(catX, catTop + small / 2), POT_HIDE_UNTIL to hero)) {
         val p = seg(t, at - 0.05f, at + 0.06f)
         if (p <= 0f || p >= 1f) continue
         for (k in 0 until 6) {
             val a = k * TAU / 6
             drawCircle(Color(0xFFE8E8F0).copy(alpha = 1f - p), cell * (2 + p * 2), Offset(c.x + cos(a) * cell * 5 * p, c.y + sin(a) * cell * 4 * p))
         }
+    }
+}
+
+private val ElderElfArt = listOf(
+    "...wwww..Y.",
+    "..wwwwww.L.",
+    "..wSSSSw.D.",
+    "SwwSKSKwSD.",
+    "..wSSSSw.D.",
+    "...wwww.SD.",
+    "..GGwwGGSD.",
+    ".GGGwwGGGD.",
+    ".GtGGGGtGD.",
+    ".GtGGGGtGD.",
+    ".GGGGGGGGD.",
+    ".GGGGGGGGD.",
+    "..GG..GG.D.",
+    "..KK..KK.D.",
+)
+
+// 精靈長老的庇護：兩位白鬍子的精靈長老從畫面左邊慢慢走到人物後面，舉起法杖，綠光灑在人物身上
+// entering = true 是剛用的動畫（t 0..1）；false 是效果還在時一直站著（t 是時鐘）
+fun DrawScope.drawElders(t: Float, hero: Offset, heroSize: Float, ground: Float, entering: Boolean) {
+    val cell = 3.dp.toPx()
+    val h = ElderElfArt.size * cell
+    val walk = if (entering) seg(t, 0f, 0.5f) else 1f
+    val raise = if (entering) seg(t, 0.5f, 0.65f) * (1f - seg(t, 0.9f, 1f)) else 0f
+    for (k in 0 until 2) {
+        val spot = hero.x - heroSize * (0.55f + k * 0.45f)
+        val x = -cell * 12 + walk * (spot + cell * 12)
+        val bob = if (entering && walk < 1f && ((t * 16).toInt() + k) % 2 == 0) cell else 0f
+        // 站在後排，比人物高一點
+        val top = ground - h - cell * 3 - bob - raise * cell * 2
+        drawSprite(ElderElfArt, x - ElderElfArt.first().length * cell / 2, top, cell)
+        val gem = Offset(x + cell * 4, top + cell * 0.5f)
+        val shine = if (!entering) (if (((t * 4).toInt() + k) % 2 == 0) 1f else 0.4f) else raise
+        if (shine > 0f) drawCircle(Color(0xFFA0F8A0).copy(alpha = 0.5f * shine), cell * 3, gem)
+        if (entering && raise > 0f) drawLine(Color(0xFF70E070).copy(alpha = 0.5f * raise), gem, Offset(hero.x, hero.y - heroSize * 0.12f), cell)
+    }
+    if (entering && t > 0.6f) {
+        for (k in 0 until 8) {
+            val p = seg(t, 0.6f + k * 0.03f, 0.85f + k * 0.03f)
+            if (p <= 0f || p >= 1f) continue
+            pixelStar(Offset(hero.x + (k - 3.5f) * cell * 3, hero.y - heroSize * 0.6f + p * heroSize * 0.6f), cell * 0.7f, Color(0xFFA0F8A0).copy(alpha = 1f - p))
+        }
+    }
+}
+
+private val TreantArt = listOf(
+    "....tGGGt.....",
+    "..tGGtGGGGt...",
+    ".tGGGGGtGGGt..",
+    "tGGtGGGGGGtGt.",
+    ".tGGGDDGGGGt..",
+    "...DDDDDD.....",
+    "..DeDDDDeD....",
+    "..DKYDDKYD....",
+    "..DDDDDDDD....",
+    "..DDKKKKDD....",
+    "DDDDDDDDDDDDD.",
+    "D.DDeDDDeDD.DD",
+    "..DDDeDDDDD...",
+    "..DDDDDeDDD...",
+    "..DeDDDDDeD...",
+    "..DDDDDDDDD...",
+    ".DDD.DDD.DDD..",
+    "DD...DD...DD..",
+)
+
+// 樹精站的位置：怪物右邊一前一後
+private fun treantSpots(monster: Offset, monsterHeight: Float, cell: Float) =
+    listOf(monster.x + monsterHeight * 0.55f + cell * 4, monster.x + monsterHeight * 0.55f + cell * 16)
+
+// 兩條樹枝手臂伸過去纏住怪物
+private fun DrawScope.drawBranchGrip(from: Offset, monster: Offset, monsterHeight: Float, cell: Float, squeeze: Float) {
+    val wrap = monsterHeight * (0.55f - squeeze * 0.05f)
+    val bark = Color(0xFF805030)
+    drawLine(Color(0xFF202030), from, Offset(monster.x + wrap * 0.6f, monster.y - cell * 2), cell * 2.5f)
+    drawLine(bark, from, Offset(monster.x + wrap * 0.6f, monster.y - cell * 2), cell * 1.5f)
+    drawArc(Color(0xFF202030), -60f, 300f, false, Offset(monster.x - wrap, monster.y - wrap * 0.4f), Size(wrap * 2, wrap * 0.8f), style = Stroke(cell * 2.5f))
+    drawArc(bark, -60f, 300f, false, Offset(monster.x - wrap, monster.y - wrap * 0.4f), Size(wrap * 2, wrap * 0.8f), style = Stroke(cell * 1.5f))
+    drawRect(Color(0xFF40A048), Offset(monster.x - wrap * 0.3f, monster.y - wrap * 0.4f - cell), Size(cell * 2, cell * 2))
+}
+
+// 幽冥樹精出現！：兩個樹精從怪物右邊（畫面外）走進來，掄起樹枝打下去，再用樹枝把怪物纏住
+fun DrawScope.drawTreantGrip(t: Float, monster: Offset, monsterHeight: Float, ground: Float) {
+    val cell = 3.dp.toPx()
+    val h = TreantArt.size * cell
+    val spots = treantSpots(monster, monsterHeight, cell)
+    val walk = seg(t, 0f, 0.3f)
+    spots.forEachIndexed { k, spot ->
+        val x = size.width + cell * 10 + walk * (spot - size.width - cell * 10)
+        val bob = if (walk < 1f && ((t * 14).toInt() + k) % 2 == 0) cell else 0f
+        val lean = if (t in 0.32f..TREANT_HIT_AT + 0.05f) -10f else 0f
+        val top = ground - h - bob
+        rotate(lean, Offset(x, ground)) { drawSprite(TreantArt, x - TreantArt.first().length * cell / 2, top, cell) }
+        // 掄樹枝：一下往上、一下打到怪物頭上
+        if (t in 0.3f..(TREANT_HIT_AT + 0.05f)) {
+            val swing = seg(t, 0.3f, TREANT_HIT_AT)
+            val shoulder = Offset(x - cell * 6, top + cell * 10)
+            val end = lerp(Offset(shoulder.x + cell * 2, shoulder.y - cell * 14), Offset(monster.x + cell * 2, monster.y - monsterHeight * 0.4f), swing)
+            drawLine(Color(0xFF202030), shoulder, end, cell * 2.5f)
+            drawLine(Color(0xFF805030), shoulder, end, cell * 1.5f)
+        }
+        if (t > TREANT_HIT_AT + 0.08f) drawBranchGrip(Offset(x - cell * 6, top + cell * 10), monster, monsterHeight, cell, seg(t, 0.6f, 0.8f))
+    }
+    drawHit(monster, seg(t, TREANT_HIT_AT, TREANT_HIT_AT + 0.25f), cell)
+    if (t in TREANT_HIT_AT..(TREANT_HIT_AT + 0.08f)) for (k in 0 until 3) pixelStar(Offset(monster.x + (k - 1) * cell * 6, monster.y - monsterHeight * 0.45f), cell, Color(0xFFF8D030))
+}
+
+// 效果還在：樹精抓著怪物，偶爾用力勒一下
+fun DrawScope.drawTreantsHolding(clock: Float, monster: Offset, monsterHeight: Float, ground: Float) {
+    val cell = 3.dp.toPx()
+    val h = TreantArt.size * cell
+    treantSpots(monster, monsterHeight, cell).forEach { x ->
+        val top = ground - h
+        drawSprite(TreantArt, x - TreantArt.first().length * cell / 2, top, cell)
+        drawBranchGrip(Offset(x - cell * 6, top + cell * 10), monster, monsterHeight, cell, if ((clock * 4).toInt() % 2 == 0) 1f else 0f)
+    }
+}
+
+// 效果結束：樹精放開怪物，轉身往右邊慢慢走出畫面
+fun DrawScope.drawTreantLeave(t: Float, monster: Offset, monsterHeight: Float, ground: Float) {
+    val cell = 3.dp.toPx()
+    val h = TreantArt.size * cell
+    treantSpots(monster, monsterHeight, cell).forEachIndexed { k, spot ->
+        val x = spot + seg(t, 0.15f, 1f) * (size.width + cell * 30 - spot)
+        val bob = if (t > 0.15f && ((t * 12).toInt() + k) % 2 == 0) cell else 0f
+        val c = Offset(x, ground - h / 2 - bob)
+        scale(-1f, 1f, c) { drawSprite(TreantArt, x - TreantArt.first().length * cell / 2, ground - h - bob, cell) }
     }
 }

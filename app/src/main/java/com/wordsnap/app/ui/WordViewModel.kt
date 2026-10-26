@@ -43,7 +43,8 @@ private const val KEY_PROFILE = "current_profile_id"
 private const val KEY_BOOK = "last_book_"
 private const val KEY_MEANING_CLEANUP = "meaning_cleanup_v1"
 private const val KEY_TESTCOUNT_RESET = "testcount_reset_v1"
-private const val KEY_TEST_SAVES = "test_saves_v1"
+// 測試存檔的版本：改這裡會把測試冒險者整個重新產生
+private const val KEY_TEST_SAVES = "test_saves_v2"
 private const val KEY_REVIEW_SET = "review_set_"
 
 // 複習一次最多 30 個字，記住 5 個才換新的 5 個進來
@@ -284,7 +285,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
             cleanupMeaningsOnce()
             // 測試存檔（9 職業 LV60、全道具），只建立一次
             if (TestSaves.ENABLED && !prefs.getBoolean(KEY_TEST_SAVES, false)) {
-                TestSaves.seed(db)
+                TestSaves.reset(db)
                 prefs.edit().putBoolean(KEY_TEST_SAVES, true).apply()
             }
             if (TestSaves.ENABLED) TestSaves.topUp(db)

@@ -225,6 +225,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var itemUse by remember { mutableStateOf<ItemUse?>(null) }
     // 監獄彩蛋：點兩下鐵門，囚犯衝出來打怪物（每場一次）；值每次加一讓動畫播放
     var prisonBreak by remember { mutableIntStateOf(0) }
+    // 羅馬競技場彩蛋：觀眾丟石頭的次數（每場一次）
+    var stonesThrown by remember { mutableIntStateOf(0) }
     var showBag by remember { mutableStateOf(false) }
     // 防護盾、混亂藥劑還剩幾回合
     var shieldTurns by remember { mutableIntStateOf(0) }
@@ -272,6 +274,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
     OneShotSound(R.raw.meow_sfx, play = meowing, volume = 0.5f)
+    // 競技場觀眾丟石頭時一陣喧嘩
+    OneShotSound(R.raw.crowd_sfx, play = stonesThrown > 0, volume = 0.6f)
     OneShotSound(R.raw.warning_jingle, play = isBoss && !introDone)
     OneShotSound(R.raw.death_jingle, play = died)
     OneShotSound(R.raw.levelup_jingle, play = showingLevelUp)
@@ -605,6 +609,23 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         skillThisRound = true
         skillUse = SkillUse(skill, (skillUse?.id ?: 0) + 1)
         applySkill(skill, e)
+        // 貓推花盆：伸爪子撥花盆時「喵～」
+        if (skill == Skill.PotPush) {
+            scope.launch {
+                delay((skillDuration(skill) * POT_MEOW_AT).toLong())
+                meowing = true
+                delay(1200)
+                meowing = false
+            }
+        }
+    }
+
+    // 羅馬競技場彩蛋：觀眾丟石頭下來，人物和怪物都扣 1 格血（每場一次；人物至少留 1 點血）
+    fun stoneRain() {
+        if (!answering || stonesThrown > 0) return
+        stonesThrown++
+        damage = (damage + WRONG_DAMAGE).coerceAtMost(HERO_MAX_HP - 1)
+        hitMonster(1, STONE_HIT_AT)
     }
 
     // 效果還在、要一直畫在戰場上的招式（光芒、醫生、樂團、跟班…）
@@ -613,7 +634,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         skill == Skill.PlagueDoctor -> weakTurns > 0
         skill == Skill.DarkMist -> dodgeTurns > 0
         skill == Skill.StolenWatch -> timeStopTurns > 0
-        skill == Skill.AncientTome || skill == Skill.ElfEye -> hintTurns > 0
+        skill == Skill.AncientTome || skill == Skill.ElderBlessing -> hintTurns > 0
+        skill == Skill.TreantGrip -> stunTurns > 0
         skill == Skill.CatOrchestra || skill == Skill.UltimateArmor || skill == Skill.CutestCat -> !finished
         else -> false
     }
@@ -713,6 +735,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     itemUse = itemUse,
                     prisonBreak = prisonBreak,
                     onPrisonDoor = { openPrisonDoor() },
+                    stones = stonesThrown,
+                    onStones = { stoneRain() },
+                    remaining = if (introDone && !finished && word != null) total - index else null,
                     skillUse = skillUse,
                     cheering = cheerTurns > 0,
                     stunned = stunTurns > 0,
@@ -951,6 +976,10 @@ private fun BattleField(
     itemUse: ItemUse?,
     prisonBreak: Int = 0,
     onPrisonDoor: () -> Unit = {},
+    stones: Int = 0,
+    onStones: () -> Unit = {},
+    // 這場還剩幾題（左上角的小字）
+    remaining: Int? = null,
     skillUse: SkillUse? = null,
     cheering: Boolean = false,
     stunned: Boolean = false,
@@ -1153,6 +1182,25 @@ private fun BattleField(
             prisonAnim.snapTo(0f)
         }
         val doorTap by rememberUpdatedState(onPrisonDoor)
+        val stonesTap by rememberUpdatedState(onStones)
+        // 海豚：點的位置（0..1）和跳了幾次；雪人堆好就一直在
+        var dolphinX by remember { mutableStateOf<Float?>(null) }
+        var dolphinJumps by remember { mutableIntStateOf(0) }
+        val dolphin = remember { Animatable(0f) }
+        LaunchedEffect(dolphinJumps) {
+            if (dolphinJumps == 0) return@LaunchedEffect
+            dolphin.snapTo(0f)
+            dolphin.animateTo(1f, tween(1400, easing = LinearEasing))
+            dolphin.snapTo(0f)
+        }
+        var snowmanX by remember { mutableStateOf<Float?>(null) }
+        val stoneAnim = remember { Animatable(0f) }
+        LaunchedEffect(stones) {
+            if (stones == 0) return@LaunchedEffect
+            stoneAnim.snapTo(0f)
+            stoneAnim.animateTo(1f, tween(STONE_DURATION, easing = LinearEasing))
+            stoneAnim.snapTo(0f)
+        }
 
         // 技能動畫
         val skillAnim = remember { Animatable(0f) }
@@ -1163,6 +1211,20 @@ private fun BattleField(
             skillAnim.snapTo(0f)
         }
         // 瘟疫醫生在瘟疫結束時鞠躬走掉
+        // 幽冥樹精在怪物能動之後放開牠，慢慢往右走掉
+        val treantHere = Skill.TreantGrip in lasting
+        var treantWas by remember { mutableStateOf(false) }
+        val treantLeave = remember { Animatable(0f) }
+        LaunchedEffect(treantHere) {
+            if (treantHere) {
+                treantWas = true
+            } else if (treantWas) {
+                treantWas = false
+                treantLeave.snapTo(0f)
+                treantLeave.animateTo(1f, tween(2600, easing = LinearEasing))
+                treantLeave.snapTo(0f)
+            }
+        }
         val doctorHere = Skill.PlagueDoctor in lasting
         var doctorWas by remember { mutableStateOf(false) }
         val doctorLeave = remember { Animatable(0f) }
@@ -1250,19 +1312,40 @@ private fun BattleField(
         // 巨斧落下時怪物被壓扁
         val squash = if (finisher == Finisher.Smash && effect in 0.6f..1f && fly == 0f) 0.45f else 1f
 
-        val prisonScene = scene == ReviewScene.Prison && monster.rank == MonsterRank.Normal
+        // 場景彩蛋（只有一般怪物的戰場才有自己的場景）：監獄鐵門點兩下、船上的海面點兩下、競技場觀眾席點三下、雪地中間點三下
+        val eggScene = monster.rank == MonsterRank.Normal && scene in SceneEggScenes
+        val eggTap by rememberUpdatedState<(SceneEgg, Float) -> Unit>({ egg, x ->
+            when (egg) {
+                SceneEgg.PrisonDoor -> doorTap()
+                SceneEgg.Dolphin -> {
+                    dolphinX = x
+                    dolphinJumps++
+                }
+                SceneEgg.Stones -> stonesTap()
+                SceneEgg.Snowman -> if (snowmanX == null) snowmanX = x
+            }
+        })
         Box(
             Modifier
                 .fillMaxWidth()
                 .graphicsLayer { translationX = landShake.dp.toPx() }
                 .then(
-                    if (!prisonScene) Modifier else Modifier.pointerInput(Unit) {
-                        // 點兩下場景左邊的鐵門才算
-                        detectTapGestures(onDoubleTap = { pos ->
+                    if (!eggScene) Modifier else Modifier.pointerInput(scene) {
+                        // 連續點同一個地方：兩次點擊間隔 0.5 秒內才算連點
+                        var count = 0
+                        var last = 0L
+                        var lastEgg: SceneEgg? = null
+                        detectTapGestures(onTap = { pos ->
                             val cell = size.width.toFloat() / scene.art.first().length
-                            val x = (pos.x / cell).toInt()
-                            val y = (pos.y / cell).toInt()
-                            if (x in PRISON_DOOR_LEFT..PRISON_DOOR_RIGHT && y in PRISON_DOOR_TOP..PRISON_DOOR_BOTTOM) doorTap()
+                            val egg = sceneEggAt(scene, (pos.x / cell).toInt(), (pos.y / cell).toInt()) ?: return@detectTapGestures
+                            val now = System.currentTimeMillis()
+                            count = if (egg == lastEgg && now - last < 500) count + 1 else 1
+                            last = now
+                            lastEgg = egg
+                            if (count >= egg.taps) {
+                                count = 0
+                                eggTap(egg, pos.x / size.width)
+                            }
                         })
                     }
                 ),
@@ -1389,6 +1472,11 @@ private fun BattleField(
                     }
                 }
                 if (doctorLeave.value > 0f) drawDoctorLeave(doctorLeave.value, monsterCenter, artH.toPx(), ground)
+                if (treantLeave.value > 0f) drawTreantLeave(treantLeave.value, monsterCenter, artH.toPx(), ground)
+                // 場景彩蛋：海豚跳出海面、雪人、觀眾丟石頭
+                dolphinX?.let { if (dolphin.value > 0f) drawDolphinJump(dolphin.value, it * size.width, size.height * DOLPHIN_SEA_Y) }
+                snowmanX?.let { drawSnowman(it * size.width, ground, spinClock) }
+                if (stoneAnim.value > 0f) drawStoneRain(stoneAnim.value, heroCenter, monsterCenter)
                 if (volley.value > 0f) drawElfVolley(volley.value, monsterCenter)
                 if (sneak.value > 0f) drawSneakStab(sneak.value, monsterCenter, artH.toPx())
                 if (skillUse?.skill == Skill.Possession && possessArt != null && skillAnim.value > 0f) {
@@ -1428,6 +1516,16 @@ private fun BattleField(
                 ) {
                     Text(tr(R.string.skill_are_we_elves_action), color = PixelGold, style = MaterialTheme.typography.labelLarge)
                 }
+            }
+            // 左上角的小字：這場還剩幾題
+            if (remaining != null) {
+                Text(
+                    tr(R.string.battle_remaining, remaining),
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
+                        .background(PixelInk.copy(alpha = 0.55f)).padding(horizontal = 4.dp, vertical = 1.dp),
+                )
             }
             // 黑霧遁形閃掉攻擊
             if (miss.value > 0f) {

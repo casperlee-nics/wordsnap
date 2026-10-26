@@ -61,7 +61,7 @@
     <string name="item_elixir">聖靈藥</string>
     <string name="item_elixir_effect">HP 全部回滿</string>
     <string name="item_angel">天使召喚</string>
-    <string name="item_angel_effect">天使從天而降，怪物損血一半</string>
+    <string name="item_angel_effect">天使從天而降，怪物損血 1/2</string>
     <string name="item_shield">防護盾</string>
     <string name="item_shield_effect">3 回合內答錯，被攻擊也不會扣血</string>
     <string name="item_confusion">混亂藥劑</string>
@@ -69,7 +69,7 @@
     <string name="item_catapult">召喚投石車</string>
     <string name="item_catapult_effect">投石車丟大石頭，怪物扣 1/3 的血</string>
     <string name="item_cat_can">貓罐頭</string>
-    <string name="item_cat_can_effect">打開罐頭，貓咪們衝出來（進擊的貓貓們），怪物扣 2 格血</string>
+    <string name="item_cat_can_effect">打開罐頭，貓咪們衝出來（進擊的貓貓們），怪物扣 3 格血，1 回合嚇得不能攻擊</string>
     <string name="item_royal_summons">王國召集令</string>
     <string name="item_royal_summons_effect">招喚王國的士兵：怪物扣 1 格血、學者告訴你這題答案、白魔法師補 1 格血</string>
     <string name="item_cat_score">貓咪樂譜</string>
@@ -92,7 +92,7 @@
     <string name="shop_sold">賣掉「%1$s」，得到 %2$d 金幣！</string>
     <string name="shop_nothing_to_sell">道具袋是空的，沒有東西可以賣。</string>
     <string name="item_bag">道具袋</string>
-    <string name="item_shelf">道具欄</string>
+    <string name="item_shelf">打開口袋</string>
     <string name="item_bag_empty">道具袋是空的。把怪物打飛時有機會打開寶箱拿到道具！</string>
 
     <!-- 冒險日誌（單字簿）選單 -->
@@ -147,8 +147,8 @@
     <string name="name_blank">名字不能是空白</string>
     <string name="name_taken">已經有叫「%1$s」的冒險者了</string>
 
-    <!-- 人物能力、轉職 -->
-    <string name="hero_title">人物能力</string>
+    <!-- 角色資料、轉職 -->
+    <string name="hero_title">角色資料</string>
     <string name="quoted">「%1$s」</string>
     <string name="hero_class_level">職業：%1$s　Lv %2$d</string>
     <string name="hero_remembered">已記住的單字：%1$d 個</string>
@@ -168,6 +168,7 @@
     <string name="class_change_message">要轉成哪一種職業？轉職後等級會從 Lv %1$d 降到 Lv %2$d。</string>
     <string name="class_change_locked">要到 LV%1$d 才能轉職喔！現在是 LV%2$d，再努力背單字升級吧。</string>
     <string name="class_change_to">轉職成%1$s</string>
+    <string name="class_change_done">轉職成功！成為%1$s</string>
 
     <!-- 職業故事、選職業 -->
     <string name="story_hero">出身王國邊境的年輕人，拿起祖傳的長劍，立誓打倒奪走文字的魔王，讓王國再次響起讀書聲。</string>
@@ -192,11 +193,13 @@
     <string name="help_battle_title">戰鬥</string>
     <string name="help_battle">一本單字簿記住 10 個字（或整本都記住）就能戰鬥。聽發音拼出單字，答對攻擊怪物、答錯被打掉 HP。最後把怪物的血打光就能打倒牠；HP 歸零會被拖回教堂。每場題數可在遊戲設定選 10、15 或 20 題。</string>
     <string name="help_level_title">等級、轉職與道具</string>
-    <string name="help_level">戰鬥拿到經驗值會升級，每 10 級換一個稱號，頭像和必殺技也會變強。超過 10 級可以在「人物能力」轉職成別的職業，但會降 10 級。戰鬥勝利有機會開到寶箱，道具在戰鬥中從道具袋使用。</string>
+    <string name="help_level">戰鬥拿到經驗值會升級，每 10 級換一個稱號，頭像和必殺技也會變強。超過 10 級可以在「角色資料」轉職成別的職業，但會降 10 級。戰鬥勝利有機會開到寶箱，道具在戰鬥中從道具袋使用。</string>
     <string name="help_boss_title">魔王</string>
     <string name="help_boss">每記住 50 個字會出現一隻中魔王，每記住 100 個字會出現一隻大魔王，打倒魔王可以拿到更多經驗值。</string>
     <string name="help_tips_title">小技巧</string>
     <string name="help_tips">主畫面的「遊戲設定」可以切換語言、調整背景音樂（關／小／大，不影響念單字的聲音）和文字大小。</string>
+    <string name="help_free_title">免費版與完整版</string>
+    <string name="help_free">免費版可以玩勇者、魔法師、精靈弓手三種職業，最多兩本單字簿、每本最多 100 個字；不會出現大魔王，也不會掉落從職業技能變成的特殊道具（貓罐頭、王國召集令、貓咪樂譜、戰艦信號旗、呼叫空中支援、奧利哈鋼礦石、魔導書的書頁）。完整版沒有這些限制。</string>
     <string name="help_about_title">關於</string>
     <string name="help_about">《像素單字》由 好玩製造所 Make It Fun Studio 製作。謝謝你一起來冒險！</string>
     <string name="help_version">軟體版本：v%1$s</string>
@@ -269,6 +272,7 @@
 
     <!-- 戰鬥 -->
     <string name="battle_title">戰鬥：%1$s</string>
+    <string name="battle_remaining">剩 %1$d 題</string>
     <string name="battle_flee">逃跑</string>
     <string name="boss_victory_title">大魔王討伐成功！</string>
     <string name="boss_victory_message">%1$s 被打倒了！王國的人們都在為你歡呼！</string>
@@ -701,10 +705,10 @@
     <string name="skill_are_we_elves_desc">怪物扣 2 格血</string>
     <string name="skill_are_we_elves_caption">抱歉，他們跑錯攝影棚了</string>
     <string name="skill_are_we_elves_action">第 1 場，開拍！</string>
-    <string name="skill_forest_blessing">森林的庇護</string>
-    <string name="skill_forest_blessing_desc">補 2 格血，同時怪物扣 1 格血</string>
-    <string name="skill_elf_eye">精靈之眼</string>
-    <string name="skill_elf_eye_desc">5 回合內題目先顯示前一半字母</string>
+    <string name="skill_treant_grip">幽冥樹精出現！</string>
+    <string name="skill_treant_grip_desc">兩個樹精從怪物右邊出現，打怪物 2 格血後抓住牠：2 回合怪物不能攻擊</string>
+    <string name="skill_elder_blessing">精靈長老的庇護</string>
+    <string name="skill_elder_blessing_desc">兩位精靈長老從後面走來守護：4 回合內題目先顯示前一半字母</string>
     <string name="skill_elven_uprising">精靈族的逆襲</string>
     <string name="skill_elven_uprising_desc">背景變成森林深處，之後答對攻擊力 x1.5</string>
     <string name="skill_bush_hide">躲進草叢</string>
@@ -736,11 +740,11 @@
     <string name="skill_lick_fur">舔舔毛毛～喵</string>
     <string name="skill_lick_fur_desc">補 1 格血</string>
     <string name="skill_cat_stampede">進擊的貓貓們～喵</string>
-    <string name="skill_cat_stampede_desc">怪物扣 2 格血</string>
+    <string name="skill_cat_stampede_desc">怪物扣 3 格血，1 回合嚇得不能攻擊</string>
     <string name="skill_cat_orchestra">貓咪交響樂團～喵</string>
     <string name="skill_cat_orchestra_desc">音樂換成古典名曲，3 回合內答錯反而補血</string>
     <string name="skill_pot_push">貓貓才不會推倒東西呢～喵</string>
-    <string name="skill_pot_push_desc">怪物後面出現櫃子，貓咪跳上去把花盆撥下來砸到怪物頭上：怪物扣 3 格血</string>
+    <string name="skill_pot_push_desc">怪物後面出現櫃子，貓咪跳上去把花盆撥下來砸到怪物頭上：怪物扣 2 格血</string>
     <string name="skill_cutest_cat">貓咪是地表最可愛的生物～喵～</string>
     <string name="skill_cutest_cat_desc">到戰鬥結束，答錯有一半機率不被攻擊，身邊多兩隻小貓</string>
     <string name="skill_sneeze_fire">小火苗噗噗</string>
