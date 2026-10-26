@@ -7,12 +7,13 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Word::class, Profile::class, Book::class, Item::class], version = 10)
+@Database(entities = [Word::class, Profile::class, Book::class, Item::class, MonsterLog::class], version = 13)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun wordDao(): WordDao
     abstract fun profileDao(): ProfileDao
     abstract fun bookDao(): BookDao
     abstract fun itemDao(): ItemDao
+    abstract fun monsterLogDao(): MonsterLogDao
 
     companion object {
         @Volatile
@@ -24,7 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "wordsnap.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13).build().also { instance = it }
             }
 
         // v0.3 加入複習欄位，保留舊的單字
@@ -115,6 +116,30 @@ abstract class AppDatabase : RoomDatabase() {
                         "`count` INTEGER NOT NULL, PRIMARY KEY(`profileId`, `type`))"
                 )
                 db.execSQL("ALTER TABLE words ADD COLUMN testCount INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        // v0.94 刪掉單字簿時，裡面記住的字數記在冒險者身上
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE profiles ADD COLUMN keptRemembered INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        // v1.00 冒險履歷：記下遇過、打倒過的怪物
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `monster_log` (`profileId` INTEGER NOT NULL, `key` TEXT NOT NULL, " +
+                        "`met` INTEGER NOT NULL, `wins` INTEGER NOT NULL, PRIMARY KEY(`profileId`, `key`))"
+                )
+            }
+        }
+
+        // v1.01 金幣：把怪物打飛就能賺
+        private val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE profiles ADD COLUMN coins INTEGER NOT NULL DEFAULT 0")
             }
         }
 

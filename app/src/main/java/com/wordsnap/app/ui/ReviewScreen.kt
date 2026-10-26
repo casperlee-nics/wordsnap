@@ -1,12 +1,18 @@
 package com.wordsnap.app.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -96,29 +102,33 @@ fun ReviewScreen(vm: WordViewModel, onBack: () -> Unit) {
                         }
                     }
 
-                    // 按了就直接換下一張：左邊不記得（人物加問號），右邊記得（人物加燈泡）
-                    Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                        PixelIconButton(
-                            IconForgot,
+                    // 按了就直接換下一張：左邊不記得（頭昏昏的臉），右邊記得（眼睛發亮的笑臉）
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        ReviewChoice(
+                            IconForgotFace,
                             tr(R.string.review_forgot),
+                            color = ForgotColor,
                             onClick = { vm.answer(word, remembered = false) },
-                            size = 88.dp,
-                            palette = ColorIconPalette,
+                            modifier = Modifier.weight(1f),
                         )
-                        PixelIconButton(
-                            IconRemember,
+                        ReviewChoice(
+                            IconRememberFace,
                             tr(R.string.review_remember),
-                            onClick = { vm.answer(word, remembered = true) },
-                            size = 88.dp,
                             color = PixelGold,
-                            palette = ColorIconPalette,
+                            onClick = { vm.answer(word, remembered = true) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    // 隨機練習的提示緊貼在按鈕下面，字放大一點
+                    if (vm.practiceMode) {
+                        Text(
+                            tr(R.string.review_practice_hint),
+                            style = MaterialTheme.typography.titleSmall.readable(),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.offset(y = (-12).dp),
                         )
                     }
                     Spacer(Modifier.weight(1f))
-                    // 隨機練習的提示放在最下面
-                    if (vm.practiceMode) {
-                        Text(tr(R.string.review_practice_hint), style = MaterialTheme.typography.bodySmall.readable())
-                    }
                 }
             }
         }
@@ -131,4 +141,24 @@ fun wordStyle(text: String): TextStyle = when {
     text.length <= 8 -> MaterialTheme.typography.displaySmall
     text.length <= 12 -> MaterialTheme.typography.headlineLarge
     else -> MaterialTheme.typography.headlineSmall
+}
+
+private val ForgotColor = Color(0xFFC8D4F0)
+
+// 複習的大按鈕：左邊表情圖、右邊大字，整顆都能按
+@Composable
+private fun ReviewChoice(icon: List<String>, label: String, color: Color, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    PixelSurface(
+        color = color,
+        modifier = modifier.height(76.dp).clickable(role = Role.Button, onClick = onClick),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        ) {
+            PixelArt(icon, ColorIconPalette, Modifier.size(44.dp))
+            Text(label, style = MaterialTheme.typography.titleLarge)
+        }
+    }
 }

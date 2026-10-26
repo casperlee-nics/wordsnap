@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wordsnap.app.R
+import com.wordsnap.app.data.Book
 import com.wordsnap.app.data.Word
 import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.speech.rememberSpeaker
@@ -63,11 +65,14 @@ fun WordListScreen(
     val books by vm.books.collectAsState()
     val selectedBookId by vm.selectedBookId.collectAsState()
     val profile by vm.currentProfile.collectAsState()
+    val monsterLog by vm.monsterLog.collectAsState()
     val allWords by vm.allWords.collectAsState()
     val unlock = remember(allWords, selectedBookId) { vm.battleUnlock(selectedBookId) }
     var showMenu by remember { mutableStateOf(false) }
     var showHero by remember { mutableStateOf(false) }
     var showItems by remember { mutableStateOf(false) }
+    var showShop by remember { mutableStateOf(false) }
+    var showSkills by remember { mutableStateOf(false) }
     val itemCounts by vm.items.collectAsState()
     val speaker = rememberSpeaker()
     val translatorStatus by vm.translatorStatus.collectAsState()
@@ -99,7 +104,7 @@ fun WordListScreen(
                     Modifier.fillMaxWidth().padding(start = 2.dp, end = 8.dp, top = 0.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // 點人物打開選單：人物能力、道具欄、回到主畫面
+                    // 點人物打開選單：角色資料、打開口袋、旅行商人、回到主畫面
                     Box(Modifier.weight(1f)) {
                         Row(
                             Modifier.clickable { showMenu = true },
@@ -123,7 +128,9 @@ fun WordListScreen(
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             DropdownMenuItem(text = { Text(tr(R.string.hero_title)) }, onClick = { showMenu = false; showHero = true })
+                            DropdownMenuItem(text = { Text(tr(R.string.skill_title)) }, onClick = { showMenu = false; showSkills = true })
                             DropdownMenuItem(text = { Text(tr(R.string.item_shelf)) }, onClick = { showMenu = false; showItems = true })
+                            DropdownMenuItem(text = { Text(tr(R.string.shop_title)) }, onClick = { showMenu = false; showShop = true })
                             DropdownMenuItem(text = { Text(tr(R.string.menu_home)) }, onClick = { showMenu = false; onHome() })
                         }
                     }
@@ -161,11 +168,25 @@ fun WordListScreen(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            Text(
-                tr(R.string.word_count, words.size),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    tr(R.string.word_count, words.size),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f).padding(horizontal = 16.dp, vertical = 6.dp),
+                )
+                // 剛剛在這本刪掉的字可以復原：放在播放和垃圾桶的正上方
+                val lastDeleted = vm.deletedWords.lastOrNull()
+                if (lastDeleted != null && lastDeleted.bookId == selectedBookId) {
+                    Row(
+                        Modifier.padding(end = 16.dp).width(88.dp).clickable { vm.undoDelete() },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        PixelArt(IconUndo, ColorIconPalette, Modifier.size(30.dp))
+                        Text(tr(R.string.undo_delete), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 4.dp))
+                    }
+                }
+            }
             if (unlock.exhausted) {
                 Text(
                     tr(R.string.book_exhausted, MAX_TESTS),
@@ -206,6 +227,24 @@ fun WordListScreen(
         }
     }
 
+    if (showSkills) {
+        profile?.let {
+            SkillDialog(
+                skills = Skill.of(Avatar.from(it.avatar).race),
+                level = levelInfo(it.exp).level,
+                onDismiss = { showSkills = false },
+            )
+        }
+    }
+    if (showShop) {
+        ShopDialog(
+            counts = itemCounts,
+            coins = profile?.coins ?: 0,
+            onBuy = vm::buyItem,
+            onSell = vm::sellItem,
+            onDismiss = { showShop = false },
+        )
+    }
     if (showItems) {
         ItemBagDialog(counts = itemCounts, onDismiss = { showItems = false })
     }
@@ -234,15 +273,17 @@ fun WordListScreen(
         profile?.let {
             HeroDialog(
                 it,
-                remembered = allWords.count { w -> w.box >= 1 },
+                remembered = allWords.count { w -> w.box >= 1 } + it.keptRemembered,
                 onDismiss = { showHero = false },
                 onClassChange = { avatar -> vm.changeClass(it, avatar) },
+                monsterLog = monsterLog,
             )
         }
     }
     if (showAdd) {
         WordDialog(
             title = tr(R.string.word_add_title),
+            duplicateIn = { vm.booksContaining(it) },
             onDismiss = { showAdd = false },
             onSave = { text, meaning ->
                 vm.add(text, meaning)
@@ -255,6 +296,7 @@ fun WordListScreen(
             title = tr(R.string.word_edit_title),
             initialText = word.text,
             initialMeaning = word.meaning,
+            duplicateIn = { vm.booksContaining(it, except = word) },
             onDismiss = { editing = null },
             onSave = { text, meaning ->
                 vm.update(word, text, meaning)
@@ -271,8 +313,11 @@ private fun WordDialog(
     onSave: (String, String) -> Unit,
     initialText: String = "",
     initialMeaning: String = "",
+    // 輸入的字已經在哪幾本單字簿裡，有的話提醒一下（還是可以存）
+    duplicateIn: (String) -> List<Book> = { emptyList() },
 ) {
     var text by remember { mutableStateOf(initialText) }
+    val duplicates = remember(text) { duplicateIn(text) }
     var meaning by remember { mutableStateOf(initialMeaning) }
 
     PixelAlertDialog(
@@ -291,6 +336,13 @@ private fun WordDialog(
                     height = 64.dp,
                     keyboardType = KeyboardType.Ascii,
                 )
+                if (duplicates.isNotEmpty()) {
+                    Text(
+                        tr(R.string.word_duplicate, duplicates.joinToString("、") { it.name }),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
                 Text(tr(R.string.word_field_meaning), style = MaterialTheme.typography.labelLarge)
                 ScrollTextField(
                     value = meaning,

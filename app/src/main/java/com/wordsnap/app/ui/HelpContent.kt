@@ -46,6 +46,10 @@ private val HelpSections = listOf(
         R.string.help_tips,
     ),
     HelpSection(
+        R.string.help_free_title,
+        R.string.help_free,
+    ),
+    HelpSection(
         R.string.help_about_title,
         R.string.help_about,
     ),

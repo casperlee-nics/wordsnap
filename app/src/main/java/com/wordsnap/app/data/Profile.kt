@@ -19,4 +19,8 @@ data class Profile(
     // 已經打倒幾隻中魔王（每記住 50 個字一隻）、大魔王（每記住 100 個字一隻）
     @ColumnInfo(defaultValue = "0") val midBossSeen: Int = 0,
     @ColumnInfo(defaultValue = "0") val bigBossSeen: Int = 0,
+    // 刪掉的單字簿或單字裡已經記住的字數；記住的字數照樣算進去，不會因為刪書被扣掉
+    @ColumnInfo(defaultValue = "0") val keptRemembered: Int = 0,
+    // 錢包裡的金幣：把怪物打飛就能賺（一般 10、中魔王 20、大魔王 30）
+    @ColumnInfo(defaultValue = "0") val coins: Int = 0,
 )

@@ -309,8 +309,9 @@ fun RetroButton(
     textStyle: TextStyle = MaterialTheme.typography.titleMedium,
     // 文字左右留白；下方工具列一排四顆比較窄，要留少一點
     textPadding: Dp = 12.dp,
+    height: Dp = 48.dp,
 ) {
-    RetroButtonFrame(onClick, modifier, enabled) { lift ->
+    RetroButtonFrame(onClick, modifier, enabled, height) { lift ->
         FitText(
             label,
             color = ButtonText,

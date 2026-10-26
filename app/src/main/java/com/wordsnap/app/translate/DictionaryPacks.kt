@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
 // - 上架時：改成 Google Play 的按需下載資源包（Play Asset Delivery），一個語言一包，只要換掉 source
 object DictionaryPacks {
     // 換新版字典包時把版本加一，App 會重新安裝
-    private val VERSION = mapOf(AppLanguage.Japanese to 2)
+    private val VERSION = mapOf(AppLanguage.Japanese to 3)
 
     var source: DictionarySource = BundledAssetSource
 

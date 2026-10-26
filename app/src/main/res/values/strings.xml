@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  像素單字的所有介面文字（預設：繁體中文）。
+  單字勇者的所有介面文字（預設：繁體中文）。
   日文放在 values-ja/strings.xml、韓文放在 values-ko/strings.xml，name 要一模一樣，只翻譯內容。
   %1$s、%1$d 是程式會填進去的文字或數字，翻譯時要保留（位置可以換）；%% 是百分比符號。
   string-array 的項目數量和順序不能變。
 -->
 <resources>
     <!-- 暫定名稱，上架前再決定 -->
-    <string name="app_name">像素單字</string>
+    <string name="app_name">單字勇者</string>
 
     <!-- 共用 -->
     <string name="cancel">取消</string>
     <string name="delete">刪除</string>
+    <string name="undo_delete">復原</string>
     <string name="delete_named">刪除 %1$s</string>
     <string name="confirm">確定</string>
     <string name="close">關閉</string>
@@ -21,7 +22,7 @@
     <string name="great">太好了！</string>
     <string name="save">儲存</string>
     <string name="retry">重試</string>
-    <string name="title_logo">像素單字</string>
+    <string name="title_logo">單字勇者</string>
     <string name="default_book">我的冒險日誌</string>
 
     <!-- 主畫面 -->
@@ -45,6 +46,9 @@
     <string name="settings_text_small">小</string>
     <string name="settings_text_large">大</string>
     <string name="settings_text_hint">「大」會把輸入的字和講解文字放大 1.2 倍，按鈕上的字不變</string>
+    <string name="settings_battle_size">每次考試單字量</string>
+    <string name="settings_battle_size_option">%1$d 個</string>
+    <string name="settings_battle_size_hint">每場戰鬥出幾題；能出的字不夠時，就只出現有的字</string>
 
     <!-- 道具 -->
     <string name="item_small_potion">小回復劑</string>
@@ -58,15 +62,42 @@
     <string name="item_elixir">聖靈藥</string>
     <string name="item_elixir_effect">HP 全部回滿</string>
     <string name="item_angel">天使召喚</string>
-    <string name="item_angel_effect">天使從天而降，怪物損血一半</string>
+    <string name="item_angel_effect">天使從天而降，怪物損血 1/2</string>
     <string name="item_shield">防護盾</string>
     <string name="item_shield_effect">3 回合內答錯，被攻擊也不會扣血</string>
     <string name="item_confusion">混亂藥劑</string>
     <string name="item_confusion_effect">3 回合內答錯，怪物反而會攻擊自己</string>
     <string name="item_catapult">召喚投石車</string>
     <string name="item_catapult_effect">投石車丟大石頭，怪物扣 1/3 的血</string>
+    <string name="item_cat_can">貓罐頭</string>
+    <string name="item_cat_can_effect">打開罐頭，貓咪們衝出來（進擊的貓貓們），怪物扣 3 格血，1 回合嚇得不能攻擊</string>
+    <string name="item_royal_summons">王國召集令</string>
+    <string name="item_royal_summons_effect">招喚王國的士兵：怪物扣 1 格血、學者告訴你這題答案、白魔法師補 1 格血</string>
+    <string name="item_cat_score">貓咪樂譜</string>
+    <string name="item_cat_score_effect">貓咪交響樂團登場：音樂換成古典名曲，3 回合內答錯反而補血</string>
+    <string name="item_signal_flag">戰艦信號旗</string>
+    <string name="item_signal_flag_effect">戰艦招喚：自己扣 1 格血，怪物扣 3 格血，背景變成海上</string>
+    <string name="item_air_support">呼叫空中支援</string>
+    <string name="item_air_support_effect">B2 轟炸機飛過來轟炸，怪物扣 2 格血，背景變成被炸過的城市</string>
+    <string name="item_orichalcum_ore">奧利哈鋼礦石</string>
+    <string name="item_orichalcum_ore_effect">打造金色巨斧：5 回合內答對，攻擊力 x1.5</string>
+    <string name="item_tome_page">魔導書的書頁</string>
+    <string name="item_tome_page_effect">古代魔導書：5 回合內題目先顯示前一半字母</string>
+    <string name="shop_title">旅行商人</string>
+    <string name="shop_buy_tab">購買</string>
+    <string name="shop_sell_tab">販售</string>
+    <string name="shop_buy">買</string>
+    <string name="shop_sell">賣</string>
+    <string name="shop_owned_price">持有 %1$d 個・%2$d 金幣</string>
+    <string name="shop_bought">買了「%1$s」，花了 %2$d 金幣！</string>
+    <string name="shop_sold">賣掉「%1$s」，得到 %2$d 金幣！</string>
+    <string name="shop_nothing_to_sell">道具袋是空的，沒有東西可以賣。</string>
+    <string name="shop_buy_confirm_title">要買嗎？</string>
+    <string name="shop_buy_confirm">用 %2$d 金幣買一個「%1$s」？</string>
+    <string name="shop_sell_confirm_title">要賣嗎？</string>
+    <string name="shop_sell_confirm">把一個「%1$s」賣掉，換 %2$d 金幣？</string>
     <string name="item_bag">道具袋</string>
-    <string name="item_shelf">道具欄</string>
+    <string name="item_shelf">打開口袋</string>
     <string name="item_bag_empty">道具袋是空的。把怪物打飛時有機會打開寶箱拿到道具！</string>
 
     <!-- 冒險日誌（單字簿）選單 -->
@@ -121,8 +152,8 @@
     <string name="name_blank">名字不能是空白</string>
     <string name="name_taken">已經有叫「%1$s」的冒險者了</string>
 
-    <!-- 人物能力、轉職 -->
-    <string name="hero_title">人物能力</string>
+    <!-- 角色資料、轉職 -->
+    <string name="hero_title">角色資料</string>
     <string name="quoted">「%1$s」</string>
     <string name="hero_class_level">職業：%1$s　Lv %2$d</string>
     <string name="hero_remembered">已記住的單字：%1$d 個</string>
@@ -133,9 +164,16 @@
     <string name="stat_luk">運氣</string>
     <string name="hero_finisher">必殺技：%1$s</string>
     <string name="hero_next_title">Lv %1$d 可獲得稱號「%2$s」</string>
+    <string name="adventure_log">冒險履歷</string>
+    <string name="adventure_log_summary">遇過 %1$d / %2$d 種怪物，共打倒 %3$d 次</string>
+    <string name="adventure_log_counts">遇到 %1$d 次・打倒 %2$d 次</string>
+    <string name="adventure_log_empty">還沒有遇過任何怪物，快去戰鬥吧！</string>
+    <string name="hero_wallet">錢包：%1$d 金幣</string>
     <string name="class_change">轉職</string>
     <string name="class_change_message">要轉成哪一種職業？轉職後等級會從 Lv %1$d 降到 Lv %2$d。</string>
+    <string name="class_change_locked">要到 LV%1$d 才能轉職喔！現在是 LV%2$d，再努力背單字升級吧。</string>
     <string name="class_change_to">轉職成%1$s</string>
+    <string name="class_change_done">轉職成功！成為%1$s</string>
 
     <!-- 職業故事、選職業 -->
     <string name="story_hero">出身王國邊境的年輕人，拿起祖傳的長劍，立誓打倒奪走文字的魔王，讓王國再次響起讀書聲。</string>
@@ -158,15 +196,17 @@
     <string name="help_review_title">複習與朗讀</string>
     <string name="help_review">「複習」用翻卡的方式練習，記得就按燈泡、不記得按問號，記住的字會隔幾天再出現。「朗讀」會自動依序念出英文和中文解釋。每天晚上 8 點會提醒你複習。</string>
     <string name="help_battle_title">戰鬥</string>
-    <string name="help_battle">一本單字簿記住 10 個字（或整本都記住）就能戰鬥。聽發音拼出單字，答對攻擊怪物、答錯被打掉 HP。最後把怪物的血打光就能打倒牠；HP 歸零會被拖回教堂。每場 5～10 題，答對 2 次的字就不再出題。</string>
+    <string name="help_battle">一本單字簿記住 10 個字（或整本都記住）就能戰鬥。聽發音拼出單字，答對攻擊怪物、答錯被打掉 HP。最後把怪物的血打光就能打倒牠；HP 歸零會被拖回教堂。每場題數可在遊戲設定選 10、15 或 20 題。</string>
     <string name="help_level_title">等級、轉職與道具</string>
-    <string name="help_level">戰鬥拿到經驗值會升級，每 10 級換一個稱號，頭像和必殺技也會變強。超過 10 級可以在「人物能力」轉職成別的職業，但會降 10 級。戰鬥勝利有機會開到寶箱，道具在戰鬥中從道具袋使用。</string>
+    <string name="help_level">戰鬥拿到經驗值會升級，每 10 級換一個稱號，頭像和必殺技也會變強。超過 10 級可以在「角色資料」轉職成別的職業，但會降 10 級。戰鬥勝利有機會開到寶箱，道具在戰鬥中從道具袋使用。</string>
     <string name="help_boss_title">魔王</string>
     <string name="help_boss">每記住 50 個字會出現一隻中魔王，每記住 100 個字會出現一隻大魔王，打倒魔王可以拿到更多經驗值。</string>
     <string name="help_tips_title">小技巧</string>
     <string name="help_tips">主畫面的「遊戲設定」可以切換語言、調整背景音樂（關／小／大，不影響念單字的聲音）和文字大小。</string>
+    <string name="help_free_title">免費版與完整版</string>
+    <string name="help_free">免費版可以玩勇者、魔法師、精靈弓手三種職業，最多兩本單字簿、每本最多 100 個字；不會出現大魔王，也不會掉落從職業技能變成的特殊道具（貓罐頭、王國召集令、貓咪樂譜、戰艦信號旗、呼叫空中支援、奧利哈鋼礦石、魔導書的書頁）。完整版沒有這些限制。</string>
     <string name="help_about_title">關於</string>
-    <string name="help_about">《像素單字》由 好玩製造所 Make It Fun Studio 製作。謝謝你一起來冒險！</string>
+    <string name="help_about">《單字勇者》由 好玩製造所 Make It Fun Studio 製作。謝謝你一起來冒險！</string>
     <string name="help_version">軟體版本：v%1$s</string>
 
     <!-- 單字簿 -->
@@ -188,6 +228,7 @@
     <string name="word_field_english">英文單字</string>
     <string name="word_field_english_hint">例如：apple</string>
     <string name="word_field_meaning">中文意思</string>
+    <string name="word_duplicate">提醒：這個字已經在《%1$s》裡了，還是可以存。</string>
     <string name="word_field_meaning_hint">空白會自動翻譯</string>
     <string name="meaning_waiting">（等待翻譯檔下載…）</string>
     <string name="meaning_failed">（無法自動翻譯，點一下自己填寫）</string>
@@ -214,6 +255,8 @@
     <string name="scan_select_none">全不選</string>
     <string name="scan_skipped">已略過 %1$d 個常見字（如 the、and、is）</string>
     <string name="scan_owned">%1$s（已有）</string>
+    <string name="scan_in_other_book">%1$s（別本有）</string>
+    <string name="scan_other_book_hint">標「別本有」的字已經在其他單字簿裡，還是可以再加進這本。</string>
     <string name="scan_unclear_hide">收起看不清楚的字 ▲</string>
     <string name="scan_unclear_show">還有 %1$d 個看不清楚的字（字典查不到）▼</string>
     <string name="scan_save_to">存到：</string>
@@ -234,7 +277,10 @@
 
     <!-- 戰鬥 -->
     <string name="battle_title">戰鬥：%1$s</string>
+    <string name="battle_remaining">剩 %1$d 題</string>
     <string name="battle_flee">逃跑</string>
+    <string name="boss_victory_title">大魔王討伐成功！</string>
+    <string name="boss_victory_message">%1$s 被打倒了！王國的人們都在為你歡呼！</string>
     <string name="boss_big">大魔王</string>
     <string name="boss_mid">中魔王</string>
     <string name="battle_boss_appears">%1$s「%2$s」出現了！</string>
@@ -251,6 +297,13 @@
     <string name="battle_next">下一回</string>
     <string name="battle_attack">攻擊</string>
     <string name="battle_hit">命中！</string>
+    <string name="battle_note_time_stop">時間暫停中，怪物動不了！</string>
+    <string name="battle_note_charmed">怪物被迷住了，反而幫你補血！</string>
+    <string name="battle_note_confused">怪物混亂了，打到自己！</string>
+    <string name="battle_note_stunned">怪物動不了，沒有攻擊！</string>
+    <string name="battle_note_cute">怪物被可愛到，捨不得攻擊！</string>
+    <string name="battle_note_dodged">躲開了怪物的攻擊！</string>
+    <string name="battle_note_blocked">防護盾擋下了攻擊！</string>
     <string name="battle_hurt">被怪物攻擊了！</string>
     <string name="result_down">被打倒了…</string>
     <string name="result_perfect">完美勝利！</string>
@@ -263,6 +316,8 @@
     <string name="result_exp">得到經驗值 +%1$d</string>
     <string name="result_exp_boss">得到經驗值 +%1$d（魔王加倍）</string>
     <string name="result_practice">練習戰：經驗值只有 1/4，不會掉寶箱</string>
+    <string name="result_halved">這隻怪物已經打倒兩次以上，經驗值、金幣和寶箱機率都減半</string>
+    <string name="result_coins">把怪物打飛，獲得 %1$d 金幣！</string>
     <string name="result_chest">打開寶箱，獲得「%1$s」！</string>
     <string name="result_level_up">升級！Lv %1$d → Lv %2$d</string>
     <string name="new_title">獲得新稱號「%1$s」！</string>
@@ -514,4 +569,223 @@
     <string name="monster_golden_skeleton">黃金骷髏</string>
     <string name="monster_snow_wolf">雪原狼</string>
     <string name="monster_black_scorpion">黑蠍</string>
+    <string name="monster_bubble_fish">泡泡魚</string>
+    <string name="monster_dandelion">蒲公英精</string>
+    <string name="monster_alarm_clock">鬧鐘怪</string>
+    <string name="monster_magic_hat_cat">魔術帽貓</string>
+    <string name="monster_snowman">雪人怪</string>
+    <string name="monster_candelabra">燭台怪</string>
+    <string name="monster_raccoon_thief">浣熊盜賊</string>
+    <string name="monster_donut">甜甜圈怪</string>
+    <string name="monster_kappa">河童</string>
+    <string name="monster_starfish">海星</string>
+    <string name="monster_firefly">螢火蟲</string>
+    <string name="monster_scarecrow">稻草人</string>
+    <string name="monster_owl_scholar">貓頭鷹學者</string>
+    <string name="monster_umbrella_spirit">雨傘妖</string>
+    <string name="monster_pencil_soldier">鉛筆兵</string>
+    <string name="monster_slime_desc">冒險路上最常見的藍色果凍。沒什麼惡意，只是喜歡彈來彈去，順便把旅人的單字卡黏走。</string>
+    <string name="monster_bat_desc">白天倒掛在洞穴裡睡覺，晚上成群飛出來唱歌。聽力超好，聽到有人唸錯單字就會吱吱叫。</string>
+    <string name="monster_ghost_desc">飄在舊圖書館裡的白色小幽靈。生前沒背完單字本，所以每晚都還在想「那個字到底怎麼拼」。</string>
+    <string name="monster_mushroom_desc">頂著紅底白點大帽子的森林居民。走路會發出「噗噗」聲，生氣時會噴出讓人打噴嚏的孢子。</string>
+    <string name="monster_skeleton_desc">骨頭喀喀作響的小士兵。很認真地站崗，可惜常常忘記自己在守什麼，因為腦袋裡空空的。</string>
+    <string name="monster_eyeball_desc">一顆會飛的大眼睛，什麼都想看。只要有人打開單字本，它就會湊過來偷看答案。</string>
+    <string name="monster_fire_spirit_desc">住在爐火裡的小火苗。個性急躁，答題時間一拉長就會「哄」地燒起來。</string>
+    <string name="monster_ice_crystal_desc">由雪山冰片結晶而成，會閃閃發亮。個性冷靜，最討厭太陽和熱可可。</string>
+    <string name="monster_pumpkin_desc">萬聖節過後沒被收走的南瓜燈。臉上的笑容是自己刻的，會追著人要糖果。</string>
+    <string name="monster_cactus_desc">沙漠裡的刺刺小子。外表很兇，其實很想被抱抱，只是沒人敢靠近。</string>
+    <string name="monster_wolf_desc">草原上成群行動的獵人。會對著月亮嗥叫，聽說是在練習英文的「ooo」發音。</string>
+    <string name="monster_imp_desc">拿著小叉子的調皮鬼。最愛把單字的字母順序打亂，然後躲在旁邊偷笑。</string>
+    <string name="monster_scorpion_desc">尾巴尖尖的沙漠守衛。太陽太大時會鑽進沙裡睡午覺，不小心踩到會被夾一下。</string>
+    <string name="monster_viper_desc">盤在草叢裡的綠色長蛇。說話總是帶著「嘶嘶」聲，最拿手的字母當然是 S。</string>
+    <string name="monster_spider_desc">八隻腳的織網高手。網上會掛滿它抓到的單字，像一面會晃動的單字牆。</string>
+    <string name="monster_zombie_desc">動作慢吞吞的綠皮大叔。一直喊著「腦…腦…」，其實是想要一顆會背單字的腦。</string>
+    <string name="monster_mummy_desc">全身纏滿繃帶的古代王子。繃帶常常鬆掉，打到一半要停下來重纏。</string>
+    <string name="monster_crab_desc">橫著走路的海邊護衛。兩隻大鉗子很有力，但只會橫著寫字，所以拼字考試常常不及格。</string>
+    <string name="monster_maneater_desc">長著大嘴巴的紅花。很愛吃，但常常吃到一半發現是紙做的單字卡而吐出來。</string>
+    <string name="monster_gargoyle_desc">白天是城堡上的石雕，晚上活過來巡邏。被打到時會掉下小碎石，自己也很心疼。</string>
+    <string name="monster_crow_desc">黑色的聰明鳥。喜歡收集亮晶晶的東西，尤其是金幣和拼對的單字。</string>
+    <string name="monster_jellyfish_desc">在海裡慢慢飄的透明小傘。碰到會麻麻的，聽說被電到的人會瞬間忘記一個字。</string>
+    <string name="monster_killer_bee_desc">嗡嗡嗡飛不停的黃黑條紋戰士。情緒很容易激動，答錯一題就會整群衝過來。</string>
+    <string name="monster_poison_frog_desc">顏色鮮艷的池塘歌手。「呱呱」唱的歌其實是字母歌，只是永遠唱不到 Z。</string>
+    <string name="monster_will_o_wisp_desc">在夜裡飄來飄去的藍色小火球。會引誘迷路的冒險者往錯的方向走，和錯的答案走。</string>
+    <string name="monster_hedgehog_desc">縮成一團就是一顆刺球的害羞小傢伙。驚嚇時會滾過來，其實只是想逃跑。</string>
+    <string name="monster_mole_desc">戴著小銅盔的挖洞大師。視力不好，常常從地底冒出來問「這裡是哪裡？」</string>
+    <string name="monster_sheep_desc">毛茸茸的羊，畢竟數完羊就會睡著。和它戰鬥久了會開始打哈欠，可要撐住！</string>
+    <string name="monster_rock_turtle_desc">背著一座小石山的老烏龜。很有耐心，一個單字可以背一百年。</string>
+    <string name="monster_snail_desc">背著螺旋殼的慢性子。爬過的地方會留下亮亮的黏液，幸好它追不上你。</string>
+    <string name="monster_thunder_beetle_desc">頭上長著發電獨角的硬殼蟲。下雨天最有精神，會隨著雷聲跳起街舞。</string>
+    <string name="monster_bookworm_desc">住在字典裡的小蟲，吃過的單字比任何人都多。可惜只是吃掉，從來沒背起來。</string>
+    <string name="monster_fire_fox_desc">尾巴尖端燃著小火焰的狐狸。跑得很快，經過的草地會留下一道暖烘烘的痕跡。</string>
+    <string name="monster_ice_penguin_desc">來自南極的紳士，永遠穿著黑白禮服。不會飛但會用肚子滑行衝撞。</string>
+    <string name="monster_ghost_lantern_desc">自己會飄的紙燈籠，一隻眼睛一張嘴。會幫迷路的人照路，前提是你先答對一題。</string>
+    <string name="monster_acorn_soldier_desc">戴著橡實帽的森林小衛兵。個子很小但很有氣勢，每天清晨都在樹下操練。</string>
+    <string name="monster_clockwork_mouse_desc">背上插著發條的鐵皮老鼠。上緊發條就會咻咻咻地衝，發條鬆了就停在原地發呆。</string>
+    <string name="monster_lava_slime_desc">史萊姆的火山版本，全身熱呵呵的橘紅色。彈過的地方會冒煙，千萬不要抱。</string>
+    <string name="monster_metal_slime_desc">銀亮亮的稀有史萊姆，硬得不得了。跑得超快，聽說打倒它的人會很幸運。</string>
+    <string name="monster_vampire_bat_desc">蝙蝠裡的紅色貴族，穿著深紅色披風。很挑食，只喝番茄汁。</string>
+    <string name="monster_shadow_ghost_desc">幽靈裡最害羞的一位，把自己染成深色躲在陰影裡。突然從你背後說「哈囉」。</string>
+    <string name="monster_poison_mushroom_desc">紫色帽子的蘑菇怪表親。很想和大家交朋友，可惜身上散發的味道會讓人頭暈。</string>
+    <string name="monster_golden_skeleton_desc">把全身骨頭都鍍了金的骷髏兵。每天花很多時間擦亮自己，戰鬥時最怕被弄髒。</string>
+    <string name="monster_snow_wolf_desc">住在雪山上的白色狼。毛色和雪一樣白，只有鼻子凍得紅紅的時候才找得到它。</string>
+    <string name="monster_black_scorpion_desc">沙漠蠍的夜行品種，全身漆黑。只在月光下出沒，尾巴一甩就會閃出一道光。</string>
+    <string name="monster_bubble_fish_desc">會吐出彩色泡泡的圓滾滾小魚。每個泡泡裡都裝著一個單字，戳破了才看得到是什麼字。</string>
+    <string name="monster_dandelion_desc">頭頂一顆白絨絨大毛球的小精靈。風一吹就散成一片種子，落地後又冒出一大堆小蒲公英精。</string>
+    <string name="monster_alarm_clock_desc">有兩隻小腳的老式鬧鐘。每到整點就鈴鈴大叫，專門把背單字背到睡著的冒險者吵醒。</string>
+    <string name="monster_magic_hat_cat_desc">戴著高帽子的黑貓魔術師。會從帽子裡變出兔子、鴿子，偶爾還會變出一張單字卡考你。</string>
+    <string name="monster_snowman_desc">冬天被孩子們堆起來後就自己活過來的雪人。紅蘿蔔鼻子是牠最寶貝的東西，千萬別拿走。</string>
+    <string name="monster_candelabra_desc">古堡走廊上會走路的三叉燭台。三根蠟燭各有脾氣，吵起架來火苗就忽大忽小。</string>
+    <string name="monster_raccoon_thief_desc">戴著天生黑眼罩的小偷。手腳超靈活，一不注意就把你背包裡的金幣和道具摸走。</string>
+    <string name="monster_donut_desc">從麵包店逃出來的甜甜圈，身上撒滿彩色糖粒。打倒牠時空氣中會飄出香甜的味道。</string>
+    <string name="monster_kappa_desc">頭頂一個小水盤的河邊住民。最愛小黃瓜，鞠躬時盤裡的水灑出來就會沒力氣。</string>
+    <string name="monster_starfish_desc">在沙灘上翻滾的五角星星。斷了一隻腳也會再長回來，所以打起架來一點都不怕痛。</string>
+    <string name="monster_firefly_desc">屁股會發光的夜晚小燈。成群飛舞時會排出字母的形狀，像在天空中出拼字題。</string>
+    <string name="monster_scarecrow_desc">站在田裡守護麥子的稻草人。站久了自己也想去冒險，但總被路過的烏鴉嘲笑。</string>
+    <string name="monster_owl_scholar_desc">戴著小眼鏡、抱著厚書的森林博士。頭可以轉一大圈，四面八方都有人在問牠問題。</string>
+    <string name="monster_umbrella_spirit_desc">一把只有一隻腳、一隻大眼睛的舊紙傘。下雨天最開心，會一蹦一跳地跟在旅人後面。</string>
+    <string name="monster_pencil_soldier_desc">筆尖削得尖尖的文具戰士。寫錯字時會用屁股上的橡皮擦擦掉，所以越打越短。</string>
+    <string name="monster_mimic_desc">偽裝成寶箱的大嘴巴。冒險者一伸手就「啪」地咬下去，肚子裡還藏著上一個勇者忘記帶走的單字卡。</string>
+    <string name="monster_octopus_desc">八隻觸手各拿一本字典的海底學者。考人單字時八題同時出，答得慢就噴你一臉墨汁。</string>
+    <string name="monster_treant_desc">活了一千年的老橡樹，說話慢到一句話要講一整個下午。年輪裡記著森林裡所有生物的名字。</string>
+    <string name="monster_golem_desc">古代魔法師用石頭堆成的守衛。力氣大到能舉起一座橋，但只聽得懂刻在身上的那幾個單字。</string>
+    <string name="monster_vampire_desc">住在古堡裡的優雅貴族，披風一揮就變成一群蝙蝠。自認很有學問，最受不了別人發音不標準。</string>
+    <string name="monster_cyclops_desc">只有一顆大眼睛的山中巨人。看東西很專心，可惜一次只能盯住一個字，所以讀書特別慢。</string>
+    <string name="monster_yeti_desc">雪山深處的白毛大個子。看起來很兇，其實是怕寂寞，會把迷路的旅人抓回洞裡陪它聊天。</string>
+    <string name="monster_minotaur_desc">迷宮的守門人，手持巨斧。方向感超差，在自己的迷宮裡也常常迷路，所以脾氣很暴躁。</string>
+    <string name="monster_medusa_desc">頭髮是一條條小蛇的神殿主人。被她瞪到會變成石頭，所以和她對戰時記得看單字，不要看她的眼睛。</string>
+    <string name="monster_wyvern_desc">有翅膀沒有手的小型龍，在峽谷上空盤旋。噴出的火焰會在天空寫出歪歪扭扭的字母。</string>
+    <string name="monster_griffin_desc">鷹頭獅身的天空騎士，守護山頂的寶物巢。非常講究公平，只跟答題速度一樣快的對手戰鬥。</string>
+    <string name="monster_sea_serpent_desc">盤據航道的巨大海蛇，一翻身就掀起大浪。據說它的鱗片上刻著古代航海家留下的單字。</string>
+    <string name="monster_skeleton_mage_desc">拿著骨頭法杖的死靈魔法師。生前是圖書館館長，死後還在召喚骷髏兵幫它整理書架。</string>
+    <string name="monster_iron_bear_desc">全身披著鋼鐵盔甲的大熊。盔甲是自己打造的，冬眠前一定要先把每片甲片擦得閃閃發亮。</string>
+    <string name="monster_ink_giant_desc">從打翻的墨水瓶裡冒出來的黑色巨靈。會把寫好的單字暈開塗掉，最怕被吸墨紙吸走。</string>
+    <string name="monster_dark_knight_king_desc">曾經是守護王國的騎士團長，被黑暗盔甲吞噬後成了魔王的左右手。劍上刻著一句誓言，但他已經想不起那個字怎麼唸。</string>
+    <string name="monster_hydra_desc">九顆頭各有各的個性，吵架吵個不停。砍掉一顆會再長兩顆，唯一的弱點是九顆頭同時答不出同一題。</string>
+    <string name="monster_reaper_desc">披著黑斗篷、拿著大鐮刀的沉默收割者。他收走的不是靈魂，而是被遺忘的單字，所以複習是最好的護身符。</string>
+    <string name="monster_inferno_troll_desc">從火山深處爬出來的巨大魔物，每走一步地面都會冒出岩漿。脾氣跟體溫一樣高，最討厭下雨天。</string>
+    <string name="monster_frost_giant_desc">統治北方冰原的巨人王，一口氣就能把湖面凍住。他的冰宮裡收藏著被冰封的單字，等著勇者來解凍。</string>
+    <string name="monster_kraken_desc">藏在最深最暗海溝裡的巨大怪物，觸手一伸就能抓住整艘船。傳說它打個哈欠，整片海都會起漩渦。</string>
+    <string name="monster_chaos_wizard_king_desc">研究禁忌魔法的巫師之王，最拿手的咒語是把字典裡所有的字母攪成一鍋粥。只有真正記住的單字，才不會被他打亂。</string>
+    <string name="monster_mech_titan_desc">古代文明留下的巨大機器人，眼睛閃著紅光，關節嘎嘎作響。體內的程式只認得機器語言，對人類的單字一竅不通。</string>
+    <string name="monster_word_devourer_desc">以單字為食的恐怖巨獸，張開滿是利牙的大嘴，就能把整本書吞下肚。被它吃掉的字會從世界上消失，只有勇者的記憶能把它們找回來。</string>
+    <string name="monster_demon_lord_desc">盤踞在熔岩河彼岸魔王城的最終之敵，一切怪物都聽從他的號令。他想讓世界上所有的文字消失，而你記住的每一個單字，都是打敗他的力量。</string>
+    <string name="skill_button">技能</string>
+    <string name="skill_title">人物技能</string>
+    <string name="skill_uses_left">這場還能用 %1$d 次技能</string>
+    <string name="skill_learn_at">LV%1$d 學會</string>
+    <string name="skill_coming">下一版開放</string>
+    <string name="skill_used">這場用過了</string>
+    <string name="skill_none_yet">到 LV10 才會學會第一個技能，加油！</string>
+    <string name="skill_rule">每場戰鬥能用的技能次數：LV10–29 一次、LV30–49 兩次、LV50 以上三次；同一招每場只能用一次。</string>
+    <!-- 人物技能（v0.95） -->
+    <string name="skill_fan_cheer">女粉絲啦啦隊</string>
+    <string name="skill_fan_cheer_desc">2 回合內答對，怪物多扣 1 格血</string>
+    <string name="skill_love_bento">勇者的愛心便當</string>
+    <string name="skill_love_bento_desc">補 1 格血</string>
+    <string name="skill_royal_soldiers">招喚王國的士兵</string>
+    <string name="skill_royal_soldiers_desc">士兵攻擊讓怪物扣 1 格血、學者告訴你這題答案、白魔法師補 1 格血</string>
+    <string name="skill_holy_shield_bash">聖光盾擊</string>
+    <string name="skill_holy_shield_bash_desc">2 回合內答錯不扣血，同時怪物扣 1 格血</string>
+    <string name="skill_cross_slash">聖劍十字斬</string>
+    <string name="skill_cross_slash_desc">怪物扣 3 格血</string>
+    <string name="skill_odin_wrath">奧丁的憤怒</string>
+    <string name="skill_odin_wrath_desc">怪物扣 5 格血，音樂換成《威廉泰爾序曲》終曲</string>
+    <string name="skill_mind_focus">精神力集中</string>
+    <string name="skill_mind_focus_desc">3 回合內答對，攻擊力 x1.5</string>
+    <string name="skill_ice_arrow">冰箭術</string>
+    <string name="skill_ice_arrow_desc">舉起法杖射出冰箭，怪物扣 1 格血，結冰 1 回合不能攻擊</string>
+    <string name="skill_fireball">大火球術</string>
+    <string name="skill_fireball_desc">舉起魔杖念咒，射出大火球，怪物扣 2 格血</string>
+    <string name="skill_heal_bubble">治癒泡泡</string>
+    <string name="skill_heal_bubble_desc">補 2 格血</string>
+    <string name="skill_ancient_tome">古代魔導書</string>
+    <string name="skill_ancient_tome_desc">5 回合內題目先顯示前一半字母</string>
+    <string name="skill_meteor_call">隕石招喚</string>
+    <string name="skill_meteor_call_desc">怪物扣 5 格血，背景變成月球表面</string>
+    <string name="skill_swish_arrow">一箭咻咻</string>
+    <string name="skill_swish_arrow_desc">怪物扣 1 格血</string>
+    <string name="skill_elf_spring">精靈泉水</string>
+    <string name="skill_elf_spring_desc">補 1 格血</string>
+    <string name="skill_are_we_elves">我們都是精靈?</string>
+    <string name="skill_are_we_elves_desc">怪物扣 2 格血</string>
+    <string name="skill_are_we_elves_caption">抱歉，他們跑錯攝影棚了</string>
+    <string name="skill_are_we_elves_action">第 1 場，開拍！</string>
+    <string name="skill_treant_grip">幽冥樹精出現！</string>
+    <string name="skill_treant_grip_desc">兩個樹精從怪物右邊出現，打怪物 2 格血後抓住牠：2 回合怪物不能攻擊</string>
+    <string name="skill_elder_blessing">精靈長老的庇護</string>
+    <string name="skill_elder_blessing_desc">兩位精靈長老從後面走來守護：4 回合內題目先顯示前一半字母</string>
+    <string name="skill_elven_uprising">精靈族的逆襲</string>
+    <string name="skill_elven_uprising_desc">背景變成森林深處，之後答對攻擊力 x1.5</string>
+    <string name="skill_bush_hide">躲進草叢</string>
+    <string name="skill_bush_hide_desc">跳過這題，不被攻擊、沒有經驗值；這題移到最後再考</string>
+    <string name="skill_boulder_throw">投擲巨石</string>
+    <string name="skill_boulder_throw_desc">怪物扣 1 格血並昏迷 2 回合，答錯不會被攻擊</string>
+    <string name="skill_cheat_sheet">偷看小抄</string>
+    <string name="skill_cheat_sheet_desc">連續 2 題直接給答案，算答對</string>
+    <string name="skill_goblin_raid">哥布林的掠奪</string>
+    <string name="skill_goblin_raid_desc">旁邊出現村莊，哥布林們衝進去掠奪：補 2 格血，這場戰鬥打飛怪物的金幣變 2 倍</string>
+    <string name="skill_stolen_watch">偷來的懷錶</string>
+    <string name="skill_stolen_watch_desc">時間暫停 3 回合：答錯不被攻擊，第 3 回合偷打怪物 1 格血</string>
+    <string name="skill_goblin_king">我是哥布林大王</string>
+    <string name="skill_goblin_king_desc">到戰鬥結束，受到的傷害 -1/4、攻擊 +1/2</string>
+    <string name="skill_pot_lid">躲到鍋蓋後面</string>
+    <string name="skill_pot_lid_desc">這回合答錯不扣血</string>
+    <string name="skill_hammer_toss">丟鐵鎚</string>
+    <string name="skill_hammer_toss_desc">怪物扣 1 格血</string>
+    <string name="skill_orichalcum">奧利哈鋼發現</string>
+    <string name="skill_orichalcum_desc">5 回合內答對，攻擊力 x1.5</string>
+    <string name="skill_mushroom_stew">矮人蘑菇燉湯</string>
+    <string name="skill_mushroom_stew_desc">補 2 格血</string>
+    <string name="skill_viking_fleet">維京人的戰艦們啊！</string>
+    <string name="skill_viking_fleet_desc">自己扣 1 格血，怪物扣 3 格血，背景變成海上</string>
+    <string name="skill_ultimate_armor">傳說中神的防具</string>
+    <string name="skill_ultimate_armor_desc">到戰鬥結束，受到的傷害減半</string>
+    <string name="skill_teaser_wand">逗貓棒搖搖～喵</string>
+    <string name="skill_teaser_wand_desc">怪物 1 回合不攻擊任何人</string>
+    <string name="skill_lick_fur">舔舔毛毛～喵</string>
+    <string name="skill_lick_fur_desc">舔舔毛，補 2 格血</string>
+    <string name="skill_cat_stampede">進擊的貓貓們～喵</string>
+    <string name="skill_cat_stampede_desc">怪物扣 3 格血，1 回合嚇得不能攻擊</string>
+    <string name="skill_cat_orchestra">貓咪交響樂團～喵</string>
+    <string name="skill_cat_orchestra_desc">音樂換成古典名曲，3 回合內答錯反而補血</string>
+    <string name="skill_pot_push">貓貓才不會推倒東西呢～喵</string>
+    <string name="skill_pot_push_desc">怪物後面出現櫃子，貓咪跳上去把花盆撥下來砸到怪物頭上：怪物扣 2 格血</string>
+    <string name="skill_cutest_cat">貓咪是地表最可愛的生物～喵～</string>
+    <string name="skill_cutest_cat_desc">到戰鬥結束，答錯有一半機率不被攻擊，身邊多兩隻小貓</string>
+    <string name="skill_sneeze_fire">小火苗噗噗</string>
+    <string name="skill_sneeze_fire_desc">怪物扣 1 格血</string>
+    <string name="skill_dragon_roar">龍的威嚇!</string>
+    <string name="skill_dragon_roar_desc">怪物嚇到 2 回合不能動，答錯不會被攻擊</string>
+    <string name="skill_dragon_flight">群龍飛舞</string>
+    <string name="skill_dragon_flight_desc">招喚兩隻飛龍飛過去吐火，怪物扣 2 格血</string>
+    <string name="skill_phoenix">火鳳凰的降臨</string>
+    <string name="skill_phoenix_desc">不死鳥降臨附身，補 2 格血；2 回合內變身不死鳥，答錯被攻擊只扣一半的血</string>
+    <string name="skill_meteor_claw">流星龍爪</string>
+    <string name="skill_meteor_claw_desc">怪物扣 3 格血</string>
+    <string name="skill_fire_whisper">火龍的呢喃</string>
+    <string name="skill_fire_whisper_desc">怪物扣 5 格血，背景變成岩漿火海</string>
+    <string name="skill_barrier_on">鐵皮罩罩 ON</string>
+    <string name="skill_barrier_on_desc">這回合答錯不扣血</string>
+    <string name="skill_data_search">資料庫搜尋中…逼</string>
+    <string name="skill_data_search_desc">直接看到這題答案，算答對、有經驗值</string>
+    <string name="skill_rocket_launch">火箭發射</string>
+    <string name="skill_rocket_launch_desc">怪物扣 2 格血</string>
+    <string name="skill_overclock">超頻模式</string>
+    <string name="skill_overclock_desc">3 回合內答對，攻擊力 x2</string>
+    <string name="skill_pit_stop">進廠大維修</string>
+    <string name="skill_pit_stop_desc">維修工進場敲敲打打：補 2 格血，2 回合內答對攻擊力 x1.5</string>
+    <string name="skill_full_arsenal">任務～殲滅～逼～全武器發射!</string>
+    <string name="skill_full_arsenal_desc">怪物扣 5 格血，背景變成被炸過的城市</string>
+    <string name="skill_bleh">小惡魔的鬼臉</string>
+    <string name="skill_bleh_desc">怪物 1 回合不攻擊任何人</string>
+    <string name="skill_dark_mist">黑霧遁形</string>
+    <string name="skill_dark_mist_desc">2 回合內答錯，怪物打不到你，不扣血</string>
+    <string name="skill_plague_doctor">瘟疫降臨</string>
+    <string name="skill_plague_doctor_desc">3 回合內怪物攻擊力減半</string>
+    <string name="skill_demon_eye">魔眼凝視</string>
+    <string name="skill_demon_eye_desc">3 回合內答錯，怪物反而打自己</string>
+    <string name="skill_soul_steal">靈魂奪取</string>
+    <string name="skill_soul_steal_desc">抽出怪物的靈魂：怪物扣 2 格血，補 1 格血</string>
+    <string name="skill_possession">惡魔的附身</string>
+    <string name="skill_possession_desc">隨機附身在別的職業身上，用那個職業的外觀和技能到戰鬥結束，音樂變得很可怕</string>
 </resources>

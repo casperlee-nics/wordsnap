@@ -25,7 +25,10 @@ abstract class ItemDao {
 
     // 用掉一個道具
     @Query("UPDATE items SET count = count - 1 WHERE profileId = :profileId AND type = :type AND count > 0")
-    abstract suspend fun use(profileId: Long, type: String)
+    abstract suspend fun use(profileId: Long, type: String): Int
+
+    @Query("SELECT COUNT(*) FROM items WHERE profileId = :profileId AND type = :type")
+    abstract suspend fun has(profileId: Long, type: String): Int
 
     @Query("DELETE FROM items WHERE profileId = :profileId")
     abstract suspend fun deleteForProfile(profileId: Long)
