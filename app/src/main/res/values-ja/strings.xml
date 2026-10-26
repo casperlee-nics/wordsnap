@@ -121,7 +121,7 @@
     <string name="review_remembered">今回覚えた単語：%1$d 個</string>
     <string name="speak_again">もう一度読む</string>
     <string name="review_forgot">覚えていない</string>
-    <string name="review_remember">覚えた</string>
+    <string name="review_remember">覚えている</string>
     <string name="review_practice_hint">今日の単語は全部覚えました。ランダムにもう一度練習します</string>
 
     <!-- 宝箱 -->
@@ -159,9 +159,9 @@
     <string name="hero_finisher">必殺技：%1$s</string>
     <string name="hero_next_title">Lv %1$d で称号「%2$s」を獲得</string>
     <string name="adventure_log">冒険の記録</string>
-    <string name="adventure_log_summary">出会った怪物 %1$d / %2$d 種類、倒した回数 %3$d 回</string>
+    <string name="adventure_log_summary">出会ったモンスター %1$d / %2$d 種類、倒した回数 %3$d 回</string>
     <string name="adventure_log_counts">出会った %1$d 回・倒した %2$d 回</string>
-    <string name="adventure_log_empty">まだ怪物に出会っていません。さあ、戦いに行こう！</string>
+    <string name="adventure_log_empty">まだモンスターに出会っていません。さあ、戦いに行こう！</string>
     <string name="hero_wallet">さいふ：%1$d ゴールド</string>
     <string name="class_change">転職</string>
     <string name="class_change_message">どの職業に転職しますか？転職するとレベルが Lv %1$d から Lv %2$d に下がります。</string>
@@ -186,7 +186,7 @@
     <string name="help_start_title">冒険を始める</string>
     <string name="help_start">「はじめから」で名前を入力し、職業を選びます。冒険者ごとに単語帳、レベル、アイテムがあり、続きは「つづきから」で遊べます。「記録の管理」では名前の変更や記録の削除ができます。</string>
     <string name="help_collect_title">単語モンスターを集める</string>
-    <string name="help_collect">単語帳で「単語を追加」を押します。手入力、カメラで隠れたモンスターを探す、アルバムからモンスターを追加、古文書（PDF、Excel、TXT ファイル）のモンスターを読み込む、の 4 つの方法があります。見つかった単語や熟語をタップすると単語帳に入り、日本語の意味も自動で入ります。</string>
+    <string name="help_collect">単語帳で「単語追加」を押します。手入力、カメラで隠れたモンスターを探す、アルバムからモンスターを追加、古文書（PDF、Excel、TXT ファイル）のモンスターを読み込む、の 4 つの方法があります。見つかった単語や熟語をタップすると単語帳に入り、日本語の意味も自動で入ります。</string>
     <string name="help_review_title">復習と読み上げ</string>
     <string name="help_review">「復習」はカードをめくって練習します。覚えていたら電球、覚えていなければハテナを押してください。覚えた単語は数日後にまた出てきます。「読み上げ」は英語と日本語の意味を順番に自動で読み上げます。毎晩 8 時に復習のお知らせが届きます。</string>
     <string name="help_battle_title">バトル</string>
@@ -198,7 +198,7 @@
     <string name="help_tips_title">ヒント</string>
     <string name="help_tips">メイン画面の「ゲーム設定」で、言語の切り替え、BGM の音量（オフ／小／大、単語の読み上げには影響しません）、文字の大きさを変えられます。</string>
     <string name="help_free_title">無料版と完全版</string>
-    <string name="help_free">無料版で遊べる職業は勇者・魔法使い・エルフの射手の 3 つで、単語帳は 2 冊まで、1 冊 100 語までです。大魔王は出現せず、職業スキルから生まれた特別なアイテム（ネコ缶、王国の召集状、ネコの楽譜、戦艦の信号旗、航空支援要請、オリハルコン鉱石、魔導書のページ）も出ません。完全版にはこの制限がありません。</string>
+    <string name="help_free">無料版で遊べる職業は勇者・魔法使い・エルフ射手の 3 つで、単語帳は 2 冊まで、1 冊 100 語までです。大魔王は出現せず、職業スキルから生まれた特別なアイテム（ネコ缶、王国の召集状、ネコの楽譜、戦艦の信号旗、航空支援要請、オリハルコン鉱石、魔導書のページ）も出ません。完全版にはこの制限がありません。</string>
     <string name="help_about_title">このアプリについて</string>
     <string name="help_about">『たんご勇者』は Make It Fun Studio が制作しました。一緒に冒険してくれてありがとう！日本語辞書の一部は EJDict-hand（CC0）のデータを使用しています。</string>
     <string name="help_version">バージョン：v%1$s</string>
@@ -212,7 +212,7 @@
     <string name="action_battle">バトル</string>
     <string name="word_count">全 %1$d 語</string>
     <string name="book_exhausted">この単語帳の単語はすべてバトルで %1$d 回正解しました。新しい単語を追加すると、また経験値と宝箱がすべてもらえます</string>
-    <string name="book_empty">まだ単語がありません。下の「単語を追加」から最初の単語を入れましょう</string>
+    <string name="book_empty">まだ単語がありません。下の「単語追加」から最初の単語を入れましょう</string>
     <string name="pronounce">発音</string>
     <string name="practice_battle">練習バトル</string>
     <string name="practice_battle_message">この単語帳の単語はすべてバトルで %1$d 回正解しています。練習は続けられますが、経験値は 1/4 になり、宝箱も出ません。</string>
@@ -249,8 +249,8 @@
     <string name="scan_select_none">すべて解除</string>
     <string name="scan_skipped">よく使う単語 %1$d 個をスキップしました（the、and、is など）</string>
     <string name="scan_owned">%1$s（登録済み）</string>
-    <string name="scan_in_other_book">%1$s（他の帳にあり）</string>
-    <string name="scan_other_book_hint">「他の帳にあり」の単語は別の単語帳に登録済みですが、この帳にも追加できます。</string>
+    <string name="scan_in_other_book">%1$s（他の単語帳にあり）</string>
+    <string name="scan_other_book_hint">「他の単語帳にあり」の単語は別の単語帳に登録済みですが、この単語帳にも追加できます。</string>
     <string name="scan_unclear_hide">読み取りにくい単語をたたむ ▲</string>
     <string name="scan_unclear_show">読み取りにくい単語があと %1$d 個（辞書にない）▼</string>
     <string name="scan_save_to">保存先：</string>
@@ -311,7 +311,7 @@
     <string name="result_exp_boss">経験値 +%1$d（魔王ボーナス 2 倍）</string>
     <string name="result_practice">練習バトル：経験値は 1/4、宝箱は出ません</string>
     <string name="result_halved">このモンスターはもう2回以上倒したので、経験値・ゴールド・宝箱の確率が半分になります</string>
-    <string name="result_coins">敵をふっとばして %1$d ゴールド手に入れた！</string>
+    <string name="result_coins">敵を吹き飛ばして %1$d ゴールド手に入れた！</string>
     <string name="result_chest">宝箱を開けて「%1$s」を手に入れた！</string>
     <string name="result_level_up">レベルアップ！Lv %1$d → Lv %2$d</string>
     <string name="new_title">新しい称号「%1$s」を手に入れた！</string>
@@ -665,21 +665,21 @@
     <string name="monster_demon_lord_desc">溶岩の川の向こうの魔王城に君臨する最後の敵で、すべての怪物が彼の命令に従う。世界からすべての文字を消そうとしているが、きみが覚えた単語のひとつひとつが彼を倒す力になる。</string>
     <string name="skill_button">スキル</string>
     <string name="skill_title">スキル</string>
-    <string name="skill_uses_left">この戦闘であと %1$d 回スキルが使える</string>
+    <string name="skill_uses_left">このバトルであと %1$d 回スキルが使える</string>
     <string name="skill_learn_at">LV%1$d で習得</string>
     <string name="skill_coming">次のバージョンで解放</string>
-    <string name="skill_used">この戦闘では使用済み</string>
+    <string name="skill_used">このバトルでは使用済み</string>
     <string name="skill_none_yet">最初のスキルは LV10 で覚えるよ。がんばろう！</string>
-    <string name="skill_rule">1回の戦闘で使えるスキルの回数：LV10～29 は1回、LV30～49 は2回、LV50 以上は3回。同じスキルは1戦闘に1回まで。</string>
+    <string name="skill_rule">1回のバトルで使えるスキルの回数：LV10～29 は1回、LV30～49 は2回、LV50 以上は3回。同じスキルは1バトルに1回まで。</string>
     <!-- 人物技能（v0.95） -->
     <string name="skill_fan_cheer">ファンの応援団</string>
     <string name="skill_fan_cheer_desc">2ターンの間、正解すると敵に追加で1ダメージ</string>
     <string name="skill_love_bento">勇者の愛情弁当</string>
     <string name="skill_love_bento_desc">HPを1マス回復</string>
     <string name="skill_royal_soldiers">王国の兵士を召喚</string>
-    <string name="skill_royal_soldiers_desc">兵士の攻撃で敵に1ダメージ、学者が答えを教えてくれ、白魔道士がHPを1マス回復</string>
+    <string name="skill_royal_soldiers_desc">兵士の攻撃で敵に1ダメージ、学者が答えを教えてくれ、白魔導士がHPを1マス回復</string>
     <string name="skill_holy_shield_bash">聖なる盾アタック</string>
-    <string name="skill_holy_shield_bash_desc">2ターンの間 ミスしてもHPが減らず、敵に1ダメージ</string>
+    <string name="skill_holy_shield_bash_desc">2ターンの間、ミスしてもHPが減らず、敵に1ダメージ</string>
     <string name="skill_cross_slash">聖剣十字斬り</string>
     <string name="skill_cross_slash_desc">敵に3ダメージ</string>
     <string name="skill_odin_wrath">オーディンの怒り</string>
@@ -705,7 +705,7 @@
     <string name="skill_are_we_elves_caption">すみません、この子たちスタジオを間違えました</string>
     <string name="skill_are_we_elves_action">シーン1、アクション！</string>
     <string name="skill_treant_grip">幽冥の樹精あらわる！</string>
-    <string name="skill_treant_grip_desc">2体の樹精が敵の右からあらわれ、敵に2ダメージを与えてつかまえる：2ターンの間 敵は攻撃できない</string>
+    <string name="skill_treant_grip_desc">2体の樹精が敵の右からあらわれ、敵に2ダメージを与えてつかまえる：2ターンの間、敵は攻撃できない</string>
     <string name="skill_elder_blessing">エルフの長老の加護</string>
     <string name="skill_elder_blessing_desc">2人のエルフの長老がうしろから見守る：4ターンの間、単語の前半が最初から表示される</string>
     <string name="skill_elven_uprising">エルフ族の逆襲</string>
@@ -721,7 +721,7 @@
     <string name="skill_stolen_watch">盗んだ懐中時計</string>
     <string name="skill_stolen_watch_desc">3ターン時間停止：ミスしても攻撃されず、3ターン目に敵へこっそり1ダメージ</string>
     <string name="skill_goblin_king">おれさまはゴブリン大王</string>
-    <string name="skill_goblin_king_desc">戦闘終了まで受けるダメージ-1/4、攻撃力+1/2</string>
+    <string name="skill_goblin_king_desc">バトル終了まで受けるダメージ-1/4、攻撃力+1/2</string>
     <string name="skill_pot_lid">鍋ぶたガード</string>
     <string name="skill_pot_lid_desc">このターンはミスしてもHPが減らない</string>
     <string name="skill_hammer_toss">ハンマー投げ</string>
@@ -733,27 +733,27 @@
     <string name="skill_viking_fleet">ヴァイキングの戦艦たちよ！</string>
     <string name="skill_viking_fleet_desc">自分もHP1マスのダメージ、敵に3ダメージ、背景が海上に</string>
     <string name="skill_ultimate_armor">伝説に伝わる神の防具</string>
-    <string name="skill_ultimate_armor_desc">戦闘終了まで受けるダメージが半分</string>
+    <string name="skill_ultimate_armor_desc">バトル終了まで受けるダメージが半分</string>
     <string name="skill_teaser_wand">ねこじゃらしフリフリ～ニャ</string>
     <string name="skill_teaser_wand_desc">敵が1ターン何もしない</string>
     <string name="skill_lick_fur">ペロペロ毛づくろい～ニャ</string>
     <string name="skill_lick_fur_desc">毛づくろいしてHPを2マス回復</string>
     <string name="skill_cat_stampede">進撃のネコたち～ニャ</string>
-    <string name="skill_cat_stampede_desc">敵に3ダメージ、1ターンの間 敵は攻撃できない</string>
+    <string name="skill_cat_stampede_desc">敵に3ダメージ、1ターンの間、敵は攻撃できない</string>
     <string name="skill_cat_orchestra">ネコ交響楽団～ニャ</string>
     <string name="skill_cat_orchestra_desc">BGMがクラシックに。3ターンの間、ミスするとHPが回復</string>
     <string name="skill_pot_push">ネコはモノを落としたりしないニャ～</string>
     <string name="skill_pot_push_desc">敵のうしろに棚があらわれ、ネコが植木鉢を落として敵の頭に命中：敵に2ダメージ</string>
     <string name="skill_cutest_cat">ネコは地上でいちばんかわいい～ニャ～</string>
-    <string name="skill_cutest_cat_desc">戦闘終了まで、ミスしても半分の確率で攻撃されない。子ネコが2匹そばに来る</string>
+    <string name="skill_cutest_cat_desc">バトル終了まで、ミスしても半分の確率で攻撃されない。子ネコが2匹そばに来る</string>
     <string name="skill_sneeze_fire">ぷぷっと小さな火</string>
     <string name="skill_sneeze_fire_desc">敵に1ダメージ</string>
     <string name="skill_dragon_roar">ドラゴンの威嚇！</string>
     <string name="skill_dragon_roar_desc">敵が2ターン動けない（ミスしても攻撃されない）</string>
     <string name="skill_dragon_flight">群竜の舞</string>
     <string name="skill_dragon_flight_desc">2匹の飛竜を呼んで火をふかせ、敵に2ダメージ</string>
-    <string name="skill_phoenix">火の鳥の降臨</string>
-    <string name="skill_phoenix_desc">不死鳥が降りてきて憑依、HPを2マス回復。2ターンの間 不死鳥に変身し、ミスで受けるダメージが半分</string>
+    <string name="skill_phoenix">火の鳳凰の降臨</string>
+    <string name="skill_phoenix_desc">不死鳥が降りてきて憑依、HPを2マス回復。2ターンの間、不死鳥に変身し、ミスで受けるダメージが半分</string>
     <string name="skill_meteor_claw">流星ドラゴンクロー</string>
     <string name="skill_meteor_claw_desc">敵に3ダメージ</string>
     <string name="skill_fire_whisper">火竜のささやき</string>
@@ -761,15 +761,15 @@
     <string name="skill_barrier_on">バリア・オン</string>
     <string name="skill_barrier_on_desc">このターンはミスしてもHPが減らない</string>
     <string name="skill_data_search">データベース検索中…ピッ</string>
-    <string name="skill_data_search_desc">この問題の答えがわかる（正解あつかい）</string>
+    <string name="skill_data_search_desc">この問題の答えがわかる（正解あつかい、経験値あり）</string>
     <string name="skill_rocket_launch">ロケット発射</string>
     <string name="skill_rocket_launch_desc">敵に2ダメージ</string>
     <string name="skill_overclock">オーバークロック</string>
     <string name="skill_overclock_desc">3ターンの間、正解時の攻撃力が2倍</string>
     <string name="skill_pit_stop">工場で大修理</string>
-    <string name="skill_pit_stop_desc">整備士たちがトンテンカン：HPを2マス回復、2ターンの間 正解で攻撃力x1.5</string>
+    <string name="skill_pit_stop_desc">整備士たちがトンテンカン：HPを2マス回復、2ターンの間、正解で攻撃力が1.5倍</string>
     <string name="skill_full_arsenal">ミッション～殲滅～ピッ～全武器発射！</string>
-    <string name="skill_full_arsenal_desc">敵に5ダメージ、背景が焼け野原の街に</string>
+    <string name="skill_full_arsenal_desc">敵に5ダメージ、背景が爆撃された街に</string>
     <string name="skill_bleh">小悪魔のあっかんべー</string>
     <string name="skill_bleh_desc">敵が1ターン何もしない</string>
     <string name="skill_dark_mist">黒い霧隠れ</string>
@@ -781,5 +781,5 @@
     <string name="skill_soul_steal">魂の強奪</string>
     <string name="skill_soul_steal_desc">敵の魂を抜き取る：敵に2ダメージ、HPを1マス回復</string>
     <string name="skill_possession">悪魔の憑依</string>
-    <string name="skill_possession_desc">ランダムでほかの職業に憑依し、戦闘終了までその姿とスキルを使える。BGMがこわくなる</string>
+    <string name="skill_possession_desc">ランダムでほかの職業に憑依し、バトル終了までその姿とスキルを使える。BGMがこわくなる</string>
 </resources>

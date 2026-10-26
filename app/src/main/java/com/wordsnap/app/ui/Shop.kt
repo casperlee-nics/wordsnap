@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -119,14 +118,21 @@ fun ShopDialog(
             onDismissRequest = { pending = null },
             title = { Text(tr(if (selling) R.string.shop_sell_confirm_title else R.string.shop_buy_confirm_title)) },
             text = { Text(tr(if (selling) R.string.shop_sell_confirm else R.string.shop_buy_confirm, type.label, price)) },
+            // 確定、取消都做成和遊戲裡一樣的木頭按鈕
             confirmButton = {
-                TextButton(onClick = {
-                    if (selling) onSell(type) else onBuy(type)
-                    note = tr(if (selling) R.string.shop_sold else R.string.shop_bought, type.label, price)
-                    pending = null
-                }) { Text(tr(R.string.confirm)) }
+                RetroButton(
+                    tr(R.string.confirm),
+                    onClick = {
+                        if (selling) onSell(type) else onBuy(type)
+                        note = tr(if (selling) R.string.shop_sold else R.string.shop_bought, type.label, price)
+                        pending = null
+                    },
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                )
             },
-            dismissButton = { TextButton(onClick = { pending = null }) { Text(tr(R.string.cancel)) } },
+            dismissButton = {
+                RetroButton(tr(R.string.cancel), onClick = { pending = null }, textStyle = MaterialTheme.typography.bodyMedium)
+            },
         )
     }
 }

@@ -15,9 +15,10 @@ import kotlin.math.sin
 // 監獄鐵門點兩下：囚犯衝出來打怪物；船上的海面點兩下：海豚跳起來（只是好看）；
 // 雪地中間點三下：堆出一個雪人，一直站到戰鬥結束
 // 月球的星球點三下：飛碟飛出來往左飛走（只是好看）；墓園中間的墓碑點三下：殭屍爬出來，隨機打人物或怪物 1 格血再爬回去
-enum class SceneEgg(val taps: Int) { PrisonDoor(2), Dolphin(2), Snowman(3), Ufo(3), Zombie(3) }
+// 地下迷宮中間的鐵柵門點三下：柵門升起，裡面一雙雙發光的眼睛、一聲吼叫，人物和怪物都嚇到，這題跳過（沒有經驗值），柵門一直開到戰鬥結束
+enum class SceneEgg(val taps: Int) { PrisonDoor(2), Dolphin(2), Snowman(3), Ufo(3), Zombie(3), Gate(3) }
 
-val SceneEggScenes = setOf(ReviewScene.Prison, ReviewScene.Ship, ReviewScene.Snow, ReviewScene.Moon, ReviewScene.Graveyard)
+val SceneEggScenes = setOf(ReviewScene.Prison, ReviewScene.Ship, ReviewScene.Snow, ReviewScene.Moon, ReviewScene.Graveyard, ReviewScene.Dungeon)
 
 // 點到的格子（場景 64 x 28 格）是哪個彩蛋
 fun sceneEggAt(scene: ReviewScene, x: Int, y: Int): SceneEgg? = when (scene) {
@@ -26,6 +27,7 @@ fun sceneEggAt(scene: ReviewScene, x: Int, y: Int): SceneEgg? = when (scene) {
     ReviewScene.Snow -> SceneEgg.Snowman.takeIf { x in 16..47 && y >= 20 }
     ReviewScene.Moon -> SceneEgg.Ufo.takeIf { x in UFO_PLANET_X - 7..UFO_PLANET_X + 7 && y <= 11 }
     ReviewScene.Graveyard -> SceneEgg.Zombie.takeIf { x in GRAVE_X - 3..GRAVE_X + 3 && y in 14..24 }
+    ReviewScene.Dungeon -> SceneEgg.Gate.takeIf { x in GATE_LEFT..GATE_RIGHT && y in GATE_TOP..GATE_BOTTOM }
     else -> null
 }
 
@@ -36,6 +38,16 @@ const val DOLPHIN_SEA_Y = 12.5f / 28f
 const val UFO_PLANET_X = 51
 const val UFO_PLANET_Y = 5
 const val GRAVE_X = 30
+
+// 地下迷宮的鐵柵門外框（場景格子，含左右上下的框）
+const val GATE_LEFT = 26
+const val GATE_RIGHT = 37
+const val GATE_TOP = 5
+const val GATE_BOTTOM = 19
+
+// 柵門升起、人物和怪物嚇一跳的動畫長度（毫秒）
+const val GATE_OPEN_DURATION = 1200
+const val SCARE_DURATION = 1600
 
 // 飛碟、殭屍的動畫長度；殭屍打到人的時間（毫秒）
 const val UFO_DURATION = 2600
@@ -202,6 +214,57 @@ fun DrawScope.drawZombie(t: Float, graveX: Float, ground: Float, target: Offset)
             val sx = target.x + (k - 1) * cell * 3
             drawLine(Color(0xFFE04030).copy(alpha = 1f - p), Offset(sx - cell * 3, target.y - cell * 6), Offset(sx + cell * 3, target.y + cell * 4), cell)
         }
+    }
+}
+
+// 鐵柵門：open 0..1 柵欄往上收進門框；開著的時候裡面一雙雙眼睛輪流閃（clock 0..1 一直轉）
+// 場景每一格寬 = 畫面寬 / 64，高 = 畫面高 / 28
+fun DrawScope.drawDungeonGate(open: Float, clock: Float) {
+    val cw = size.width / 64f
+    val ch = size.height / 28f
+    val left = (GATE_LEFT + 1) * cw
+    val top = (GATE_TOP + 1) * ch
+    val w = (GATE_RIGHT - GATE_LEFT - 1) * cw
+    val h = (GATE_BOTTOM - GATE_TOP - 1) * ch
+    // 門裡面是黑的
+    drawRect(Color(0xFF140C18), Offset(left, top), Size(w, h))
+    // 眼睛：門開到一半以上才看得到
+    if (open > 0.5f) {
+        val eyes = listOf(0.2f to 0.3f, 0.65f to 0.2f, 0.4f to 0.55f, 0.8f to 0.6f, 0.15f to 0.75f, 0.55f to 0.85f)
+        eyes.forEachIndexed { i, (ex, ey) ->
+            val phase = (clock * (1f + i * 0.17f) + i * 0.37f) % 1f
+            if (phase > 0.75f) return@forEachIndexed
+            val color = if (i % 2 == 0) Color(0xFFF8D030) else Color(0xFFE04030)
+            val c = Offset(left + ex * w, top + ey * h)
+            val glow = (open - 0.5f) * 2f
+            drawCircle(color.copy(alpha = 0.3f * glow), cw * 1.4f, c)
+            drawRect(color.copy(alpha = glow), Offset(c.x - cw * 0.9f, c.y - ch * 0.3f), Size(cw * 0.6f, ch * 0.6f))
+            drawRect(color.copy(alpha = glow), Offset(c.x + cw * 0.3f, c.y - ch * 0.3f), Size(cw * 0.6f, ch * 0.6f))
+        }
+    }
+    // 柵欄往上升，只畫還在門框裡的部分
+    clipRect(left, top, left + w, top + h) {
+        val shift = open * h
+        val bar = Color(0xFF707890)
+        for (k in 0 until 5) {
+            drawRect(bar, Offset(left + (1 + k * 2) * cw, top - shift), Size(cw, h))
+        }
+        drawRect(bar, Offset(left, top + ch * 6 - shift), Size(w, ch))
+    }
+}
+
+// 人物和怪物嚇一跳：頭上冒出紅色驚嘆號、冒冷汗
+fun DrawScope.drawScared(t: Float, hero: Offset, monster: Offset) {
+    val cell = 3.dp.toPx()
+    val alpha = 1f - ((t - 0.8f) / 0.2f).coerceIn(0f, 1f)
+    val jump = if (t < 0.15f) sin(t / 0.15f * PI.toFloat()) * cell * 4 else 0f
+    for (c in listOf(hero, monster)) {
+        val x = c.x + cell * 6
+        val y = c.y - cell * 18 - jump
+        drawRect(Color(0xFFE04030).copy(alpha = alpha), Offset(x - cell, y - cell * 5), Size(cell * 2, cell * 5))
+        drawRect(Color(0xFFE04030).copy(alpha = alpha), Offset(x - cell, y + cell), Size(cell * 2, cell * 2))
+        val drop = (t * 3f) % 1f
+        drawRect(Color(0xFF90D0F8).copy(alpha = alpha), Offset(c.x - cell * 7, c.y - cell * 10 + drop * cell * 4), Size(cell * 1.5f, cell * 2))
     }
 }
 
