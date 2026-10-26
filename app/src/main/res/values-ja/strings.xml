@@ -551,6 +551,7 @@
     <string name="skill_elf_spring_desc">ミス1回分のHPを回復</string>
     <string name="skill_are_we_elves">ぼくらもエルフ？</string>
     <string name="skill_are_we_elves_desc">敵に2ダメージ、1ターン攻撃してこない</string>
+    <string name="skill_are_we_elves_caption">すみません、この子たちスタジオを間違えました</string>
     <string name="skill_leaf_shield_arrow">木の葉の盾と反撃の矢</string>
     <string name="skill_leaf_shield_arrow_desc">このターンはミスしてもHPが減らず、敵に1ダメージ</string>
     <string name="skill_elf_eye">エルフの瞳</string>

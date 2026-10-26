@@ -14,14 +14,38 @@ import kotlin.math.floor
 import kotlin.math.sin
 
 // 戰鬥畫面上的技能動畫：每一招都有自己的樣子，t 從 0 到 1
-// 會持續幾回合的效果（粉絲加油、精神集中、怪物昏迷）另外用 drawCheerFans、drawFocusAura、drawStunned 一直畫著
+// 會持續幾回合的效果（粉絲加油、攻擊力加成、怪物昏迷、生病、被迷住、貓咪樂團）另外用 drawCheerFans、drawBoostAura、
+// drawStunned、drawSick、drawCharmed、drawCatBand 一直畫著
 
 // 每一招動畫播多久（毫秒）
 fun skillDuration(skill: Skill): Int = when (skill) {
-    Skill.FanCheer, Skill.BoulderThrow, Skill.DragonRoar, Skill.DataSearch -> 1800
-    Skill.SneezeFire, Skill.BushHide, Skill.DarkMist -> 1600
+    Skill.AreWeElves -> 3600
+    Skill.Orichalcum, Skill.PlagueDoctor -> 2600
+    Skill.RoyalSoldiers -> 2400
+    Skill.CatStampede -> 2200
+    Skill.CatOrchestra, Skill.BombChain, Skill.RocketLaunch -> 2000
+    Skill.FanCheer, Skill.BoulderThrow, Skill.DragonRoar, Skill.DataSearch, Skill.DragonHowl, Skill.MushroomStew -> 1800
+    Skill.SneezeFire, Skill.BushHide, Skill.DarkMist, Skill.HolyShieldBash, Skill.LeafShieldArrow,
+    Skill.GurgleCurse, Skill.HealBubble, Skill.CheatSheet, Skill.Overclock, Skill.DemonEye -> 1600
     else -> 1400
 }
+
+// 動畫裡打中怪物的時間（毫秒）：怪物在這時候晃一下、血條掉下去
+fun skillImpact(skill: Skill): Int {
+    val at = when (skill) {
+        Skill.AreWeElves -> 0.3f
+        Skill.RoyalSoldiers -> 0.4f
+        Skill.HammerToss, Skill.CatStampede, Skill.TailSwing -> 0.45f
+        Skill.HolyShieldBash, Skill.BombChain -> 0.5f
+        Skill.SwishArrow, Skill.SneezeFire, Skill.RocketLaunch -> 0.6f
+        Skill.BoulderThrow, Skill.LeafShieldArrow -> 0.68f
+        else -> 0.6f
+    }
+    return (skillDuration(skill) * at).toInt()
+}
+
+// 「我們都是精靈?」導演出場、字幕出現的時間
+const val ELVES_CAPTION_FROM = 0.55f
 
 private val TAU = 2 * PI.toFloat()
 
@@ -51,6 +75,24 @@ fun DrawScope.drawSkill(skill: Skill, t: Float, hero: Offset, monster: Offset, h
         Skill.DataSearch -> drawDataSearch(t, hero, heroSize, cell)
         Skill.Bleh -> drawBleh(t, hero, heroSize, monster, monsterHeight, cell)
         Skill.DarkMist -> drawBush(t, hero, heroSize, monster, monsterHeight, ground, cell, mist = true)
+        Skill.RoyalSoldiers -> drawRoyalSoldiers(t, hero, heroSize, monster, ground, cell)
+        Skill.HolyShieldBash -> drawHolyShieldBash(t, hero, heroSize, monster, cell)
+        Skill.GurgleCurse -> drawGurgle(t, hero, heroSize, monster, monsterHeight, cell)
+        Skill.HealBubble -> drawHealBubbles(t, hero, heroSize, ground, cell)
+        Skill.AreWeElves -> drawElves(t, monster, monsterHeight, ground, cell)
+        Skill.LeafShieldArrow -> drawLeafShieldArrow(t, hero, heroSize, monster, cell)
+        Skill.CheatSheet -> drawCheatSheet(t, hero, heroSize, cell)
+        Skill.BombChain -> drawBombChain(t, hero, monster, cell)
+        Skill.Orichalcum -> drawOrichalcum(t, hero, heroSize, ground, cell)
+        Skill.MushroomStew -> drawStew(t, hero, heroSize, ground, cell)
+        Skill.CatStampede -> drawStampede(t, ground, cell)
+        Skill.CatOrchestra -> drawOrchestraStart(t, hero, heroSize, monster, monsterHeight, ground, cell)
+        Skill.TailSwing -> drawTailSwing(t, hero, heroSize, monster, cell)
+        Skill.DragonHowl -> drawHowl(t, hero, heroSize, cell)
+        Skill.RocketLaunch -> drawRockets(t, hero, heroSize, monster, cell)
+        Skill.Overclock -> drawOverclock(t, hero, heroSize, cell)
+        Skill.PlagueDoctor -> drawPlagueDoctor(t, monster, monsterHeight, ground, cell)
+        Skill.DemonEye -> drawDemonEye(t, hero, heroSize, monster, monsterHeight, cell)
         else -> Unit
     }
 }
@@ -502,4 +544,753 @@ private fun DrawScope.drawBleh(t: Float, hero: Offset, heroSize: Float, monster:
     // 怪物看傻了
     if (t > 0.3f) spriteCentered(QuestionArt, Offset(monster.x, monster.y - monsterHeight / 2 - cell * 5), cell * 1.3f, recolor = mapOf('Y' to 'q'))
     if (t > 0.3f && abs(sin(t * 40)) > 0.5f) spriteCentered(BangArt, Offset(monster.x + cell * 5, monster.y - monsterHeight / 2 - cell * 5), cell)
+}
+
+// ======== LV30、LV40 的招式 ========
+
+private val SoldierArt = listOf(
+    ".....Y...M.",
+    "...KKKK..M.",
+    "..KMMMMK.D.",
+    "..KSKSKK.D.",
+    "..KSSSSK.D.",
+    "..KBBBBKKD.",
+    ".KSBYYBSKD.",
+    "..KBBBBK.D.",
+    "..KmmmmK.D.",
+    "..KDKKDK...",
+    "..KK..KK...",
+)
+
+private val HolyShieldArt = listOf(
+    "KKKKKKKKK",
+    "KYYYYYYYK",
+    "KYYYWYYYK",
+    "KYYYWYYYK",
+    "KYWWWWWYK",
+    "KYYYWYYYK",
+    "KYYYWYYYK",
+    ".KYYWYYK.",
+    ".KYYYYYK.",
+    "..KYYYK..",
+    "...KYK...",
+    "....K....",
+)
+
+// 童話裡的小精靈：尖帽子、尖耳朵
+private val ElfArt = listOf(
+    "....RRW.",
+    "...RRR..",
+    "..RRRR..",
+    ".WWWWWW.",
+    "SSKSSKSS",
+    ".SSSSSS.",
+    ".GGYYGG.",
+    ".GGGGGG.",
+    ".KK..KK.",
+)
+
+// 片場導演：貝雷帽、墨鏡、大聲公
+private val DirectorArt = listOf(
+    "...KKKK....",
+    "..KrrrrK...",
+    ".KrrrrrrK..",
+    "..KSSSSK...",
+    "..KKKKKK...",
+    "..KSSSSK...",
+    "...KSSK..Y.",
+    "..KyyyyK.YY",
+    ".KSyyyySYYY",
+    "..KyyyyK.YY",
+    "..KDDDDK.Y.",
+    "..KDKKDK...",
+    "..KK..KK...",
+)
+
+private val GoldAxeArt = listOf(
+    ".YYY..",
+    "YWYYYD",
+    "YWYYND",
+    "YYYYND",
+    ".YYN.D",
+    ".....D",
+    ".....D",
+    ".....D",
+    ".....D",
+    ".....e",
+)
+
+private val MushroomArt = listOf(
+    ".RRR.",
+    "RWRWR",
+    "RRRRR",
+    ".WWW.",
+    ".WWW.",
+)
+
+// 往右跑的貓（兩格腳步輪流）
+private val CatRunA = listOf(
+    "O......O.O",
+    ".O.....OOO",
+    "..OOOOOOKO",
+    "..OOOOOOOP",
+    "..OOOOOO..",
+    "..O.O.O.O.",
+)
+private val CatRunB = CatRunA.dropLast(1) + "...O.O.O.."
+
+// 正面坐著的貓（貓咪樂團）
+private val CatSitArt = listOf(
+    "O......O",
+    "OO....OO",
+    "OOOOOOOO",
+    "OKOOOOKO",
+    "OOOPPOOO",
+    ".OOOOOO.",
+    ".OOOOOO.",
+    ".OO..OO.",
+)
+
+private val NoteArt = listOf(
+    "..KK.",
+    "..K.K",
+    "..K..",
+    "KKK..",
+    "KKK..",
+)
+
+// 瘟疫醫生：黑帽子、白色鳥嘴面具、黑袍（面向左邊的怪物）
+private val DoctorArt = listOf(
+    "....KKKK...",
+    "....KKKK...",
+    "..KKKKKKKK.",
+    "....KwwwK..",
+    "..KwwKwwK..",
+    "KwwwwwwwK..",
+    "..KKwwwwK..",
+    "....KKKK...",
+    "...KxxxxK..",
+    "..KxxKKxxK.",
+    "..KxxxxxxK.",
+    "..KxxxxxxK.",
+    "...KK..KK..",
+)
+
+// 這幾種貓的毛色：橘貓、白貓、灰貓、黑貓、虎斑、奶茶
+private val CatCoats = listOf(
+    mapOf('O' to 'O'),
+    mapOf('O' to 'w'),
+    mapOf('O' to 's'),
+    mapOf('O' to 'K', 'K' to 'Y'),
+    mapOf('O' to 'Y'),
+    mapOf('O' to 'd'),
+)
+
+private fun lerp(a: Offset, b: Offset, p: Float) = Offset(a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p)
+
+private fun DrawScope.drawExplosion(c: Offset, p: Float, cell: Float) {
+    if (p <= 0f || p >= 1f) return
+    drawCircle(Color(0xFFF05020).copy(alpha = 1f - p), cell * (3 + p * 8), c)
+    drawCircle(Color(0xFFF8D030).copy(alpha = 1f - p), cell * (2 + p * 5), c)
+    for (k in 0 until 6) {
+        val a = k * TAU / 6 + 0.3f
+        val d = cell * (4 + p * 10)
+        drawRect(Color(0xFFF09030).copy(alpha = 1f - p), Offset(c.x + cos(a) * d, c.y + sin(a) * d), Size(cell * 1.5f, cell * 1.5f))
+    }
+}
+
+private fun DrawScope.drawHit(monster: Offset, p: Float, cell: Float) {
+    if (p <= 0f || p >= 1f) return
+    drawCircle(Color(0xFFF8E8A0).copy(alpha = (1f - p) * 0.7f), cell * (4 + p * 12), monster)
+}
+
+// 招喚王國的士兵：三個士兵排隊走到怪物前面用長槍戳，一個轉頭偷偷告訴人物答案，人物補血，士兵退場
+private fun DrawScope.drawRoyalSoldiers(t: Float, hero: Offset, heroSize: Float, monster: Offset, ground: Float, cell: Float) {
+    val w = SoldierArt.first().length * cell
+    val h = SoldierArt.size * cell
+    val march = seg(t, 0f, 0.3f)
+    val leave = seg(t, 0.82f, 1f)
+    val poke = sin(seg(t, 0.3f, 0.5f) * TAU).coerceAtLeast(0f) * cell * 4
+    for (i in 0 until 3) {
+        val target = monster.x - w * (1.4f + i * 1.05f)
+        val start = -w * (1.5f + i)
+        var x = start + (target - start) * march
+        x += (start - x) * leave
+        val walking = (march in 0.01f..0.99f) || leave > 0f
+        val step = if (walking && ((t * 18).toInt() + i) % 2 == 0) cell else 0f
+        drawSprite(SoldierArt, x - w / 2 + (if (i == 0) poke else poke * 0.6f), ground - h - step, cell)
+    }
+    drawHit(monster, seg(t, 0.36f, 0.6f), cell)
+    // 最後一個士兵回頭說悄悄話：對話框裡有答案的小紙條
+    val whisper = seg(t, 0.5f, 0.56f) * (1f - seg(t, 0.78f, 0.82f))
+    if (whisper > 0f) {
+        val c = Offset(hero.x + heroSize * 0.55f, hero.y - heroSize * 0.75f)
+        drawRect(Color(0xFF202030), Offset(c.x - cell * 6, c.y - cell * 5), Size(cell * 12, cell * 9))
+        drawRect(Color.White, Offset(c.x - cell * 5, c.y - cell * 4), Size(cell * 10, cell * 7))
+        drawRect(Color.White, Offset(c.x - cell * 3, c.y + cell * 3), Size(cell * 2, cell * 2))
+        for (k in 0 until 3) drawRect(Color(0xFF202030), Offset(c.x - cell * 4, c.y - cell * 3 + k * cell * 2), Size(cell * (8 - k * 2), cell))
+    }
+    if (t > 0.6f) drawHeal(ItemType.SmallPotion, seg(t, 0.6f, 1f), hero, heroSize)
+}
+
+// 聖光盾擊：金色十字盾出現在人物前面，衝過去撞怪物再飛回來
+private fun DrawScope.drawHolyShieldBash(t: Float, hero: Offset, heroSize: Float, monster: Offset, cell: Float) {
+    val c4 = cell * 1.4f
+    val w = HolyShieldArt.first().length * c4
+    val appear = seg(t, 0f, 0.2f)
+    val go = seg(t, 0.25f, 0.5f)
+    val back = seg(t, 0.55f, 0.85f)
+    val start = Offset(hero.x + heroSize * 0.5f, hero.y)
+    val end = Offset(monster.x - w, monster.y)
+    val c = lerp(start, end, if (t < 0.55f) go * go else 1f - back)
+    val alpha = appear * (1f - seg(t, 0.9f, 1f))
+    // 盾牌背後的光芒
+    for (k in 0 until 8) {
+        val a = k * TAU / 8 + stepped(t, 12) * 2
+        drawLine(Color(0xFFF8E8A0).copy(alpha = alpha * 0.8f), c, Offset(c.x + cos(a) * w, c.y + sin(a) * w), cell / 2)
+    }
+    spriteCentered(HolyShieldArt, c, c4, alpha = alpha)
+    drawHit(monster, seg(t, 0.48f, 0.7f), cell)
+}
+
+// 咕嚕咕嚕混亂咒：紫色泡泡咕嚕咕嚕飄到怪物頭上，繞成漩渦
+private fun DrawScope.drawGurgle(t: Float, hero: Offset, heroSize: Float, monster: Offset, monsterHeight: Float, cell: Float) {
+    val head = Offset(monster.x, monster.y - monsterHeight / 2 - cell * 3)
+    val from = Offset(hero.x + heroSize * 0.3f, hero.y - heroSize * 0.4f)
+    for (k in 0 until 10) {
+        val p = seg(t, k * 0.05f, 0.45f + k * 0.05f)
+        if (p <= 0f || p >= 1f) continue
+        val c = lerp(from, head, p) + Offset(0f, sin(p * TAU * 2 + k) * cell * 4 - sin(p * PI.toFloat()) * cell * 10)
+        val r = cell * (1.5f + k % 3)
+        drawCircle(Color(0xFF9060C0), r, c)
+        drawCircle(Color(0xFF202030), r, c, style = Stroke(cell / 2))
+        drawRect(Color.White, Offset(c.x - r * 0.5f, c.y - r * 0.5f), Size(cell, cell))
+    }
+    if (t > 0.5f) {
+        val p = seg(t, 0.5f, 1f)
+        for (k in 0 until 8) {
+            val a = (stepped(p, 16) * 2 + k / 8f) * TAU
+            val r = cell * (3 + k) * (1f - p * 0.3f)
+            drawRect(Color(0xFFC090E8).copy(alpha = 1f - p * 0.6f), Offset(head.x + cos(a) * r, head.y + sin(a) * r * 0.4f), Size(cell, cell))
+        }
+    }
+    if (t in 0.45f..0.6f) drawRect(Color(0xFF9060C0).copy(alpha = 0.12f))
+}
+
+// 治癒泡泡：腳邊冒出一顆顆泡泡往上飄，破掉變成亮晶晶
+private fun DrawScope.drawHealBubbles(t: Float, hero: Offset, heroSize: Float, ground: Float, cell: Float) {
+    for (k in 0 until 12) {
+        val p = seg(t, k * 0.04f, 0.5f + k * 0.04f)
+        if (p <= 0f || p >= 1f) continue
+        val x = hero.x + ((k * 5) % 9 - 4) * heroSize * 0.12f + sin(p * TAU + k) * cell * 2
+        val y = ground - p * heroSize * 1.3f
+        val r = cell * (1.5f + k % 3)
+        if (p < 0.85f) {
+            drawCircle(Color(0xFF90D0F8).copy(alpha = 0.35f), r, Offset(x, y))
+            drawCircle(Color(0xFF90D0F8), r, Offset(x, y), style = Stroke(cell / 2))
+            drawRect(Color.White, Offset(x - r * 0.5f, y - r * 0.5f), Size(cell, cell))
+        } else {
+            pixelStar(Offset(x, y), cell, Color.White)
+        }
+    }
+    if (t > 0.4f) drawHeal(ItemType.SmallPotion, seg(t, 0.4f, 1f), hero, heroSize)
+}
+
+// 我們都是精靈?：童話小精靈跑來圍著怪物敲敲打打，導演拿大聲公跑進來把他們拖走（字幕另外顯示）
+private fun DrawScope.drawElves(t: Float, monster: Offset, monsterHeight: Float, ground: Float, cell: Float) {
+    val w = ElfArt.first().length * cell
+    val h = ElfArt.size * cell
+    val run = seg(t, 0f, 0.12f)
+    // 被導演拖走：大家一起往左滑出畫面
+    val drag = seg(t, 0.64f, 0.95f)
+    val dragDx = -drag * drag * (monster.x + w * 6)
+    val elfX = List(3) { i -> monster.x + (i - 1) * w * 1.3f - w / 2 }
+    for (i in 0 until 3) {
+        var x = -w * (2 + i) + (elfX[i] + w * (2 + i)) * run
+        var y = ground - h
+        if (t in 0.12f..0.45f) {
+            // 跳上跳下敲怪物
+            val hop = abs(sin((t - 0.12f) * TAU * 3 + i))
+            y -= hop * monsterHeight * 0.5f
+        }
+        if (drag > 0f) {
+            x = elfX[i] + dragDx
+            y = ground - h + if (((t * 20).toInt() + i) % 2 == 0) -cell else 0f
+        }
+        val colors = if (i == 1) mapOf('R' to 'G', 'G' to 'R') else emptyMap()
+        drawSprite(ElfArt, x, y, cell, recolor = colors)
+        // 小鐵鎚敲下去冒星星
+        if (t in 0.15f..0.45f && ((t * 12).toInt() + i) % 3 == 0) pixelStar(Offset(x + w, y), cell, Color(0xFFF8D030))
+    }
+    drawHit(monster, seg(t, 0.28f, 0.45f), cell)
+    // 擺姿勢「當噹！」，怪物看傻了
+    if (t in 0.45f..0.64f) spriteCentered(QuestionArt, Offset(monster.x + w * 1.8f, monster.y - monsterHeight / 2 - cell * 4), cell * 1.3f)
+    // 導演從左邊跑過來
+    if (t > ELVES_CAPTION_FROM) {
+        val dw = DirectorArt.first().length * cell
+        val dh = DirectorArt.size * cell
+        val come = seg(t, ELVES_CAPTION_FROM, 0.64f)
+        val target = elfX[0] - dw
+        val x = -dw + (target + dw) * come + dragDx
+        val step = if (come in 0.01f..0.99f && (t * 18).toInt() % 2 == 0) cell else 0f
+        drawSprite(DirectorArt, x, ground - dh - step, cell)
+        if (t in 0.62f..0.7f) spriteCentered(BangArt, Offset(x + dw / 2, ground - dh - cell * 4), cell)
+    }
+}
+
+// 樹葉盾反擊箭：樹葉繞著人物轉一圈變成盾，再射出一支綠色的箭
+private fun DrawScope.drawLeafShieldArrow(t: Float, hero: Offset, heroSize: Float, monster: Offset, cell: Float) {
+    val gather = seg(t, 0f, 0.35f)
+    val fade = 1f - seg(t, 0.85f, 1f)
+    for (k in 0 until 10) {
+        val a = k * TAU / 10 + (1f - gather) * TAU
+        val r = heroSize * (1.2f - 0.55f * gather)
+        val c = Offset(hero.x + cos(a) * r, hero.y + sin(a) * r * 0.7f)
+        val color = if (k % 2 == 0) Color(0xFF40A048) else Color(0xFF70C058)
+        drawRect(color.copy(alpha = fade), Offset(c.x - cell, c.y - cell / 2), Size(cell * 2, cell))
+        drawRect(color.copy(alpha = fade), Offset(c.x - cell / 2, c.y - cell), Size(cell, cell * 2))
+    }
+    if (t > 0.3f) drawArrowShot(seg(t, 0.3f, 1f), hero, monster, cell)
+}
+
+// 偷看小抄：從袖子抽出小紙條，眼睛左看右看，打兩個勾（連續兩題）
+private fun DrawScope.drawCheatSheet(t: Float, hero: Offset, heroSize: Float, cell: Float) {
+    val out = seg(t, 0f, 0.25f)
+    val hide = seg(t, 0.8f, 1f)
+    val c4 = cell * (0.6f + out * 0.9f)
+    val c = Offset(hero.x + heroSize * 0.35f, hero.y - out * heroSize * 0.85f + hide * heroSize * 0.6f)
+    spriteCentered(PaperArt, c, c4, alpha = 1f - hide)
+    // 從紙條上方偷看的眼睛
+    if (t in 0.25f..0.8f) {
+        val look = if ((t * 5).toInt() % 2 == 0) -cell else cell
+        for (side in listOf(-1, 1)) {
+            val e = Offset(c.x + side * cell * 3 + look, c.y - PaperArt.size * c4 / 2 - cell * 2)
+            drawRect(Color.White, Offset(e.x - cell * 1.5f, e.y - cell), Size(cell * 3, cell * 2))
+            drawRect(Color(0xFF202030), Offset(e.x - cell / 2 + look / 2, e.y - cell / 2), Size(cell, cell))
+        }
+        drawRect(Color(0xFF90D0F8), Offset(c.x + cell * 7, c.y - cell * 6 + ((t * 3) % 1f) * cell * 4), Size(cell, cell * 2))
+    }
+    // 打勾
+    for (k in 0 until 2) {
+        val p = seg(t, 0.45f + k * 0.12f, 0.55f + k * 0.12f)
+        if (p <= 0f) continue
+        val o = Offset(c.x - cell * 4 + k * cell * 7, c.y + PaperArt.size * c4 / 2 + cell * 3)
+        val g = Color(0xFF40A048).copy(alpha = 1f - hide)
+        drawLine(g, o, Offset(o.x + cell * 2 * p, o.y + cell * 2 * p), cell)
+        if (p >= 1f) drawLine(g, Offset(o.x + cell * 2, o.y + cell * 2), Offset(o.x + cell * 5, o.y - cell * 2), cell)
+    }
+}
+
+// 炸彈連環爆：丟出三顆冒火花的炸彈，一顆接一顆爆炸
+private fun DrawScope.drawBombChain(t: Float, hero: Offset, monster: Offset, cell: Float) {
+    for (k in 0 until 3) {
+        val s = k * 0.12f
+        val p = seg(t, s, s + 0.35f)
+        val target = monster + Offset((k - 1) * cell * 7, (k % 2) * cell * 5 - cell * 3)
+        if (p > 0f && p < 1f) {
+            val c = lerp(hero, target, p) - Offset(0f, sin(p * PI.toFloat()) * cell * 18)
+            drawCircle(Color(0xFF202030), cell * 3, c)
+            drawRect(Color(0xFF707890), Offset(c.x - cell * 1.5f, c.y - cell * 1.5f), Size(cell, cell))
+            drawLine(Color(0xFFC08848), Offset(c.x + cell * 2, c.y - cell * 2), Offset(c.x + cell * 3, c.y - cell * 4), cell / 2)
+            if ((t * 20).toInt() % 2 == 0) pixelStar(Offset(c.x + cell * 3, c.y - cell * 5), cell * 0.7f, Color(0xFFF8D030))
+        }
+        drawExplosion(target, seg(t, s + 0.35f, s + 0.6f), cell)
+    }
+    if (t in 0.45f..0.75f && (t * 20).toInt() % 2 == 0) drawRect(Color.White.copy(alpha = 0.12f))
+}
+
+// 奧利哈鋼發現：十字鎬挖地 → 挖到發光的礦石 → 放上鐵砧敲三下 → 打出金色巨斧交給人物
+private fun DrawScope.drawOrichalcum(t: Float, hero: Offset, heroSize: Float, ground: Float, cell: Float) {
+    val spot = Offset(hero.x + heroSize * 0.8f, ground)
+    if (t < 0.32f) {
+        // 十字鎬一下一下挖，土塊往上噴
+        val swing = if ((t * 10).toInt() % 2 == 0) -40f else 15f
+        val pivot = Offset(spot.x - cell * 4, spot.y - cell * 8)
+        rotate(swing, pivot) {
+            drawRect(Color(0xFF805030), Offset(pivot.x - cell / 2, pivot.y - cell * 8), Size(cell, cell * 9))
+            drawRect(Color(0xFF707890), Offset(pivot.x - cell * 4, pivot.y - cell * 9), Size(cell * 8, cell * 2))
+        }
+        for (k in 0 until 5) {
+            val p = (t * 6 + k * 0.2f) % 1f
+            drawRect(Color(0xFF986030), Offset(spot.x + (k - 2) * cell * 2 * p, spot.y - sin(p * PI.toFloat()) * cell * 10), Size(cell, cell))
+        }
+    }
+    // 挖到的礦石：金色帶一點藍綠的光
+    val ore = seg(t, 0.2f, 0.32f)
+    if (t in 0.2f..0.64f) {
+        val c = Offset(spot.x, spot.y - cell * 2 - ore * cell * (if (t < 0.32f) 6 else 7))
+        val glow = if ((t * 12).toInt() % 2 == 0) 0.6f else 0.3f
+        drawCircle(Color(0xFF90F0D0).copy(alpha = glow), cell * 5, c)
+        drawRect(Color(0xFFF8D030), Offset(c.x - cell * 2, c.y - cell * 1.5f), Size(cell * 4, cell * 3))
+        drawRect(Color(0xFF70E0C0), Offset(c.x - cell, c.y - cell * 1.5f), Size(cell, cell))
+        drawRect(Color.White, Offset(c.x + cell, c.y - cell / 2), Size(cell, cell))
+    }
+    // 鐵砧和鐵鎚：敲三下冒火花
+    if (t in 0.32f..0.66f) {
+        val top = spot.y - cell * 5
+        drawRect(Color(0xFF202030), Offset(spot.x - cell * 6, top - cell / 2), Size(cell * 12, cell * 3))
+        drawRect(Color(0xFF707890), Offset(spot.x - cell * 5.5f, top), Size(cell * 11, cell * 2))
+        drawRect(Color(0xFF707890), Offset(spot.x - cell * 2, top + cell * 2), Size(cell * 4, cell * 3))
+        val beat = seg(t, 0.34f, 0.64f) * 3 % 1f
+        val lift = abs(cos(beat * PI.toFloat())) * cell * 8
+        val hx = spot.x + cell * 3
+        drawRect(Color(0xFF805030), Offset(hx, top - cell * 9 - lift), Size(cell, cell * 7))
+        drawRect(Color(0xFF707890), Offset(hx - cell * 2, top - cell * 11 - lift), Size(cell * 5, cell * 3))
+        if (beat < 0.25f) {
+            for (k in 0 until 6) {
+                val a = -PI.toFloat() * (0.1f + 0.8f * k / 5f)
+                val d = cell * (3 + beat * 30)
+                drawRect(Color(0xFFF8D030), Offset(spot.x + cos(a) * d, top - cell * 3 + sin(a) * d), Size(cell, cell))
+            }
+        }
+    }
+    // 金色巨斧升起、轉一圈發光，再飛到人物手上
+    if (t > 0.64f) {
+        val rise = seg(t, 0.64f, 0.8f)
+        val give = seg(t, 0.84f, 1f)
+        val c = lerp(Offset(spot.x, spot.y - cell * 6 - rise * heroSize * 0.6f), Offset(hero.x + heroSize * 0.45f, hero.y), give)
+        for (k in 0 until 8) {
+            val a = k * TAU / 8 + t * 4
+            drawLine(Color(0xFFF8E8A0).copy(alpha = 0.7f * (1f - give)), c, Offset(c.x + cos(a) * cell * 12, c.y + sin(a) * cell * 12), cell / 2)
+        }
+        rotate(stepped(rise, 8) * 360f, c) {
+            spriteCentered(GoldAxeArt, c, cell * 1.3f)
+        }
+    }
+}
+
+// 矮人蘑菇燉湯：蘑菇跳進鍋子，咕嘟咕嘟冒煙，喝一口補血
+private fun DrawScope.drawStew(t: Float, hero: Offset, heroSize: Float, ground: Float, cell: Float) {
+    val pot = Offset(hero.x + heroSize * 0.75f, ground - cell * 5)
+    // 鍋底的小火
+    for (k in 0 until 3) {
+        val flick = if (((t * 12).toInt() + k) % 2 == 0) cell else 0f
+        drawRect(Color(0xFFF05020), Offset(pot.x - cell * 4 + k * cell * 3, ground - cell * 2 - flick), Size(cell * 2, cell * 2 + flick))
+    }
+    drawRect(Color(0xFF202030), Offset(pot.x - cell * 7, pot.y - cell * 5), Size(cell * 14, cell * 8))
+    drawRect(Color(0xFF707890), Offset(pot.x - cell * 6, pot.y - cell * 4), Size(cell * 12, cell * 6))
+    drawRect(Color(0xFFB85030), Offset(pot.x - cell * 6, pot.y - cell * 4), Size(cell * 12, cell * 2))
+    drawRect(Color(0xFF202030), Offset(pot.x - cell * 8, pot.y - cell * 4), Size(cell * 2, cell))
+    drawRect(Color(0xFF202030), Offset(pot.x + cell * 6, pot.y - cell * 4), Size(cell * 2, cell))
+    for (k in 0 until 3) {
+        val p = seg(t, k * 0.1f, 0.3f + k * 0.1f)
+        if (p <= 0f || p >= 1f) continue
+        val from = Offset(pot.x - cell * 18 + k * cell * 4, pot.y - cell * 14)
+        val c = lerp(from, Offset(pot.x + (k - 1) * cell * 3, pot.y - cell * 4), p) - Offset(0f, sin(p * PI.toFloat()) * cell * 8)
+        spriteCentered(MushroomArt, c, cell)
+    }
+    // 咕嘟咕嘟：泡泡和蒸氣
+    if (t > 0.3f) {
+        for (k in 0 until 4) {
+            val p = ((t - 0.3f) * 2.5f + k * 0.25f) % 1f
+            drawCircle(Color.White.copy(alpha = 0.7f * (1f - p)), cell * (1.5f + p * 2), Offset(pot.x + (k - 1.5f) * cell * 3 + sin(p * TAU) * cell, pot.y - cell * 5 - p * cell * 14))
+        }
+    }
+    if (t > 0.55f) drawHeal(ItemType.SmallPotion, seg(t, 0.55f, 1f), hero, heroSize)
+}
+
+// 進擊的貓貓們～喵：一大群貓從左邊衝過整個畫面，踩過怪物，揚起灰塵
+private fun DrawScope.drawStampede(t: Float, ground: Float, cell: Float) {
+    val w = CatRunA.first().length * cell * 1.2f
+    val h = CatRunA.size * cell * 1.2f
+    for (i in 0 until 18) {
+        val s = (i % 6) * 0.04f + (i / 6) * 0.1f
+        val p = seg(t, s, s + 0.55f)
+        if (p <= 0f || p >= 1f) continue
+        val x = -w + p * (size.width + w * 2)
+        val lane = (i * 5) % 3
+        val y = ground - h - lane * cell * 3
+        val frame = if (((t * 20).toInt() + i) % 2 == 0) CatRunA else CatRunB
+        drawSprite(frame, x, y - (if (frame === CatRunB) cell else 0f), cell * 1.2f, recolor = CatCoats[i % CatCoats.size])
+        // 揚起的灰塵
+        drawCircle(Color(0xFFB8B0A0).copy(alpha = 0.6f), cell * 2, Offset(x - cell * 2, ground - cell - lane * cell * 3))
+    }
+}
+
+// 貓咪交響樂團～喵（剛出場）：音符從人物身上冒出來，樂團升上來，愛心飄向怪物
+private fun DrawScope.drawOrchestraStart(t: Float, hero: Offset, heroSize: Float, monster: Offset, monsterHeight: Float, ground: Float, cell: Float) {
+    drawCatBand(t * 2, hero, heroSize, ground, appear = seg(t, 0f, 0.4f))
+    for (k in 0 until 6) {
+        val p = seg(t, k * 0.06f, 0.5f + k * 0.06f)
+        if (p <= 0f || p >= 1f) continue
+        val c = Offset(hero.x + p * heroSize * (0.6f + k * 0.15f), hero.y - p * heroSize * 0.9f + sin(p * TAU + k) * cell * 2)
+        spriteCentered(NoteArt, c, cell, alpha = 1f - p, recolor = mapOf('K' to if (k % 2 == 0) 'Y' else 'P'))
+    }
+    for (k in 0 until 4) {
+        val p = seg(t, 0.4f + k * 0.08f, 0.8f + k * 0.08f)
+        if (p <= 0f || p >= 1f) continue
+        val c = lerp(Offset(size.width / 2, hero.y - heroSize * 0.6f), Offset(monster.x + (k - 1.5f) * cell * 4, monster.y - monsterHeight / 2), p)
+        spriteCentered(HeartArt, c, cell)
+    }
+}
+
+// 龍尾甩甩：大尾巴從背後甩一大圈打中怪物
+private fun DrawScope.drawTailSwing(t: Float, hero: Offset, heroSize: Float, monster: Offset, cell: Float) {
+    val swing = seg(t, 0.05f, 0.45f)
+    val back = seg(t, 0.6f, 0.95f)
+    if (back >= 1f) return
+    val a = -2.6f + 2.7f * (swing * swing) - back * 1.2f
+    val pivot = Offset(hero.x + heroSize * 0.1f, hero.y + heroSize * 0.25f)
+    val len = (monster.x - hero.x) * 0.9f * (1f - back * 0.7f)
+    val pts = List(10) { i ->
+        val f = (i + 1) / 10f
+        val ang = a - f * 0.3f
+        Offset(pivot.x + cos(ang) * len * f, pivot.y + sin(ang) * len * f * 0.8f)
+    }
+    pts.forEachIndexed { i, p -> drawCircle(Color(0xFF202030), cell * (4.5f - i * 0.35f) + cell / 2, p) }
+    pts.forEachIndexed { i, p ->
+        val r = cell * (4.5f - i * 0.35f)
+        drawCircle(if (i % 2 == 0) Color(0xFF40A048) else Color(0xFF70C058), r, p)
+        drawRect(Color(0xFFF8D030), Offset(p.x - cell / 2, p.y - r - cell), Size(cell, cell * 1.5f))
+    }
+    // 甩過的軌跡
+    if (swing in 0.3f..1f && back == 0f) {
+        for (k in 1..3) {
+            val ang = a - k * 0.25f
+            val e = Offset(pivot.x + cos(ang) * len, pivot.y + sin(ang) * len * 0.8f)
+            drawLine(Color.White.copy(alpha = 0.6f - k * 0.15f), lerp(pivot, e, 0.6f), e, cell / 2)
+        }
+    }
+    drawHit(monster, seg(t, 0.42f, 0.65f), cell)
+}
+
+// 一團往上竄的像素火焰（龍之咆哮）
+private fun DrawScope.drawFlames(clock: Float, hero: Offset, heroSize: Float, power: Float, cell: Float) {
+    for (k in 0 until 7) {
+        val x = hero.x + (k - 3) * heroSize * 0.16f
+        val tall = heroSize * (0.25f + 0.3f * abs(sin(stepped(clock, 12) * TAU * 2 + k * 1.7f))) * power
+        val base = hero.y + heroSize * 0.5f
+        drawRect(Color(0xFFE04030).copy(alpha = 0.8f), Offset(x - cell * 1.5f, base - tall), Size(cell * 3, tall))
+        drawRect(Color(0xFFF09030).copy(alpha = 0.85f), Offset(x - cell, base - tall * 0.7f), Size(cell * 2, tall * 0.7f))
+        drawRect(Color(0xFFF8D030).copy(alpha = 0.9f), Offset(x - cell / 2, base - tall * 0.4f), Size(cell, tall * 0.4f))
+    }
+}
+
+// 龍之咆哮：仰天大吼，紅色火焰從腳下竄起，畫面閃紅光
+private fun DrawScope.drawHowl(t: Float, hero: Offset, heroSize: Float, cell: Float) {
+    drawFlames(t * 3, hero, heroSize, 0.4f + seg(t, 0f, 0.4f) * 1.2f - seg(t, 0.7f, 1f) * 0.9f, cell)
+    for (ring in 0 until 3) {
+        val p = seg(t, 0.1f + ring * 0.15f, 0.6f + ring * 0.15f)
+        if (p <= 0f || p >= 1f) continue
+        val c = Offset(hero.x, hero.y - heroSize * 0.4f - p * heroSize)
+        drawOval(Color(0xFFF09030).copy(alpha = 1f - p), Offset(c.x - cell * (4 + p * 14), c.y - cell * (1 + p * 3)), Size(cell * (8 + p * 28), cell * (2 + p * 6)), style = Stroke(cell))
+    }
+    if ((t in 0.15f..0.3f) || (t in 0.45f..0.55f)) drawRect(Color(0xFFE02020).copy(alpha = 0.15f))
+}
+
+// 火箭發射：身上的艙門打開，四支小火箭往上飛再轉彎打中怪物
+private fun DrawScope.drawRockets(t: Float, hero: Offset, heroSize: Float, monster: Offset, cell: Float) {
+    for (k in 0 until 4) {
+        val s = 0.1f + k * 0.07f
+        val p = seg(t, s, s + 0.4f)
+        val start = Offset(hero.x + (k - 1.5f) * cell * 3, hero.y - heroSize * 0.4f)
+        val peak = Offset((hero.x + monster.x) / 2 + (k - 1.5f) * cell * 5, hero.y - heroSize * 1.6f)
+        val end = monster + Offset((k - 1.5f) * cell * 3, (k % 2) * cell * 4)
+        fun at(q: Float): Offset {
+            val a = lerp(start, peak, q)
+            val b = lerp(peak, end, q)
+            return lerp(a, b, q)
+        }
+        if (t < s) {
+            // 準備發射：火箭頭從身上冒出來
+            val peek = seg(t, 0f, s)
+            drawRect(Color(0xFFE04030), Offset(start.x - cell / 2, start.y - cell * 2 * peek), Size(cell, cell * 2 * peek))
+            continue
+        }
+        if (p < 1f) {
+            for (j in 1..5) {
+                val q = (p - j * 0.04f).coerceAtLeast(0f)
+                drawCircle(Color(0xFFE8E8F0).copy(alpha = 0.6f - j * 0.1f), cell * (1f + j * 0.4f), at(q))
+            }
+            val c = at(p)
+            val d = at((p + 0.02f).coerceAtMost(1f)) - at((p - 0.02f).coerceAtLeast(0f))
+            val deg = (kotlin.math.atan2(d.y, d.x) * 180f / PI.toFloat())
+            rotate(deg, c) {
+                drawRect(Color(0xFF202030), Offset(c.x - cell * 3, c.y - cell * 1.5f), Size(cell * 6, cell * 3))
+                drawRect(Color(0xFFC0C8D8), Offset(c.x - cell * 2.5f, c.y - cell), Size(cell * 4.5f, cell * 2))
+                drawRect(Color(0xFFE04030), Offset(c.x + cell * 2, c.y - cell), Size(cell, cell * 2))
+                drawRect(Color(0xFFE04030), Offset(c.x - cell * 3, c.y - cell * 2), Size(cell * 1.5f, cell * 4))
+                if ((t * 30).toInt() % 2 == 0) drawRect(Color(0xFFF8D030), Offset(c.x - cell * 4.5f, c.y - cell / 2), Size(cell * 1.5f, cell))
+            }
+        }
+        drawExplosion(end, seg(t, s + 0.4f, s + 0.62f), cell)
+    }
+}
+
+// 超頻模式：頭上的儀表指針衝到紅色，身體噴出蒸氣
+private fun DrawScope.drawOverclock(t: Float, hero: Offset, heroSize: Float, cell: Float) {
+    val c = Offset(hero.x, hero.y - heroSize * 0.75f)
+    val r = cell * 7
+    val show = seg(t, 0f, 0.1f) * (1f - seg(t, 0.85f, 1f))
+    if (show > 0f) {
+        val box = Offset(c.x - r - cell, c.y - r - cell)
+        drawRect(Color(0xFF202030).copy(alpha = show), box, Size(r * 2 + cell * 2, r + cell * 3))
+        val arcTop = Offset(c.x - r, c.y - r)
+        drawArc(Color(0xFF70E070).copy(alpha = show), 180f, 60f, false, arcTop, Size(r * 2, r * 2), style = Stroke(cell * 1.5f))
+        drawArc(Color(0xFFF8D030).copy(alpha = show), 240f, 60f, false, arcTop, Size(r * 2, r * 2), style = Stroke(cell * 1.5f))
+        drawArc(Color(0xFFE04030).copy(alpha = show), 300f, 60f, false, arcTop, Size(r * 2, r * 2), style = Stroke(cell * 1.5f))
+        // 指針一格一格往右衝，到紅色區抖動
+        val sweep = stepped(seg(t, 0.1f, 0.45f), 8)
+        val jitter = if (t > 0.45f && (t * 30).toInt() % 2 == 0) 0.08f else 0f
+        val a = PI.toFloat() * (1f + sweep * 0.92f + jitter)
+        drawLine(Color.White.copy(alpha = show), c, Offset(c.x + cos(a) * r * 0.9f, c.y + sin(a) * r * 0.9f), cell / 1.5f)
+    }
+    if (t > 0.4f) {
+        drawSteam(t * 3, hero, heroSize, cell, seg(t, 0.4f, 0.5f) * (1f - seg(t, 0.85f, 1f)) * 2f)
+        if ((t * 10).toInt() % 2 == 0) drawCircle(Color(0xFFF09030).copy(alpha = 0.25f), heroSize * 0.7f, hero)
+    }
+}
+
+// 兩邊噴出的白色蒸氣
+private fun DrawScope.drawSteam(clock: Float, hero: Offset, heroSize: Float, cell: Float, power: Float = 1f) {
+    for (side in listOf(-1, 1)) {
+        for (k in 0 until 3) {
+            val p = (clock + k / 3f) % 1f
+            val c = Offset(hero.x + side * (heroSize * 0.4f + p * cell * 8), hero.y - heroSize * 0.3f - p * cell * 10)
+            drawCircle(Color.White.copy(alpha = (0.7f * (1f - p) * power).coerceIn(0f, 1f)), cell * (1.5f + p * 3), c)
+        }
+    }
+}
+
+// 瘟疫降臨：瘟疫醫生從右邊走進來，拐杖一揮，綠色瘴氣飄到怪物身上，鞠個躬又走掉
+private fun DrawScope.drawPlagueDoctor(t: Float, monster: Offset, monsterHeight: Float, ground: Float, cell: Float) {
+    val w = DoctorArt.first().length * cell
+    val h = DoctorArt.size * cell
+    val stand = monster.x + monsterHeight * 0.45f + cell * 2
+    val come = seg(t, 0f, 0.25f)
+    val go = seg(t, 0.76f, 1f)
+    val x = size.width + w - (size.width + w - stand) * come + go * (size.width + w - stand)
+    val walking = (come in 0.01f..0.99f) || go > 0f
+    val step = if (walking && (t * 16).toInt() % 2 == 0) cell else 0f
+    val bow = if (t in 0.66f..0.76f) cell * 2 else 0f
+    drawSprite(DoctorArt, x, ground - h - step + bow, cell)
+    // 拐杖：揮瘴氣時舉起來
+    val raise = seg(t, 0.25f, 0.32f) * (1f - seg(t, 0.6f, 0.66f))
+    val hand = Offset(x + cell * 2, ground - h * 0.4f)
+    val tip = Offset(hand.x - cell * 3 - raise * cell * 4, hand.y + cell * 7 - raise * cell * 14)
+    drawLine(Color(0xFF805030), hand, tip, cell)
+    // 綠色瘴氣一團團飄向怪物，怪物變得有點綠
+    if (t in 0.28f..0.75f) {
+        val p = seg(t, 0.28f, 0.75f)
+        for (k in 0 until 7) {
+            val q = (p * 1.6f - k * 0.1f).coerceIn(0f, 1f)
+            if (q <= 0f || q >= 1f) continue
+            val c = lerp(tip, monster + Offset((k - 3) * cell * 3, (k % 3 - 1) * cell * 4), q)
+            drawCircle(Color(0xFF70C058).copy(alpha = 0.7f * (1f - q * 0.5f)), cell * (2 + k % 3), c)
+        }
+        drawCircle(Color(0xFF70C058).copy(alpha = 0.25f * seg(t, 0.4f, 0.55f)), monsterHeight * 0.55f, monster)
+    }
+    if (t > 0.5f) drawSick(t * 2, monster, monsterHeight)
+}
+
+// 魔眼混亂：人物頭上睜開一隻大眼睛，放出一圈圈催眠波
+private fun DrawScope.drawDemonEye(t: Float, hero: Offset, heroSize: Float, monster: Offset, monsterHeight: Float, cell: Float) {
+    val c = Offset(hero.x, hero.y - heroSize * 0.85f)
+    val open = seg(t, 0f, 0.25f) * (1f - seg(t, 0.85f, 1f))
+    val w = cell * 14
+    val h = cell * 8 * open
+    drawOval(Color(0xFF202030), Offset(c.x - w / 2 - cell, c.y - h / 2 - cell), Size(w + cell * 2, h + cell * 2))
+    if (h > cell) {
+        drawOval(Color(0xFFE8E8F0), Offset(c.x - w / 2, c.y - h / 2), Size(w, h))
+        drawCircle(Color(0xFFE04030), minOf(h / 2, cell * 3.5f), c)
+        drawRect(Color(0xFF202030), Offset(c.x - cell / 2, c.y - minOf(h / 2, cell * 3)), Size(cell, minOf(h, cell * 6)))
+    }
+    for (ring in 0 until 4) {
+        val p = seg(t, 0.3f + ring * 0.1f, 0.65f + ring * 0.1f)
+        if (p <= 0f || p >= 1f) continue
+        val o = lerp(c, Offset(monster.x, monster.y - monsterHeight * 0.3f), p)
+        drawCircle((if (ring % 2 == 0) Color(0xFF9060C0) else Color(0xFFE04030)).copy(alpha = 1f - p * 0.5f), cell * (3 + p * 5), o, style = Stroke(cell))
+    }
+    if (t > 0.65f) {
+        val head = Offset(monster.x, monster.y - monsterHeight / 2 - cell * 3)
+        for (k in 0 until 10) {
+            val a = (stepped(t, 20) * 3 + k / 10f) * TAU
+            val r = cell * (1 + k * 0.7f)
+            drawRect(Color(0xFFC090E8), Offset(head.x + cos(a) * r, head.y + sin(a) * r * 0.5f), Size(cell, cell))
+        }
+    }
+}
+
+// ---- LV30、LV40 一直畫著的效果 ----
+
+// 攻擊力加成還在：精神集中是藍色光點、奧利哈鋼是金色巨斧、龍之咆哮是紅色火焰、超頻是蒸氣
+fun DrawScope.drawBoostAura(skill: Skill, clock: Float, hero: Offset, heroSize: Float) {
+    val cell = 3.dp.toPx()
+    when (skill) {
+        Skill.Orichalcum -> {
+            val c = Offset(hero.x + heroSize * 0.5f, hero.y + sin(stepped(clock, 8) * TAU) * cell)
+            spriteCentered(GoldAxeArt, c, cell * 1.1f)
+            if ((clock * 4).toInt() % 2 == 0) pixelStar(Offset(c.x - cell * 2, c.y - cell * 5), cell, Color.White)
+        }
+        Skill.DragonHowl -> drawFlames(clock, hero, heroSize, 0.45f, cell)
+        Skill.Overclock -> {
+            drawSteam(clock, hero, heroSize, cell, 0.7f)
+            if ((clock * 6).toInt() % 3 == 0) {
+                drawRect(Color(0xFFF09030), Offset(hero.x - heroSize * 0.45f, hero.y - heroSize * 0.2f), Size(cell, cell))
+                drawRect(Color(0xFFF8D030), Offset(hero.x + heroSize * 0.4f, hero.y + heroSize * 0.1f), Size(cell, cell))
+            }
+        }
+        else -> drawFocusAura(clock, hero, heroSize)
+    }
+}
+
+// 怪物生病了（瘟疫）：頭上冒綠色泡泡、流綠色冷汗
+fun DrawScope.drawSick(clock: Float, monster: Offset, monsterHeight: Float) {
+    val cell = 3.dp.toPx()
+    for (k in 0 until 3) {
+        val p = (clock + k / 3f) % 1f
+        val c = Offset(monster.x + (k - 1) * cell * 5 + sin(p * TAU) * cell, monster.y - monsterHeight / 2 - p * cell * 10)
+        drawCircle(Color(0xFF70C058).copy(alpha = 1f - p), cell * (1.2f + p), c)
+    }
+    val drop = (clock * 1.5f) % 1f
+    drawRect(Color(0xFF70C058), Offset(monster.x - monsterHeight * 0.45f, monster.y - monsterHeight * 0.25f + drop * cell * 6), Size(cell, cell * 2))
+}
+
+// 怪物被貓咪樂團迷住了：頭上愛心繞圈
+fun DrawScope.drawCharmed(clock: Float, monster: Offset, monsterHeight: Float) {
+    val cell = 3.dp.toPx()
+    val center = Offset(monster.x, monster.y - monsterHeight / 2 - cell * 3)
+    for (k in 0 until 3) {
+        val a = (stepped(clock, 8) + k / 3f) * TAU
+        spriteCentered(HeartArt, Offset(center.x + cos(a) * cell * 7, center.y + sin(a) * cell * 2), cell * 0.9f)
+    }
+}
+
+// 貓咪樂團：三隻貓在畫面中間後面拉小提琴、吹喇叭、打鼓，音符飄起來（直到戰鬥結束）
+fun DrawScope.drawCatBand(clock: Float, hero: Offset, heroSize: Float, ground: Float, appear: Float = 1f) {
+    val cell = 2.dp.toPx()
+    val w = CatSitArt.first().length * cell
+    val h = CatSitArt.size * cell
+    val middle = maxOf(size.width / 2, hero.x + heroSize * 0.5f + w * 3)
+    val top = ground - heroSize * 1.55f + (1f - appear) * heroSize
+    if (appear <= 0f) return
+    for (i in 0 until 3) {
+        val x = middle + (i - 1) * w * 2f - w / 2
+        val beat = ((clock * 8).toInt() + i) % 2 == 0
+        val y = top - (if (beat) cell else 0f)
+        drawSprite(CatSitArt, x, y, cell, alpha = appear, recolor = CatCoats[(i * 2 + 1) % CatCoats.size])
+        when (i) {
+            0 -> {
+                // 小提琴和琴弓
+                drawOval(Color(0xFFA06030).copy(alpha = appear), Offset(x + w - cell, y + h * 0.4f), Size(cell * 3, cell * 4))
+                val bow = if (beat) cell * 2 else -cell * 2
+                drawLine(Color(0xFFE8E8F0).copy(alpha = appear), Offset(x + w - cell * 2 + bow, y + h * 0.3f), Offset(x + w + cell * 3 + bow, y + h * 0.75f), cell / 2)
+            }
+            1 -> {
+                // 喇叭
+                drawRect(Color(0xFFF8D030).copy(alpha = appear), Offset(x + w * 0.5f, y + h * 0.55f), Size(w * 0.7f, cell))
+                drawRect(Color(0xFFF8D030).copy(alpha = appear), Offset(x + w * 1.1f, y + h * 0.45f), Size(cell * 1.5f, cell * 3))
+            }
+            else -> {
+                // 小鼓和鼓棒
+                drawRect(Color(0xFFE04030).copy(alpha = appear), Offset(x, y + h), Size(w, cell * 3))
+                drawRect(Color(0xFFE8E8F0).copy(alpha = appear), Offset(x, y + h), Size(w, cell))
+                val stick = if (beat) 0f else cell * 2
+                drawLine(Color(0xFFC08848).copy(alpha = appear), Offset(x + cell, y + h * 0.6f), Offset(x + cell * 3, y + h - stick), cell / 2)
+            }
+        }
+        // 飄起來的音符
+        val p = (clock + i / 3f) % 1f
+        spriteCentered(NoteArt, Offset(x + w / 2 + sin(p * TAU) * cell * 3, top - cell * 3 - p * cell * 12), cell, alpha = (1f - p) * appear, recolor = mapOf('K' to if (i == 1) 'P' else 'Y'))
+    }
 }

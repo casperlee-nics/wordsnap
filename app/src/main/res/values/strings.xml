@@ -557,6 +557,7 @@
     <string name="skill_elf_spring_desc">補回 1 次答錯的血</string>
     <string name="skill_are_we_elves">我們都是精靈?</string>
     <string name="skill_are_we_elves_desc">怪物扣 2 格血，並迷惑 1 回合不攻擊</string>
+    <string name="skill_are_we_elves_caption">抱歉，他們跑錯攝影棚了</string>
     <string name="skill_leaf_shield_arrow">樹葉盾反擊箭</string>
     <string name="skill_leaf_shield_arrow_desc">這回合答錯不扣血，同時怪物扣 1 格血</string>
     <string name="skill_elf_eye">精靈之眼</string>

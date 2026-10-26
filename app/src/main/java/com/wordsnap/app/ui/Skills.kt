@@ -28,28 +28,36 @@ import com.wordsnap.app.ui.theme.PixelRed
 // 人物技能：每個職業在 LV10、20、30、40、50、60 各學會一招（技能表見專案的「全職業技能表」文件）
 // 「1 格」= 怪物血條 1 個單字量；補血的 amount 是補回幾次答錯的血
 
-enum class SkillKind {
-    // 怪物扣 amount 格血（stunTurns > 0 時順便讓怪物昏迷）
-    Damage,
-    // 補回 amount 次答錯的血
-    Heal,
-    // turns 回合內答錯不扣血
-    Shield,
-    // turns 回合內怪物不能動，答錯不會被攻擊
-    Stun,
-    // 直接顯示這題答案，算答對
-    Reveal,
+// 一招可以同時有好幾個效果，例如聖光盾擊：這回合答錯不扣血，同時怪物扣 1 格
+data class SkillEffect(
+    // 怪物扣幾格血
+    val damage: Int = 0,
+    // 補回幾次答錯的血
+    val heal: Int = 0,
+    // 幾回合內答錯不扣血
+    val shield: Int = 0,
+    // 幾回合內怪物不能動，答錯不會被攻擊
+    val stun: Int = 0,
+    // 連續幾題直接給答案，算答對
+    val reveal: Int = 0,
     // 跳過這題，移到最後再考
-    Skip,
-    // 粉絲加油：turns 回合內答對，怪物多扣 1 格
-    Cheer,
-    // 集中：turns 回合內答對，攻擊力 x1.5
-    Focus,
-}
+    val skip: Boolean = false,
+    // 粉絲加油：幾回合內答對，怪物多扣 1 格
+    val cheer: Int = 0,
+    // 攻擊力加成幾回合；每次答對多打幾個半格（x1.5 = 1、x2 = 2）
+    val boost: Int = 0,
+    val boostHalves: Int = 0,
+    // 幾回合內答錯，怪物反而打自己
+    val confuse: Int = 0,
+    // 幾回合內怪物攻擊力減半
+    val weaken: Int = 0,
+    // 幾回合內怪物被迷住，答錯反而補 1 次血
+    val charm: Int = 0,
+    // 背景音樂換成隨機的古典名曲，直到戰鬥結束
+    val music: Boolean = false,
+)
 
-data class SkillEffect(val kind: SkillKind, val amount: Int = 0, val turns: Int = 0, val stunTurns: Int = 0)
-
-// effect 是 null 的招式還沒做好（v0.96 以後開放），技能表裡看得到但不能用
+// effect 是 null 的招式還沒做好（v0.97 開放），技能表裡看得到但不能用
 enum class Skill(
     val race: Race,
     val level: Int,
@@ -57,58 +65,58 @@ enum class Skill(
     @StringRes private val descRes: Int,
     val effect: SkillEffect?,
 ) {
-    FanCheer(Race.Hero, 10, R.string.skill_fan_cheer, R.string.skill_fan_cheer_desc, SkillEffect(SkillKind.Cheer, turns = 2)),
-    LoveBento(Race.Hero, 20, R.string.skill_love_bento, R.string.skill_love_bento_desc, SkillEffect(SkillKind.Heal, amount = 1)),
-    RoyalSoldiers(Race.Hero, 30, R.string.skill_royal_soldiers, R.string.skill_royal_soldiers_desc, null),
-    HolyShieldBash(Race.Hero, 40, R.string.skill_holy_shield_bash, R.string.skill_holy_shield_bash_desc, null),
+    FanCheer(Race.Hero, 10, R.string.skill_fan_cheer, R.string.skill_fan_cheer_desc, SkillEffect(cheer = 2)),
+    LoveBento(Race.Hero, 20, R.string.skill_love_bento, R.string.skill_love_bento_desc, SkillEffect(heal = 1)),
+    RoyalSoldiers(Race.Hero, 30, R.string.skill_royal_soldiers, R.string.skill_royal_soldiers_desc, SkillEffect(damage = 1, reveal = 1, heal = 1)),
+    HolyShieldBash(Race.Hero, 40, R.string.skill_holy_shield_bash, R.string.skill_holy_shield_bash_desc, SkillEffect(shield = 1, damage = 1)),
     CrossSlash(Race.Hero, 50, R.string.skill_cross_slash, R.string.skill_cross_slash_desc, null),
     OdinWrath(Race.Hero, 60, R.string.skill_odin_wrath, R.string.skill_odin_wrath_desc, null),
-    MindFocus(Race.Mage, 10, R.string.skill_mind_focus, R.string.skill_mind_focus_desc, SkillEffect(SkillKind.Focus, turns = 3)),
-    CrystalPeek(Race.Mage, 20, R.string.skill_crystal_peek, R.string.skill_crystal_peek_desc, SkillEffect(SkillKind.Reveal)),
-    GurgleCurse(Race.Mage, 30, R.string.skill_gurgle_curse, R.string.skill_gurgle_curse_desc, null),
-    HealBubble(Race.Mage, 40, R.string.skill_heal_bubble, R.string.skill_heal_bubble_desc, null),
+    MindFocus(Race.Mage, 10, R.string.skill_mind_focus, R.string.skill_mind_focus_desc, SkillEffect(boost = 3, boostHalves = 1)),
+    CrystalPeek(Race.Mage, 20, R.string.skill_crystal_peek, R.string.skill_crystal_peek_desc, SkillEffect(reveal = 1)),
+    GurgleCurse(Race.Mage, 30, R.string.skill_gurgle_curse, R.string.skill_gurgle_curse_desc, SkillEffect(confuse = 2)),
+    HealBubble(Race.Mage, 40, R.string.skill_heal_bubble, R.string.skill_heal_bubble_desc, SkillEffect(heal = 2)),
     AncientTome(Race.Mage, 50, R.string.skill_ancient_tome, R.string.skill_ancient_tome_desc, null),
     MeteorCall(Race.Mage, 60, R.string.skill_meteor_call, R.string.skill_meteor_call_desc, null),
-    SwishArrow(Race.Archer, 10, R.string.skill_swish_arrow, R.string.skill_swish_arrow_desc, SkillEffect(SkillKind.Damage, amount = 1)),
-    ElfSpring(Race.Archer, 20, R.string.skill_elf_spring, R.string.skill_elf_spring_desc, SkillEffect(SkillKind.Heal, amount = 1)),
-    AreWeElves(Race.Archer, 30, R.string.skill_are_we_elves, R.string.skill_are_we_elves_desc, null),
-    LeafShieldArrow(Race.Archer, 40, R.string.skill_leaf_shield_arrow, R.string.skill_leaf_shield_arrow_desc, null),
+    SwishArrow(Race.Archer, 10, R.string.skill_swish_arrow, R.string.skill_swish_arrow_desc, SkillEffect(damage = 1)),
+    ElfSpring(Race.Archer, 20, R.string.skill_elf_spring, R.string.skill_elf_spring_desc, SkillEffect(heal = 1)),
+    AreWeElves(Race.Archer, 30, R.string.skill_are_we_elves, R.string.skill_are_we_elves_desc, SkillEffect(damage = 2, stun = 1)),
+    LeafShieldArrow(Race.Archer, 40, R.string.skill_leaf_shield_arrow, R.string.skill_leaf_shield_arrow_desc, SkillEffect(shield = 1, damage = 1)),
     ElfEye(Race.Archer, 50, R.string.skill_elf_eye, R.string.skill_elf_eye_desc, null),
     ElvenUprising(Race.Archer, 60, R.string.skill_elven_uprising, R.string.skill_elven_uprising_desc, null),
-    BushHide(Race.Goblin, 10, R.string.skill_bush_hide, R.string.skill_bush_hide_desc, SkillEffect(SkillKind.Skip)),
-    BoulderThrow(Race.Goblin, 20, R.string.skill_boulder_throw, R.string.skill_boulder_throw_desc, SkillEffect(SkillKind.Damage, amount = 1, stunTurns = 2)),
-    CheatSheet(Race.Goblin, 30, R.string.skill_cheat_sheet, R.string.skill_cheat_sheet_desc, null),
-    BombChain(Race.Goblin, 40, R.string.skill_bomb_chain, R.string.skill_bomb_chain_desc, null),
+    BushHide(Race.Goblin, 10, R.string.skill_bush_hide, R.string.skill_bush_hide_desc, SkillEffect(skip = true)),
+    BoulderThrow(Race.Goblin, 20, R.string.skill_boulder_throw, R.string.skill_boulder_throw_desc, SkillEffect(damage = 1, stun = 2)),
+    CheatSheet(Race.Goblin, 30, R.string.skill_cheat_sheet, R.string.skill_cheat_sheet_desc, SkillEffect(reveal = 2)),
+    BombChain(Race.Goblin, 40, R.string.skill_bomb_chain, R.string.skill_bomb_chain_desc, SkillEffect(damage = 2)),
     StolenWatch(Race.Goblin, 50, R.string.skill_stolen_watch, R.string.skill_stolen_watch_desc, null),
     GoblinKing(Race.Goblin, 60, R.string.skill_goblin_king, R.string.skill_goblin_king_desc, null),
-    PotLid(Race.Dwarf, 10, R.string.skill_pot_lid, R.string.skill_pot_lid_desc, SkillEffect(SkillKind.Shield, turns = 1)),
-    HammerToss(Race.Dwarf, 20, R.string.skill_hammer_toss, R.string.skill_hammer_toss_desc, SkillEffect(SkillKind.Damage, amount = 1)),
-    Orichalcum(Race.Dwarf, 30, R.string.skill_orichalcum, R.string.skill_orichalcum_desc, null),
-    MushroomStew(Race.Dwarf, 40, R.string.skill_mushroom_stew, R.string.skill_mushroom_stew_desc, null),
+    PotLid(Race.Dwarf, 10, R.string.skill_pot_lid, R.string.skill_pot_lid_desc, SkillEffect(shield = 1)),
+    HammerToss(Race.Dwarf, 20, R.string.skill_hammer_toss, R.string.skill_hammer_toss_desc, SkillEffect(damage = 1)),
+    Orichalcum(Race.Dwarf, 30, R.string.skill_orichalcum, R.string.skill_orichalcum_desc, SkillEffect(boost = 5, boostHalves = 1)),
+    MushroomStew(Race.Dwarf, 40, R.string.skill_mushroom_stew, R.string.skill_mushroom_stew_desc, SkillEffect(heal = 2)),
     HotSpring(Race.Dwarf, 50, R.string.skill_hot_spring, R.string.skill_hot_spring_desc, null),
     UltimateArmor(Race.Dwarf, 60, R.string.skill_ultimate_armor, R.string.skill_ultimate_armor_desc, null),
-    TeaserWand(Race.Cat, 10, R.string.skill_teaser_wand, R.string.skill_teaser_wand_desc, SkillEffect(SkillKind.Stun, turns = 1)),
-    LickFur(Race.Cat, 20, R.string.skill_lick_fur, R.string.skill_lick_fur_desc, SkillEffect(SkillKind.Heal, amount = 1)),
-    CatStampede(Race.Cat, 30, R.string.skill_cat_stampede, R.string.skill_cat_stampede_desc, null),
-    CatOrchestra(Race.Cat, 40, R.string.skill_cat_orchestra, R.string.skill_cat_orchestra_desc, null),
+    TeaserWand(Race.Cat, 10, R.string.skill_teaser_wand, R.string.skill_teaser_wand_desc, SkillEffect(stun = 1)),
+    LickFur(Race.Cat, 20, R.string.skill_lick_fur, R.string.skill_lick_fur_desc, SkillEffect(heal = 1)),
+    CatStampede(Race.Cat, 30, R.string.skill_cat_stampede, R.string.skill_cat_stampede_desc, SkillEffect(damage = 2)),
+    CatOrchestra(Race.Cat, 40, R.string.skill_cat_orchestra, R.string.skill_cat_orchestra_desc, SkillEffect(charm = 3, music = true)),
     PurrHeal(Race.Cat, 50, R.string.skill_purr_heal, R.string.skill_purr_heal_desc, null),
     CutestCat(Race.Cat, 60, R.string.skill_cutest_cat, R.string.skill_cutest_cat_desc, null),
-    SneezeFire(Race.Dragon, 10, R.string.skill_sneeze_fire, R.string.skill_sneeze_fire_desc, SkillEffect(SkillKind.Damage, amount = 1)),
-    DragonRoar(Race.Dragon, 20, R.string.skill_dragon_roar, R.string.skill_dragon_roar_desc, SkillEffect(SkillKind.Stun, turns = 2)),
-    TailSwing(Race.Dragon, 30, R.string.skill_tail_swing, R.string.skill_tail_swing_desc, null),
-    DragonHowl(Race.Dragon, 40, R.string.skill_dragon_howl, R.string.skill_dragon_howl_desc, null),
+    SneezeFire(Race.Dragon, 10, R.string.skill_sneeze_fire, R.string.skill_sneeze_fire_desc, SkillEffect(damage = 1)),
+    DragonRoar(Race.Dragon, 20, R.string.skill_dragon_roar, R.string.skill_dragon_roar_desc, SkillEffect(stun = 2)),
+    TailSwing(Race.Dragon, 30, R.string.skill_tail_swing, R.string.skill_tail_swing_desc, SkillEffect(damage = 2)),
+    DragonHowl(Race.Dragon, 40, R.string.skill_dragon_howl, R.string.skill_dragon_howl_desc, SkillEffect(boost = 3, boostHalves = 2)),
     MeteorClaw(Race.Dragon, 50, R.string.skill_meteor_claw, R.string.skill_meteor_claw_desc, null),
     FireWhisper(Race.Dragon, 60, R.string.skill_fire_whisper, R.string.skill_fire_whisper_desc, null),
-    BarrierOn(Race.Machine, 10, R.string.skill_barrier_on, R.string.skill_barrier_on_desc, SkillEffect(SkillKind.Shield, turns = 1)),
-    DataSearch(Race.Machine, 20, R.string.skill_data_search, R.string.skill_data_search_desc, SkillEffect(SkillKind.Reveal)),
-    RocketLaunch(Race.Machine, 30, R.string.skill_rocket_launch, R.string.skill_rocket_launch_desc, null),
-    Overclock(Race.Machine, 40, R.string.skill_overclock, R.string.skill_overclock_desc, null),
+    BarrierOn(Race.Machine, 10, R.string.skill_barrier_on, R.string.skill_barrier_on_desc, SkillEffect(shield = 1)),
+    DataSearch(Race.Machine, 20, R.string.skill_data_search, R.string.skill_data_search_desc, SkillEffect(reveal = 1)),
+    RocketLaunch(Race.Machine, 30, R.string.skill_rocket_launch, R.string.skill_rocket_launch_desc, SkillEffect(damage = 2)),
+    Overclock(Race.Machine, 40, R.string.skill_overclock, R.string.skill_overclock_desc, SkillEffect(boost = 3, boostHalves = 2)),
     Battleship(Race.Machine, 50, R.string.skill_battleship, R.string.skill_battleship_desc, null),
     FullArsenal(Race.Machine, 60, R.string.skill_full_arsenal, R.string.skill_full_arsenal_desc, null),
-    Bleh(Race.Demon, 10, R.string.skill_bleh, R.string.skill_bleh_desc, SkillEffect(SkillKind.Stun, turns = 1)),
-    DarkMist(Race.Demon, 20, R.string.skill_dark_mist, R.string.skill_dark_mist_desc, SkillEffect(SkillKind.Skip)),
-    PlagueDoctor(Race.Demon, 30, R.string.skill_plague_doctor, R.string.skill_plague_doctor_desc, null),
-    DemonEye(Race.Demon, 40, R.string.skill_demon_eye, R.string.skill_demon_eye_desc, null),
+    Bleh(Race.Demon, 10, R.string.skill_bleh, R.string.skill_bleh_desc, SkillEffect(stun = 1)),
+    DarkMist(Race.Demon, 20, R.string.skill_dark_mist, R.string.skill_dark_mist_desc, SkillEffect(skip = true)),
+    PlagueDoctor(Race.Demon, 30, R.string.skill_plague_doctor, R.string.skill_plague_doctor_desc, SkillEffect(weaken = 5)),
+    DemonEye(Race.Demon, 40, R.string.skill_demon_eye, R.string.skill_demon_eye_desc, SkillEffect(confuse = 2)),
     EnergySip(Race.Demon, 50, R.string.skill_energy_sip, R.string.skill_energy_sip_desc, null),
     Possession(Race.Demon, 60, R.string.skill_possession, R.string.skill_possession_desc, null);
     val label: String get() = tr(nameRes)
