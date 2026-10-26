@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -78,7 +79,12 @@ fun ListenScreen(vm: WordViewModel, onBack: () -> Unit) {
                     RetroButton(tr(R.string.back_to_book), onClick = onBack)
                     return@Column
                 }
-                Text(tr(R.string.listen_progress, index % words.size + 1, words.size), style = MaterialTheme.typography.bodyMedium)
+                // 「第 1 / xx 個」離字卡遠一點、字大一點
+                Text(
+                    tr(R.string.listen_progress, index % words.size + 1, words.size),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.offset(y = (-10).dp),
+                )
                 PixelSurface(
                     color = MaterialTheme.colorScheme.surfaceContainer,
                     modifier = Modifier.fillMaxWidth(),

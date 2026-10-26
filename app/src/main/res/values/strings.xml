@@ -532,7 +532,7 @@
     <string name="skill_love_bento">勇者的愛心便當</string>
     <string name="skill_love_bento_desc">補回 1 次答錯的血</string>
     <string name="skill_royal_soldiers">招喚王國的士兵</string>
-    <string name="skill_royal_soldiers_desc">怪物扣 1 格血、直接告訴你這題答案，再補回 1 次答錯的血</string>
+    <string name="skill_royal_soldiers_desc">士兵攻擊讓怪物扣 1 格血、學者告訴你這題答案、白魔法師補回 1 次答錯的血</string>
     <string name="skill_holy_shield_bash">聖光盾擊</string>
     <string name="skill_holy_shield_bash_desc">這回合答錯不扣血，同時怪物扣 1 格血</string>
     <string name="skill_cross_slash">聖劍十字斬</string>
@@ -558,8 +558,9 @@
     <string name="skill_are_we_elves">我們都是精靈?</string>
     <string name="skill_are_we_elves_desc">怪物扣 2 格血，並迷惑 1 回合不攻擊</string>
     <string name="skill_are_we_elves_caption">抱歉，他們跑錯攝影棚了</string>
-    <string name="skill_leaf_shield_arrow">樹葉盾反擊箭</string>
-    <string name="skill_leaf_shield_arrow_desc">這回合答錯不扣血，同時怪物扣 1 格血</string>
+    <string name="skill_are_we_elves_action">第 1 場，開拍！</string>
+    <string name="skill_forest_blessing">森林的庇護</string>
+    <string name="skill_forest_blessing_desc">補回 2 次答錯的血，同時怪物扣 1 格血</string>
     <string name="skill_elf_eye">精靈之眼</string>
     <string name="skill_elf_eye_desc">4 回合內題目先顯示前一半字母</string>
     <string name="skill_elven_uprising">精靈族的逆襲</string>
@@ -585,7 +586,7 @@
     <string name="skill_mushroom_stew">矮人蘑菇燉湯</string>
     <string name="skill_mushroom_stew_desc">補回 2 次答錯的血</string>
     <string name="skill_hot_spring">矮人秘境溫泉</string>
-    <string name="skill_hot_spring_desc">補回 3 次答錯的血</string>
+    <string name="skill_hot_spring_desc">補回 2 次答錯的血，2 回合內答對攻擊力 x1.5</string>
     <string name="skill_ultimate_armor">防具終極強化</string>
     <string name="skill_ultimate_armor_desc">到戰鬥結束，受到的傷害減半</string>
     <string name="skill_teaser_wand">逗貓棒搖搖～喵</string>
@@ -604,8 +605,8 @@
     <string name="skill_sneeze_fire_desc">怪物扣 1 格血</string>
     <string name="skill_dragon_roar">龍的威嚇!</string>
     <string name="skill_dragon_roar_desc">怪物嚇到 2 回合不能動，答錯不會被攻擊</string>
-    <string name="skill_tail_swing">龍尾甩甩</string>
-    <string name="skill_tail_swing_desc">怪物扣 2 格血</string>
+    <string name="skill_dragon_flight">群龍飛舞</string>
+    <string name="skill_dragon_flight_desc">招喚兩隻飛龍飛過去吐火，怪物扣 2 格血</string>
     <string name="skill_dragon_howl">龍之咆哮</string>
     <string name="skill_dragon_howl_desc">3 回合內答對，攻擊力 x2</string>
     <string name="skill_meteor_claw">流星龍爪</string>
@@ -627,7 +628,7 @@
     <string name="skill_bleh">小惡魔的鬼臉</string>
     <string name="skill_bleh_desc">怪物 1 回合不攻擊任何人</string>
     <string name="skill_dark_mist">黑霧遁形</string>
-    <string name="skill_dark_mist_desc">跳過這題，不被攻擊、沒有經驗值；這題移到最後再考</string>
+    <string name="skill_dark_mist_desc">2 回合內答錯，怪物打不到你，不扣血</string>
     <string name="skill_plague_doctor">瘟疫降臨</string>
     <string name="skill_plague_doctor_desc">5 回合內怪物攻擊力減半</string>
     <string name="skill_demon_eye">魔眼混亂</string>
@@ -636,4 +637,7 @@
     <string name="skill_energy_sip_desc">怪物扣 2 格血，同時補回 2 次答錯的血</string>
     <string name="skill_possession">惡魔的附身</string>
     <string name="skill_possession_desc">附身在別的職業身上，用他的外觀和技能到戰鬥結束</string>
+    <string name="possession_title">要附身在誰身上？</string>
+    <string name="possession_hint">附身後外觀和技能都變成那個職業，直到戰鬥結束</string>
+    <string name="battle_time_stop_retry">時間暫停中！再答一次</string>
 </resources>

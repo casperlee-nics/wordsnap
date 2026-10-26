@@ -526,7 +526,7 @@
     <string name="skill_love_bento">勇者の愛情弁当</string>
     <string name="skill_love_bento_desc">ミス1回分のHPを回復</string>
     <string name="skill_royal_soldiers">王国の兵士を召喚</string>
-    <string name="skill_royal_soldiers_desc">敵に1ダメージ、この問題の答えがわかり、ミス1回分のHPも回復</string>
+    <string name="skill_royal_soldiers_desc">兵士の攻撃で敵に1ダメージ、学者が答えを教えてくれ、白魔道士がミス1回分のHPを回復</string>
     <string name="skill_holy_shield_bash">聖なる盾アタック</string>
     <string name="skill_holy_shield_bash_desc">このターンはミスしてもHPが減らず、敵に1ダメージ</string>
     <string name="skill_cross_slash">聖剣十字斬り</string>
@@ -552,8 +552,9 @@
     <string name="skill_are_we_elves">ぼくらもエルフ？</string>
     <string name="skill_are_we_elves_desc">敵に2ダメージ、1ターン攻撃してこない</string>
     <string name="skill_are_we_elves_caption">すみません、この子たちスタジオを間違えました</string>
-    <string name="skill_leaf_shield_arrow">木の葉の盾と反撃の矢</string>
-    <string name="skill_leaf_shield_arrow_desc">このターンはミスしてもHPが減らず、敵に1ダメージ</string>
+    <string name="skill_are_we_elves_action">シーン1、アクション！</string>
+    <string name="skill_forest_blessing">森の加護</string>
+    <string name="skill_forest_blessing_desc">ミス2回分のHPを回復し、敵に1ダメージ</string>
     <string name="skill_elf_eye">エルフの瞳</string>
     <string name="skill_elf_eye_desc">4ターンの間、単語の前半が最初から表示される</string>
     <string name="skill_elven_uprising">エルフ族の逆襲</string>
@@ -579,7 +580,7 @@
     <string name="skill_mushroom_stew">ドワーフのきのこシチュー</string>
     <string name="skill_mushroom_stew_desc">ミス2回分のHPを回復</string>
     <string name="skill_hot_spring">ドワーフの秘湯</string>
-    <string name="skill_hot_spring_desc">ミス3回分のHPを回復</string>
+    <string name="skill_hot_spring_desc">ミス2回分のHPを回復、2ターンの間 正解で攻撃力x1.5</string>
     <string name="skill_ultimate_armor">防具究極強化</string>
     <string name="skill_ultimate_armor_desc">戦闘終了まで受けるダメージが半分</string>
     <string name="skill_teaser_wand">ねこじゃらしフリフリ～ニャ</string>
@@ -598,8 +599,8 @@
     <string name="skill_sneeze_fire_desc">敵に1ダメージ</string>
     <string name="skill_dragon_roar">ドラゴンの威嚇！</string>
     <string name="skill_dragon_roar_desc">敵が2ターン動けない（ミスしても攻撃されない）</string>
-    <string name="skill_tail_swing">しっぽブンブン</string>
-    <string name="skill_tail_swing_desc">敵に2ダメージ</string>
+    <string name="skill_dragon_flight">群竜の舞</string>
+    <string name="skill_dragon_flight_desc">2匹の飛竜を呼んで火をふかせ、敵に2ダメージ</string>
     <string name="skill_dragon_howl">竜の咆哮</string>
     <string name="skill_dragon_howl_desc">3ターンの間、正解時の攻撃力が2倍</string>
     <string name="skill_meteor_claw">流星ドラゴンクロー</string>
@@ -621,7 +622,7 @@
     <string name="skill_bleh">小悪魔のあっかんべー</string>
     <string name="skill_bleh_desc">敵が1ターン何もしない</string>
     <string name="skill_dark_mist">黒い霧隠れ</string>
-    <string name="skill_dark_mist_desc">この問題をとばす（攻撃されず経験値なし、最後にもう一度出題）</string>
+    <string name="skill_dark_mist_desc">2ターンの間、ミスしても敵の攻撃が当たらずHPが減らない</string>
     <string name="skill_plague_doctor">疫病の到来</string>
     <string name="skill_plague_doctor_desc">5ターンの間、敵の攻撃力が半分</string>
     <string name="skill_demon_eye">魔眼の混乱</string>
@@ -630,4 +631,7 @@
     <string name="skill_energy_sip_desc">敵に2ダメージ、ミス2回分のHPを回復</string>
     <string name="skill_possession">悪魔の憑依</string>
     <string name="skill_possession_desc">ほかの職業に憑依し、戦闘終了までその姿とスキルを使える</string>
+    <string name="possession_title">だれに取りつく？</string>
+    <string name="possession_hint">取りつくと見た目とスキルがその職業になる（戦闘終了まで）</string>
+    <string name="battle_time_stop_retry">時間停止中！もう一度答えよう</string>
 </resources>

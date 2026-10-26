@@ -81,44 +81,44 @@ val ColorIconPalette = mapOf(
     'm' to Color(0xFF687080),
 )
 
-// 複習：不記得（人物頭上一個問號）
-val IconForgot = listOf(
-    "...........RRRR.",
-    "..........RR..RR",
-    "..............RR",
-    ".............RR.",
-    "............RR..",
-    "............RR..",
-    "..KKKKK.........",
-    ".KHHHHHK....RR..",
-    ".KSSSSSK....RR..",
-    ".KSKSKSK........",
-    ".KSSSSSK........",
-    "..KSSSK.........",
-    ".KKBBBKK........",
-    "KBBBBBBBK.......",
-    "KBBBBBBBK.......",
-    "KKKKKKKKK.......",
+// 複習按鈕：不記得（頭昏昏、轉圈圈的眼睛、冒冷汗）
+val IconForgotFace = listOf(
+    "................",
+    ".....KKKKKK.....",
+    "...KKSSSSSSKK...",
+    "..KSSSSSSSSSSK.L",
+    ".KSSSSSSSSSSSSKL",
+    ".KSKKKSSSSKKKSK.",
+    ".KSKSKSSSSKSKSK.",
+    ".KSSKKSSSSKKSSK.",
+    ".KSSSSSSSSSSSSK.",
+    ".KSSSSSSSSSSSSK.",
+    ".KSSSSKKKKSSSSK.",
+    ".KSSSKSSSSKSSSK.",
+    "..KSSSSSSSSSSK..",
+    "...KKSSSSSSKK...",
+    ".....KKKKKK.....",
+    "................",
 )
 
-// 複習：記得（人物頭上一顆燈泡）
-val IconRemember = listOf(
-    "...........KKK..",
-    "..........KYYYK.",
-    ".........KYYWYYK",
-    ".........KYWYYYK",
-    ".........KYYYYYK",
-    "..........KYYYK.",
-    "..KKKKK....KMK..",
-    ".KHHHHHK...KmK..",
-    ".KSSSSSK...KKK..",
-    ".KSKSKSK........",
-    ".KSSSSSK........",
-    "..KSSSK.........",
-    ".KKBBBKK........",
-    "KBBBBBBBK.......",
-    "KBBBBBBBK.......",
-    "KKKKKKKKK.......",
+// 複習按鈕：記得（星星眼、張嘴笑、旁邊閃亮亮）
+val IconRememberFace = listOf(
+    "W..............W",
+    ".....KKKKKK.....",
+    "...KKSSSSSSKK...",
+    "..KSSSSSSSSSSK..",
+    ".KSSSSSSSSSSSSK.",
+    ".KSSYSSSSSSYSSK.",
+    ".KSYYYSSSSYYYSK.",
+    ".KSSYSSSSSSYSSK.",
+    ".KSSSSSSSSSSSSK.",
+    ".KSRSSSSSSSSRSK.",
+    ".KSSKKKKKKKKSSK.",
+    ".KSSKRRRRRRKSSK.",
+    "..KSSKKKKKKSSK..",
+    "...KKSSSSSSKK...",
+    ".....KKKKKK.....",
+    "Y..............Y",
 )
 
 // 加單字：手動輸入（筆和筆記本）

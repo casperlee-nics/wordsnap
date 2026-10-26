@@ -42,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -86,6 +87,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
+import kotlin.random.Random
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -122,13 +124,16 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val profile by vm.currentProfile.collectAsState()
     val books by vm.books.collectAsState()
     val items by vm.items.collectAsState()
-    val avatar = Avatar.from(profile?.avatar)
-    val race = avatar.race
+    val ownAvatar = Avatar.from(profile?.avatar)
+    val race = ownAvatar.race
+    // 惡魔的附身：附身的職業（外觀和技能都換成那個職業，戰鬥結束先變回來）
+    var possessed by remember { mutableStateOf<Race?>(null) }
+    var choosePossession by remember { mutableStateOf(false) }
     // 戰鬥開始時的稱號階級，決定頭像和招式
     val tier = remember { avatarTier(levelInfo(profile?.exp ?: 0).level) }
     // 戰鬥開始時的等級，決定學會哪些技能、能用幾次
     val level = remember { levelInfo(profile?.exp ?: 0).level }
-    val skills = remember { Skill.of(race) }
+    val skills = Skill.of(possessed ?: race)
     val bookName = books.firstOrNull { it.id == bookId }?.name ?: ""
     // 這本的字都答對兩次了：練習戰，經驗值 1/4、不掉道具
     val practice = remember { vm.isPracticeBattle(bookId) }
@@ -136,7 +141,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val questions = remember { vm.pickBattleWords(bookId, practice).toMutableStateList() }
     val monster = remember { vm.pickBattleMonster() }
     val isBoss = monster.rank != MonsterRank.Normal
-    val scene = remember { ReviewScene.entries.random() }
+    // 隕石招喚、火龍的呢喃這些招會把背景換掉，直到戰鬥結束
+    var scene by remember { mutableStateOf(ReviewScene.entries.random()) }
     val speaker = rememberSpeaker()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -149,6 +155,9 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var result by remember { mutableStateOf<Boolean?>(null) }
     var finished by remember { mutableStateOf(false) }
     var died by remember { mutableStateOf(false) }
+    // 戰場上顯示的人物：附身時是附身的職業，戰鬥結束先變回自己
+    val shownRace = possessed?.takeIf { !finished } ?: race
+    val avatar = if (shownRace == race) ownAvatar else avatarOf(shownRace)
     var fallen by remember { mutableStateOf(false) }
     // 魔王出場動畫播完了才開始出題
     var introDone by remember { mutableStateOf(!isBoss) }
@@ -181,6 +190,20 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var charmHeals by remember { mutableIntStateOf(0) }
     // 技能打中怪物要等多久（每招動畫不一樣長）
     var hitDelay by remember { mutableIntStateOf(900) }
+    // 黑霧遁形（怪物打不到）、魔導書／精靈之眼（先給前一半字母）、偷來的懷錶（時間暫停）還剩幾回合
+    var dodgeTurns by remember { mutableIntStateOf(0) }
+    var hintTurns by remember { mutableIntStateOf(0) }
+    var timeStopTurns by remember { mutableIntStateOf(0) }
+    // 時間暫停時這題已經重答過了沒；最後一次怪物攻擊是不是被閃掉
+    var retried by remember { mutableStateOf(false) }
+    var lastDodged by remember { mutableStateOf(false) }
+    // 受到傷害的倍率（哥布林大王 0.75、防具終極強化 0.5），小數累積起來再扣
+    var guardMult by remember { mutableFloatStateOf(1f) }
+    var hurtCarry by remember { mutableFloatStateOf(0f) }
+    // 貓咪是地表最可愛的生物：答錯有一半機率不被攻擊
+    var cute by remember { mutableStateOf(false) }
+    // 每回合（1 題）最多用 1 招
+    var skillThisRound by remember { mutableStateOf(false) }
     var itemUse by remember { mutableStateOf<ItemUse?>(null) }
     // 監獄彩蛋：點兩下鐵門，囚犯衝出來打怪物（每場一次）；值每次加一讓動畫播放
     var prisonBreak by remember { mutableIntStateOf(0) }
@@ -258,6 +281,24 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         if (stunTurns > 0) stunTurns--
         if (weakTurns > 0) weakTurns--
         if (charmTurns > 0) charmTurns--
+        if (dodgeTurns > 0) dodgeTurns--
+        if (hintTurns > 0) hintTurns--
+        if (timeStopTurns > 0) timeStopTurns--
+    }
+
+    // 被怪物打到：防具、哥布林大王、瘟疫會讓傷害變少，不到 1 的部分累積起來
+    fun hurtHero() {
+        var amount = WRONG_DAMAGE * guardMult
+        if (weakTurns > 0) amount /= 2
+        hurtCarry += amount
+        val whole = hurtCarry.toInt()
+        damage += whole
+        hurtCarry -= whole
+    }
+
+    // 古代魔導書、精靈之眼：輸入框先填好前一半字母
+    fun fillHint() {
+        if (hintTurns > 0 && result == null) input = answer.take((answer.length / 2).coerceAtLeast(1))
     }
 
     // 答對時技能的加成：粉絲加油多扣 1 格、攻擊力加成多扣半格（x1.5）或 1 格（x2）
@@ -279,13 +320,23 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         if (!answering || input.isBlank() || word == null) return
         // 要拼出整個單字
         val ok = input.trim().equals(answer, ignoreCase = true)
+        // 時間暫停：第一次答錯不算，馬上再答一次
+        if (!ok && timeStopTurns > 0 && !retried) {
+            retried = true
+            input = ""
+            fillHint()
+            return
+        }
         result = ok
         if (ok) {
             correct++
             correctBonus()
         } else {
             wrong.add(word)
+            lastDodged = false
             when {
+                // 時間暫停：怪物定格，不會攻擊
+                timeStopTurns > 0 -> lastBlocked = false
                 // 被貓咪樂團迷住：怪物不攻擊，反而幫人物補 1 次血
                 charmTurns > 0 -> {
                     lastBlocked = false
@@ -299,6 +350,14 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 }
                 // 怪物昏迷或嚇呆了：不能動，不會攻擊
                 stunTurns > 0 -> lastBlocked = false
+                // 被貓咪可愛到：一半機率不攻擊
+                cute && Random.nextBoolean() -> lastBlocked = false
+                // 黑霧遁形：怪物撲過來但打不到
+                dodgeTurns > 0 -> {
+                    lastBlocked = false
+                    lastDodged = true
+                    monsterAttacks++
+                }
                 // 防護盾：怪物照樣攻擊，但被盾擋下不扣血
                 shieldTurns > 0 -> {
                     lastBlocked = true
@@ -307,8 +366,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                 else -> {
                     lastBlocked = false
                     monsterAttacks++
-                    // 瘟疫：怪物生病了，攻擊力減半
-                    damage += if (weakTurns > 0) WRONG_DAMAGE / 2 else WRONG_DAMAGE
+                    hurtHero()
                 }
             }
         }
@@ -325,6 +383,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     fun next() {
         input = ""
         result = null
+        retried = false
+        skillThisRound = false
         // 道具或混亂讓怪物的血先打光了，就直接打倒，不用把題目答完
         if (index + 1 >= total || monsterHalves() <= 0) {
             win(questions.take(index + 1))
@@ -363,22 +423,31 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
-    // 這招現在能不能用：學會了、做好了、這場還沒用過、還有次數，而且用了有效果
+    // 附身不算在使用次數裡
+    fun usesLeft() = (skillUsesPerBattle(level) - usedSkills.count { it != Skill.Possession }).coerceAtLeast(0)
+
+    // 這招現在能不能用：學會了、做好了、這場還沒用過、還有次數、這回合還沒用過，而且用了有效果
     fun canUseSkill(skill: Skill): Boolean {
         val e = skill.effect ?: return false
-        if (!answering || skill.level > level || skill in usedSkills || usedSkills.size >= skillUsesPerBattle(level)) return false
+        if (!answering || skillThisRound || skill.level > level || skill in usedSkills) return false
+        if (!e.possess && usesLeft() <= 0) return false
         // 只有單一效果的招式，效果還在身上時不能再用（不然浪費一次）
-        val attacks = e.damage > 0 || e.reveal > 0
         return when {
+            e.possess -> possessed == null
+            e.selfHit > 0 -> heroHp > WRONG_DAMAGE * e.selfHit
             e.skip -> index < total - 1
-            e.heal > 0 && !attacks -> damage > 0
-            e.shield > 0 && !attacks -> shieldTurns == 0
-            e.stun > 0 && !attacks -> stunTurns == 0
+            e == SkillEffect(heal = e.heal) -> damage > 0
+            e == SkillEffect(shield = e.shield) -> shieldTurns == 0
+            e == SkillEffect(stun = e.stun) -> stunTurns == 0
             e.cheer > 0 -> cheerTurns == 0
+            e.guard > 0 -> true
             e.boost > 0 -> boostTurns == 0
             e.confuse > 0 -> confuseTurns == 0
             e.weaken > 0 -> weakTurns == 0
             e.charm > 0 -> charmTurns == 0
+            e.dodge > 0 -> dodgeTurns == 0
+            e.hint > 0 -> hintTurns == 0
+            e.timeStop > 0 -> timeStopTurns == 0
             else -> true
         }
     }
@@ -387,9 +456,16 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         val e = skill.effect ?: return
         if (!canUseSkill(skill)) return
         showSkills = false
+        // 附身先選職業，選好了才算用掉
+        if (e.possess) {
+            choosePossession = true
+            return
+        }
         usedSkills.add(skill)
+        skillThisRound = true
         skillUse = SkillUse(skill, (skillUse?.id ?: 0) + 1)
         if (e.heal > 0) damage = (damage - WRONG_DAMAGE * e.heal).coerceAtLeast(0)
+        if (e.selfHit > 0) damage += WRONG_DAMAGE * e.selfHit
         if (e.shield > 0) shieldTurns = maxOf(shieldTurns, e.shield)
         if (e.stun > 0) stunTurns = maxOf(stunTurns, e.stun)
         if (e.cheer > 0) cheerTurns = e.cheer
@@ -401,7 +477,28 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         if (e.confuse > 0) confuseTurns = maxOf(confuseTurns, e.confuse)
         if (e.weaken > 0) weakTurns = e.weaken
         if (e.charm > 0) charmTurns = e.charm
-        if (e.music) musicOverride = ClassicalTunes.random()
+        if (e.dodge > 0) dodgeTurns = e.dodge
+        if (e.timeStop > 0) timeStopTurns = e.timeStop
+        if (e.guard > 0) guardMult *= (100 - e.guard) / 100f
+        if (e.cute) cute = true
+        if (e.hint > 0) {
+            hintTurns = e.hint
+            fillHint()
+        }
+        when (e.music) {
+            SkillMusic.Classical -> musicOverride = ClassicalTunes.random()
+            SkillMusic.Moonlight -> musicOverride = R.raw.classical_moonlight
+            SkillMusic.Sailor -> musicOverride = R.raw.sailor_bgm
+            null -> Unit
+        }
+        // 背景在動畫播到一半（煙塵散去、火焰退去）時換掉
+        val newScene = e.scene
+        if (newScene != null) {
+            scope.launch {
+                delay(skillSceneSwap(skill).toLong())
+                scene = newScene
+            }
+        }
         when {
             e.reveal > 0 -> {
                 // 先打怪物再給答案；答對後下一題時才檢查怪物倒下，不會結束兩次
@@ -423,6 +520,30 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
+    // 效果還在、要一直畫在戰場上的招式（光芒、醫生、樂團、跟班…）
+    fun lastingActive(skill: Skill): Boolean = when {
+        skill == boostSkill -> boostTurns > 0
+        skill == Skill.PlagueDoctor -> weakTurns > 0
+        skill == Skill.DarkMist -> dodgeTurns > 0
+        skill == Skill.StolenWatch -> timeStopTurns > 0
+        skill == Skill.AncientTome || skill == Skill.ElfEye -> hintTurns > 0
+        skill == Skill.CatOrchestra || skill == Skill.UltimateArmor || skill == Skill.CutestCat -> !finished
+        else -> false
+    }
+
+    // 附身：魔族化成黑影鑽進去，動畫播到一半換成那個職業；這回合不能再用技能
+    fun possess(target: Race) {
+        choosePossession = false
+        if (!answering || possessed != null) return
+        usedSkills.add(Skill.Possession)
+        skillThisRound = true
+        skillUse = SkillUse(Skill.Possession, (skillUse?.id ?: 0) + 1)
+        scope.launch {
+            delay(skillDuration(Skill.Possession) / 2L)
+            possessed = target
+        }
+    }
+
     // 監獄的鐵門點兩下：一群囚犯衝出來，怪物損血 1
     fun openPrisonDoor() {
         if (!answering || prisonBreak > 0) return
@@ -436,6 +557,10 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             delay(300)
             sayWord()
         }
+    }
+    // 魔導書、精靈之眼：每一題先填好前一半字母
+    LaunchedEffect(index, skips) {
+        if (word != null && !finished) fillHint()
     }
     // 偷看小抄的第二題：題目出來一下下，就自動寫上答案
     LaunchedEffect(index) {
@@ -494,7 +619,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     hero = avatar,
                     heroName = profile?.name.orEmpty(),
                     tier = tier,
-                    finisher = race.finisher,
+                    finisher = shownRace.finisher,
                     hits = correct,
                     bonusHits = bonusHits,
                     attacks = monsterAttacks,
@@ -516,11 +641,12 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     onPrisonDoor = { openPrisonDoor() },
                     skillUse = skillUse,
                     cheering = cheerTurns > 0,
-                    boosting = if (boostTurns > 0) boostSkill else null,
                     stunned = stunTurns > 0,
-                    sick = weakTurns > 0,
                     charmed = charmTurns > 0,
-                    orchestra = musicOverride != null,
+                    lasting = usedSkills.filter(::lastingActive),
+                    frozen = timeStopTurns > 0,
+                    dodged = lastDodged,
+                    giant = boostSkill == Skill.GoblinKing && boostTurns > 0 && !finished,
                     charmHeals = charmHeals,
                     hitDelay = hitDelay,
                     falling = died,
@@ -560,6 +686,10 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     }
                     !introDone -> Text(tr(R.string.battle_watch_out), style = MaterialTheme.typography.titleMedium)
                     word != null -> {
+                        // 時間暫停：第一次答錯可以馬上再答一次
+                        if (retried && result == null) {
+                            Text(tr(R.string.battle_time_stop_retry), style = MaterialTheme.typography.titleMedium, color = PixelRed)
+                        }
                         Question(
                             answer = answer,
                             meaning = word.meaning,
@@ -595,13 +725,17 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         )
     }
 
+    if (choosePossession) {
+        PossessionDialog(self = race, onPick = ::possess, onDismiss = { choosePossession = false })
+    }
+
     if (showSkills) {
         SkillDialog(
             skills = skills,
             level = level,
             onDismiss = { showSkills = false },
             used = usedSkills,
-            usesLeft = (skillUsesPerBattle(level) - usedSkills.size).coerceAtLeast(0),
+            usesLeft = usesLeft(),
             canUse = ::canUseSkill,
             onUse = ::useSkill,
         )
@@ -611,7 +745,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     if (endShown && done != null) {
         val chestItem = done.item
         if (showingLevelUp) {
-            LevelUpScreen(avatar, race, done.levelBefore, done.levelAfter, onClose = { levelUpDone = true })
+            LevelUpScreen(ownAvatar, race, done.levelBefore, done.levelAfter, onClose = { levelUpDone = true })
         } else if (showingChest && chestItem != null) {
             ChestScreen(chestItem, onClose = { chestDone = true })
         } else {
@@ -643,7 +777,7 @@ private fun Question(
     // 由上往下：答對答錯的結果 → 按鈕 → 咒語輸入框
     // 輸入框放在最下面，畫面捲到底時它就緊貼在鍵盤上方，按鈕在它正上方，都不會被鍵盤蓋住
     when (result) {
-        true -> Text(tr(R.string.battle_hit), style = MaterialTheme.typography.headlineSmall, color = PixelRed)
+        true -> Text(tr(R.string.battle_hit), style = MaterialTheme.typography.titleLarge, color = PixelRed)
         false -> Text(tr(R.string.battle_hurt), style = MaterialTheme.typography.titleMedium, color = PixelRed)
         null -> Unit
     }
@@ -735,11 +869,12 @@ private fun BattleField(
     onPrisonDoor: () -> Unit = {},
     skillUse: SkillUse? = null,
     cheering: Boolean = false,
-    boosting: Skill? = null,
     stunned: Boolean = false,
-    sick: Boolean = false,
     charmed: Boolean = false,
-    orchestra: Boolean = false,
+    lasting: List<Skill> = emptyList(),
+    frozen: Boolean = false,
+    dodged: Boolean = false,
+    giant: Boolean = false,
     charmHeals: Int = 0,
     hitDelay: Int = 900,
     falling: Boolean = false,
@@ -755,6 +890,8 @@ private fun BattleField(
     val bob by idle.animateFloat(
         0f, 1f, infiniteRepeatable(tween(650, easing = LinearEasing), RepeatMode.Reverse), label = "bob",
     )
+    // 時間暫停時怪物定格不動
+    val monsterBob = if (frozen) 0f else bob
 
     BoxWithConstraints(Modifier.fillMaxWidth().clipToBounds()) {
         val half = maxWidth / 2
@@ -817,6 +954,8 @@ private fun BattleField(
         val heroFlash = remember { Animatable(0f) }
         val blocked by rememberUpdatedState(lastBlocked)
         val block = remember { Animatable(0f) }
+        val dodgedNow by rememberUpdatedState(dodged)
+        val miss = remember { Animatable(0f) }
         LaunchedEffect(attacks) {
             if (attacks == 0) return@LaunchedEffect
             launch {
@@ -829,6 +968,12 @@ private fun BattleField(
                 })
             }
             delay(260)
+            // 黑霧遁形：怪物撲空，人物旁邊跳出 MISS
+            if (dodgedNow) {
+                miss.snapTo(1f)
+                miss.animateTo(0f, tween(800))
+                return@LaunchedEffect
+            }
             // 被防護盾擋下：光罩亮一下，人物不閃也不晃
             if (blocked) {
                 block.snapTo(1f)
@@ -928,6 +1073,29 @@ private fun BattleField(
             skillAnim.animateTo(1f, tween(skillDuration(skillUse.skill), easing = LinearEasing))
             skillAnim.snapTo(0f)
         }
+        // 瘟疫醫生在瘟疫結束時鞠躬走掉
+        val doctorHere = Skill.PlagueDoctor in lasting
+        var doctorWas by remember { mutableStateOf(false) }
+        val doctorLeave = remember { Animatable(0f) }
+        LaunchedEffect(doctorHere) {
+            if (doctorHere) {
+                doctorWas = true
+            } else if (doctorWas) {
+                doctorWas = false
+                doctorLeave.snapTo(0f)
+                doctorLeave.animateTo(1f, tween(1400, easing = LinearEasing))
+                doctorLeave.snapTo(0f)
+            }
+        }
+        // 精靈族的逆襲：答對時樹上的精靈一起放箭
+        val volley = remember { Animatable(0f) }
+        val uprising by rememberUpdatedState(Skill.ElvenUprising in lasting)
+        LaunchedEffect(hits) {
+            if (hits == 0 || !uprising) return@LaunchedEffect
+            volley.snapTo(0f)
+            volley.animateTo(1f, tween(800, easing = LinearEasing))
+            volley.snapTo(0f)
+        }
         // 被迷住的怪物答錯時幫人物補血
         val charmAnim = remember { Animatable(0f) }
         LaunchedEffect(charmHeals) {
@@ -1001,6 +1169,11 @@ private fun BattleField(
                                 }
                                 transformOrigin = TransformOrigin(0.5f, 1f)
                                 rotationZ = fallAngle
+                                // 哥布林大王：狂吃雞腿變巨大
+                                if (giant) {
+                                    scaleX = 1.3f
+                                    scaleY = 1.3f
+                                }
                             },
                         )
                     }
@@ -1028,12 +1201,12 @@ private fun BattleField(
                                 .graphicsLayer {
                                     transformOrigin = TransformOrigin(0.5f, 1f)
                                     translationX = shake.value.dp.toPx() + lunge.value.dp.toPx() + move.dx.dp.toPx()
-                                    translationY = -bob * 4.dp.toPx() + move.dy.dp.toPx() -
+                                    translationY = -monsterBob * 4.dp.toPx() + move.dy.dp.toPx() -
                                         (1f - drop) * (artH + 160.dp).toPx()
                                     // 混亂打自己時一格一格轉一圈
                                     rotationZ = move.rotation + floor(selfSpin.value * 8f) * 45f
-                                    scaleX = move.scale * (1f + 0.04f * bob)
-                                    scaleY = move.scale * (1f - 0.04f * bob) * squash
+                                    scaleX = move.scale * (1f + 0.04f * monsterBob)
+                                    scaleY = move.scale * (1f - 0.04f * monsterBob) * squash
                                     alpha = if (drop <= 0f) 0f else move.alpha * (1f - 0.7f * flash.value)
                                 },
                         )
@@ -1082,11 +1255,16 @@ private fun BattleField(
                 }
                 if (prisonAnim.value > 0f) drawRiot(prisonAnim.value, ground, prisoners = true)
                 // 技能：持續幾回合的效果一直畫著，剛用的那一招播動畫
-                if (orchestra && !knockout) drawCatBand(spinClock, heroCenter, HeroSize.toPx(), ground)
+                if (!knockout) {
+                    // 剛用的那一招動畫還在播的時候，先不畫它的持續效果（不然會重複）
+                    lasting.filterNot { skillUse?.skill == it && skillAnim.value > 0f }.forEach {
+                        drawLasting(it, spinClock, heroCenter, HeroSize.toPx(), monsterCenter, artH.toPx(), ground)
+                    }
+                }
+                if (doctorLeave.value > 0f) drawDoctorLeave(doctorLeave.value, monsterCenter, artH.toPx(), ground)
+                if (volley.value > 0f) drawElfVolley(volley.value, monsterCenter)
                 if (cheering && !knockout) drawCheerFans(spinClock, heroCenter, HeroSize.toPx(), ground)
-                if (boosting != null && !knockout) drawBoostAura(boosting, spinClock, heroCenter, HeroSize.toPx())
                 if (stunned && !knockout) drawStunned(spinClock, monsterCenter, artH.toPx())
-                if (sick && !knockout) drawSick(spinClock, monsterCenter, artH.toPx())
                 if (charmed && !knockout) drawCharmed(spinClock, monsterCenter, artH.toPx())
                 if (charmAnim.value > 0f) drawHeal(ItemType.SmallPotion, charmAnim.value, heroCenter, HeroSize.toPx())
                 if (skillUse != null && skillAnim.value > 0f) {
@@ -1107,6 +1285,25 @@ private fun BattleField(
                 }
             }
 
+            // 我們都是精靈?：一開始的場記板「開拍！」
+            if (skillUse?.skill == Skill.AreWeElves && skillAnim.value in 0.01f..ELVES_ACTION_UNTIL) {
+                Box(
+                    Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp).background(PixelInk.copy(alpha = 0.8f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text(tr(R.string.skill_are_we_elves_action), color = PixelGold, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+            // 黑霧遁形閃掉攻擊
+            if (miss.value > 0f) {
+                Text(
+                    "MISS",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 24.dp)
+                        .graphicsLayer { translationY = -(1f - miss.value) * 30.dp.toPx(); alpha = miss.value },
+                )
+            }
             // 我們都是精靈?：導演把跑錯棚的精靈拖走時的字幕
             if (skillUse?.skill == Skill.AreWeElves && skillAnim.value in ELVES_CAPTION_FROM..0.99f) {
                 Box(
