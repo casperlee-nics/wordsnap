@@ -69,6 +69,9 @@ interface WordDao {
     @Query("UPDATE words SET meaning = :meaning WHERE id = :id")
     suspend fun setMeaning(id: Long, meaning: String)
 
+    @Query("SELECT COUNT(*) FROM words WHERE bookId = :bookId AND box >= 1")
+    suspend fun countRememberedInBook(bookId: Long): Int
+
     @Query("DELETE FROM words WHERE bookId = :bookId")
     suspend fun deleteForBook(bookId: Long)
 

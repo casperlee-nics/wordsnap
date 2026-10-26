@@ -162,7 +162,7 @@ private fun MainScreens(vm: WordViewModel, profiles: List<Profile>) {
             onAddChoiceShown = { reopenAddChoice = false },
         )
         Screen.Scan -> ScanScreen(
-            existing = allWords.map { it.text.lowercase() }.toSet(),
+            existing = allWords.groupBy({ it.text.trim().lowercase() }, { it.bookId }).mapValues { it.value.toSet() },
             books = books,
             defaultBookId = selectedBookId,
             onCreateBook = vm::createBook,

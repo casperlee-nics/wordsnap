@@ -374,6 +374,21 @@ private val VillagerArt = listOf(
     "..KK..KK...",
 )
 
+// 監獄彩蛋的囚犯：黑白條紋囚衣、腳上拖著鐵球
+private val PrisonerArt = listOf(
+    "...KKKK....",
+    "..KHHHHK...",
+    "..KSSSSK...",
+    "..KSKSKK...",
+    "..KSSSSK...",
+    "..KWWWWK...",
+    ".KSKKKKSK..",
+    "..KWWWWK...",
+    "..KKKKKK...",
+    "..KWKKWK...",
+    "..KK..KKmK.",
+)
+
 private val BulbArt = listOf(
     "..KKK..",
     ".KYYYK.",
@@ -485,8 +500,8 @@ fun DrawScope.drawVillager(left: Float, bottom: Float, cell: Float, shirt: Char,
     }
 }
 
-// 村民暴動：一群拿著草叉的村民從左邊衝過怪物
-fun DrawScope.drawRiot(t: Float, groundY: Float) {
+// 村民暴動：一群拿著草叉的村民從左邊衝過怪物；prisoners 是監獄彩蛋，換成穿黑白條紋囚衣的囚犯
+fun DrawScope.drawRiot(t: Float, groundY: Float, prisoners: Boolean = false) {
     val cell = 3.dp.toPx()
     val w = VillagerArt.first().length * cell
     val h = VillagerArt.size * cell
@@ -497,7 +512,11 @@ fun DrawScope.drawRiot(t: Float, groundY: Float) {
         if (x < -w || x > size.width) continue
         val hop = if (((t * 20).toInt() + i) % 2 == 0) 0f else cell
         val shirt = shirts[i % shirts.size]
-        drawSprite(VillagerArt, x, groundY - h - hop - (i % 2) * cell * 3, cell, recolor = mapOf('G' to shirt))
+        if (prisoners) {
+            drawSprite(PrisonerArt, x, groundY - h - hop - (i % 2) * cell * 3, cell)
+        } else {
+            drawSprite(VillagerArt, x, groundY - h - hop - (i % 2) * cell * 3, cell, recolor = mapOf('G' to shirt))
+        }
     }
     // 揚起的塵土
     for (k in 0 until 10) {

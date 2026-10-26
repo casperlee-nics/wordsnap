@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wordsnap.app.R
+import com.wordsnap.app.data.Book
 import com.wordsnap.app.data.Word
 import com.wordsnap.app.i18n.tr
 import com.wordsnap.app.speech.rememberSpeaker
@@ -234,7 +235,7 @@ fun WordListScreen(
         profile?.let {
             HeroDialog(
                 it,
-                remembered = allWords.count { w -> w.box >= 1 },
+                remembered = allWords.count { w -> w.box >= 1 } + it.keptRemembered,
                 onDismiss = { showHero = false },
                 onClassChange = { avatar -> vm.changeClass(it, avatar) },
             )
@@ -243,6 +244,7 @@ fun WordListScreen(
     if (showAdd) {
         WordDialog(
             title = tr(R.string.word_add_title),
+            duplicateIn = { vm.booksContaining(it) },
             onDismiss = { showAdd = false },
             onSave = { text, meaning ->
                 vm.add(text, meaning)
@@ -255,6 +257,7 @@ fun WordListScreen(
             title = tr(R.string.word_edit_title),
             initialText = word.text,
             initialMeaning = word.meaning,
+            duplicateIn = { vm.booksContaining(it, except = word) },
             onDismiss = { editing = null },
             onSave = { text, meaning ->
                 vm.update(word, text, meaning)
@@ -271,8 +274,11 @@ private fun WordDialog(
     onSave: (String, String) -> Unit,
     initialText: String = "",
     initialMeaning: String = "",
+    // 輸入的字已經在哪幾本單字簿裡，有的話提醒一下（還是可以存）
+    duplicateIn: (String) -> List<Book> = { emptyList() },
 ) {
     var text by remember { mutableStateOf(initialText) }
+    val duplicates = remember(text) { duplicateIn(text) }
     var meaning by remember { mutableStateOf(initialMeaning) }
 
     PixelAlertDialog(
@@ -291,6 +297,13 @@ private fun WordDialog(
                     height = 64.dp,
                     keyboardType = KeyboardType.Ascii,
                 )
+                if (duplicates.isNotEmpty()) {
+                    Text(
+                        tr(R.string.word_duplicate, duplicates.joinToString("、") { it.name }),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
                 Text(tr(R.string.word_field_meaning), style = MaterialTheme.typography.labelLarge)
                 ScrollTextField(
                     value = meaning,

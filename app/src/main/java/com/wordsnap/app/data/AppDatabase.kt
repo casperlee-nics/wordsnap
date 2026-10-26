@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Word::class, Profile::class, Book::class, Item::class], version = 10)
+@Database(entities = [Word::class, Profile::class, Book::class, Item::class], version = 11)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun wordDao(): WordDao
     abstract fun profileDao(): ProfileDao
@@ -24,7 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "wordsnap.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11).build().also { instance = it }
             }
 
         // v0.3 加入複習欄位，保留舊的單字
@@ -115,6 +115,13 @@ abstract class AppDatabase : RoomDatabase() {
                         "`count` INTEGER NOT NULL, PRIMARY KEY(`profileId`, `type`))"
                 )
                 db.execSQL("ALTER TABLE words ADD COLUMN testCount INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        // v0.94 刪掉單字簿時，裡面記住的字數記在冒險者身上
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE profiles ADD COLUMN keptRemembered INTEGER NOT NULL DEFAULT 0")
             }
         }
 

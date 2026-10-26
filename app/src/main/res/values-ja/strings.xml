@@ -129,6 +129,7 @@
     <string name="hero_next_title">Lv %1$d で称号「%2$s」を獲得</string>
     <string name="class_change">転職</string>
     <string name="class_change_message">どの職業に転職しますか？転職するとレベルが Lv %1$d から Lv %2$d に下がります。</string>
+    <string name="class_change_locked">転職は LV%1$d から！今は LV%2$d です。単語を覚えてレベルを上げよう。</string>
     <string name="class_change_to">%1$s に転職</string>
 
     <!-- 職業の物語、職業選択 -->
@@ -182,6 +183,7 @@
     <string name="word_field_english">英単語</string>
     <string name="word_field_english_hint">例：apple</string>
     <string name="word_field_meaning">日本語の意味</string>
+    <string name="word_duplicate">お知らせ：この単語はもう《%1$s》にあります。このまま保存もできます。</string>
     <string name="word_field_meaning_hint">空欄なら自動で翻訳します</string>
     <string name="meaning_waiting">（翻訳データのダウンロード待ち…）</string>
     <string name="meaning_failed">（自動翻訳できませんでした。タップして入力してください）</string>
@@ -208,6 +210,8 @@
     <string name="scan_select_none">すべて解除</string>
     <string name="scan_skipped">よく使う単語 %1$d 個をスキップしました（the、and、is など）</string>
     <string name="scan_owned">%1$s（登録済み）</string>
+    <string name="scan_in_other_book">%1$s（他の帳にあり）</string>
+    <string name="scan_other_book_hint">「他の帳にあり」の単語は別の単語帳に登録済みですが、この帳にも追加できます。</string>
     <string name="scan_unclear_hide">読み取りにくい単語をたたむ ▲</string>
     <string name="scan_unclear_show">読み取りにくい単語があと %1$d 個（辞書にない）▼</string>
     <string name="scan_save_to">保存先：</string>

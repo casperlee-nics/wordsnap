@@ -67,7 +67,8 @@ enum class ScanSource { Camera, Gallery, Pdf }
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ScanScreen(
-    existing: Set<String>,
+    // 已經收錄的字 → 在哪幾本單字簿裡
+    existing: Map<String, Set<Long?>>,
     books: List<Book>,
     defaultBookId: Long?,
     onCreateBook: (String, (Long) -> Unit) -> Unit,
@@ -206,7 +207,15 @@ fun ScanScreen(
                     // 片語由常見字組成，不能被常見字過濾掉
                     val words = all.filter { ' ' in it || !TextScanner.isCommon(it) }
                     val skipped = all.size - words.size
-                    val selectable = words.filter { it !in existing }
+                    // 要存的那本已經有的字不能選；別本有的字可以選，但標出來提醒
+                    fun owned(word: String) = existing[word]?.contains(targetBookId) == true
+                    fun inOtherBook(word: String) = !owned(word) && existing[word]?.isNotEmpty() == true
+                    fun label(word: String) = when {
+                        owned(word) -> tr(R.string.scan_owned, word)
+                        inOtherBook(word) -> tr(R.string.scan_in_other_book, word)
+                        else -> word
+                    }
+                    val selectable = words.filter { !owned(it) }
                     val allSelected = selectable.isNotEmpty() && selectable.all { it in selected }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(tr(R.string.scan_pick), Modifier.weight(1f))
@@ -223,6 +232,9 @@ fun ScanScreen(
                     if (skipped > 0) {
                         Text(tr(R.string.scan_skipped, skipped), style = MaterialTheme.typography.bodySmall.readable())
                     }
+                    if ((words + unclear).any { inOtherBook(it) }) {
+                        Text(tr(R.string.scan_other_book_hint), style = MaterialTheme.typography.bodySmall.readable(), color = MaterialTheme.colorScheme.error)
+                    }
                     // 選字的外框，上緣站著幾隻像素怪物
                     Box(Modifier.weight(1f).fillMaxWidth()) {
                         FlowRow(
@@ -235,12 +247,11 @@ fun ScanScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             words.forEach { word ->
-                                val owned = word in existing
                                 FilterChip(
-                                    selected = word in selected,
+                                    selected = word in selected && !owned(word),
                                     onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
-                                    label = { Text(if (owned) tr(R.string.scan_owned, word) else word, style = MaterialTheme.typography.labelLarge.readable()) },
-                                    enabled = !owned,
+                                    label = { Text(label(word), style = MaterialTheme.typography.labelLarge.readable()) },
+                                    enabled = !owned(word),
                                 )
                             }
                             // 字典查不到的字收在最後，點一下才展開
@@ -253,12 +264,11 @@ fun ScanScreen(
                                 }
                                 if (showUnclear) {
                                     unclear.forEach { word ->
-                                        val owned = word in existing
                                         FilterChip(
-                                            selected = word in selected,
+                                            selected = word in selected && !owned(word),
                                             onClick = { if (word in selected) selected.remove(word) else selected.add(word) },
-                                            label = { Text(if (owned) tr(R.string.scan_owned, word) else word, style = MaterialTheme.typography.labelLarge.readable()) },
-                                            enabled = !owned,
+                                            label = { Text(label(word), style = MaterialTheme.typography.labelLarge.readable()) },
+                                            enabled = !owned(word),
                                         )
                                     }
                                 }
@@ -277,9 +287,9 @@ fun ScanScreen(
                         onTopBar = true,
                     )
                     RetroButton(
-                        tr(R.string.scan_add, selected.size),
-                        onClick = { onAdd(selected.toList(), targetBookId) },
-                        enabled = selected.isNotEmpty(),
+                        tr(R.string.scan_add, selected.count { !owned(it) }),
+                        onClick = { onAdd(selected.filter { !owned(it) }, targetBookId) },
+                        enabled = selected.any { !owned(it) },
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

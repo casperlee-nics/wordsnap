@@ -55,6 +55,7 @@ import kotlin.math.floor
 @Composable
 fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit, onClassChange: ((Avatar) -> Unit)? = null) {
     var changingClass by remember { mutableStateOf(false) }
+    var classLocked by remember { mutableStateOf(false) }
     val avatar = Avatar.from(profile.avatar)
     val race = avatar.race
     val info = levelInfo(profile.exp)
@@ -72,9 +73,11 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit, onClass
                     Text(profile.name, style = MaterialTheme.typography.titleLarge)
                     Text(tr(R.string.quoted, race.title(info.level)), style = MaterialTheme.typography.bodyMedium)
                 }
-                // 超過 10 級才出現轉職按鈕
-                if (onClassChange != null && info.level >= CLASS_CHANGE_MIN_LEVEL) {
-                    ClassChangeButton(onClick = { changingClass = true })
+                // 轉職按鈕一直都在；還沒超過 10 級時按了只會提示還不能轉職
+                if (onClassChange != null) {
+                    ClassChangeButton(onClick = {
+                        if (info.level >= CLASS_CHANGE_MIN_LEVEL) changingClass = true else classLocked = true
+                    })
                 }
             }
         },
@@ -96,6 +99,15 @@ fun HeroDialog(profile: Profile, remembered: Int, onDismiss: () -> Unit, onClass
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+    }
+
+    if (classLocked) {
+        PixelAlertDialog(
+            onDismissRequest = { classLocked = false },
+            title = { Text(tr(R.string.class_change)) },
+            text = { Text(tr(R.string.class_change_locked, CLASS_CHANGE_MIN_LEVEL, info.level), style = MaterialTheme.typography.bodyMedium.readable()) },
+            confirmButton = { TextButton(onClick = { classLocked = false }) { Text(tr(R.string.close)) } },
+        )
     }
 
     if (changingClass && onClassChange != null) {

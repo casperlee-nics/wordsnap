@@ -135,6 +135,7 @@
     <string name="hero_next_title">Lv %1$d 可獲得稱號「%2$s」</string>
     <string name="class_change">轉職</string>
     <string name="class_change_message">要轉成哪一種職業？轉職後等級會從 Lv %1$d 降到 Lv %2$d。</string>
+    <string name="class_change_locked">要到 LV%1$d 才能轉職喔！現在是 LV%2$d，再努力背單字升級吧。</string>
     <string name="class_change_to">轉職成%1$s</string>
 
     <!-- 職業故事、選職業 -->
@@ -188,6 +189,7 @@
     <string name="word_field_english">英文單字</string>
     <string name="word_field_english_hint">例如：apple</string>
     <string name="word_field_meaning">中文意思</string>
+    <string name="word_duplicate">提醒：這個字已經在《%1$s》裡了，還是可以存。</string>
     <string name="word_field_meaning_hint">空白會自動翻譯</string>
     <string name="meaning_waiting">（等待翻譯檔下載…）</string>
     <string name="meaning_failed">（無法自動翻譯，點一下自己填寫）</string>
@@ -214,6 +216,8 @@
     <string name="scan_select_none">全不選</string>
     <string name="scan_skipped">已略過 %1$d 個常見字（如 the、and、is）</string>
     <string name="scan_owned">%1$s（已有）</string>
+    <string name="scan_in_other_book">%1$s（別本有）</string>
+    <string name="scan_other_book_hint">標「別本有」的字已經在其他單字簿裡，還是可以再加進這本。</string>
     <string name="scan_unclear_hide">收起看不清楚的字 ▲</string>
     <string name="scan_unclear_show">還有 %1$d 個看不清楚的字（字典查不到）▼</string>
     <string name="scan_save_to">存到：</string>

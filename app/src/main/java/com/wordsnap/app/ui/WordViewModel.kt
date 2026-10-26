@@ -42,6 +42,7 @@ private const val KEY_PROFILE = "current_profile_id"
 private const val KEY_BOOK = "last_book_"
 private const val KEY_MEANING_CLEANUP = "meaning_cleanup_v1"
 private const val KEY_TESTCOUNT_RESET = "testcount_reset_v1"
+private const val KEY_TEST_SAVES = "test_saves_v1"
 
 // 記住 10 個字就能戰鬥，每場最多 10 題
 const val BATTLE_SIZE = 10
@@ -219,6 +220,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         if (books.value.size <= 1) return
         viewModelScope.launch {
             db.withTransaction {
+                profileDao.addKeptRemembered(book.profileId, dao.countRememberedInBook(book.id))
                 dao.deleteForBook(book.id)
                 bookDao.delete(book.id)
             }
@@ -258,6 +260,11 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 prefs.edit().putBoolean(KEY_TESTCOUNT_RESET, true).apply()
             }
             cleanupMeaningsOnce()
+            // 測試存檔（9 職業 LV60、全道具），只建立一次
+            if (TestSaves.ENABLED && !prefs.getBoolean(KEY_TEST_SAVES, false)) {
+                TestSaves.seed(db)
+                prefs.edit().putBoolean(KEY_TEST_SAVES, true).apply()
+            }
             // 目前的語言是日文，字典包有新版（或還沒裝）就先裝好，才查得到解釋
             DictionaryPacks.install(getApplication(), appLanguage(getApplication()))
             fillMissingMeaningsNow()
@@ -296,11 +303,11 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 把拍照選到的單字一次加入指定的單字簿，這個暱稱已經有的字會略過
+    // 把拍照選到的單字一次加入指定的單字簿，這本已經有的字會略過（別本有的字可以重複加）
     fun addAll(texts: Collection<String>, bookId: Long?) {
         val pid = profileId ?: return
         viewModelScope.launch {
-            val existing = dao.getAllTexts(pid).map { it.lowercase() }.toSet()
+            val existing = allWords.value.filter { it.bookId == bookId }.map { it.text.trim().lowercase() }.toSet()
             val newWords = texts.filter { it.lowercase() !in existing }
                 .map { Word(text = it, meaning = "", profileId = pid, bookId = bookId) }
             dao.insertAll(newWords)
@@ -315,9 +322,27 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun delete(word: Word) {
-        viewModelScope.launch { dao.delete(word) }
+    // 這個字已經在哪些單字簿裡（不分大小寫）；編輯時不算自己
+    fun booksContaining(text: String, except: Word? = null): List<Book> {
+        val key = text.trim().lowercase()
+        if (key.isEmpty()) return emptyList()
+        val ids = allWords.value.filter { it.id != except?.id && it.text.trim().lowercase() == key }.map { it.bookId }.toSet()
+        return books.value.filter { it.id in ids }
     }
+
+    // 刪掉已經記住的字，記住的字數照樣保留
+    fun delete(word: Word) {
+        viewModelScope.launch {
+            db.withTransaction {
+                if (word.box >= 1) profileDao.addKeptRemembered(word.profileId, 1)
+                dao.delete(word)
+            }
+        }
+    }
+
+    // 這個冒險者總共記住幾個字：現在單字簿裡記住的，加上刪掉的單字簿裡記住過的
+    fun rememberedTotal(): Int =
+        allWords.value.count { it.box >= 1 } + (currentProfile.value?.keptRemembered ?: 0)
 
     // 下載失敗後讓使用者按「重試」
     fun retryTranslation() = fillMissingMeanings()
@@ -385,7 +410,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     // 這次要打的怪物：每記住 100 個字出現一隻大魔王、每 50 個字一隻中魔王，其他時候隨機一般怪物
     fun pickBattleMonster(): Monster {
         val profile = currentProfile.value ?: return NormalMonsters.random()
-        val remembered = allWords.value.count { it.box >= 1 }
+        val remembered = rememberedTotal()
         return when {
             remembered / 100 > profile.bigBossSeen -> BigBosses[profile.bigBossSeen % BigBosses.size]
             remembered / 50 > profile.midBossSeen -> MidBosses[profile.midBossSeen % MidBosses.size]
@@ -435,7 +460,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 if (item != null) itemDao.add(profile.id, item.name)
                 // 魔王要通過這場戰鬥才算打倒，不然下次還會再出現
                 if (passed && monster.rank != MonsterRank.Normal) {
-                    val remembered = allWords.value.count { it.box >= 1 }
+                    val remembered = rememberedTotal()
                     if (monster.rank == MonsterRank.Big) {
                         // 打倒大魔王時，同一段的中魔王也一起跳過
                         profileDao.setBossSeen(profile.id, maxOf(profile.midBossSeen, remembered / 50), profile.bigBossSeen + 1)

@@ -25,6 +25,9 @@ interface ProfileDao {
     @Query("UPDATE profiles SET midBossSeen = :mid, bigBossSeen = :big WHERE id = :id")
     suspend fun setBossSeen(id: Long, mid: Int, big: Int)
 
+    @Query("UPDATE profiles SET keptRemembered = keptRemembered + :count WHERE id = :id")
+    suspend fun addKeptRemembered(id: Long, count: Int)
+
     @Query("UPDATE profiles SET avatar = :avatar, exp = :exp WHERE id = :id")
     suspend fun changeClass(id: Long, avatar: String, exp: Int)
 

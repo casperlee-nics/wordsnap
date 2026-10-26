@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -63,6 +64,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -138,6 +140,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     var bonus by remember { mutableIntStateOf(0) }
     var bonusHits by remember { mutableIntStateOf(0) }
     var itemUse by remember { mutableStateOf<ItemUse?>(null) }
+    // 監獄彩蛋：點兩下鐵門，囚犯衝出來打怪物（每場一次）；值每次加一讓動畫播放
+    var prisonBreak by remember { mutableIntStateOf(0) }
     var showBag by remember { mutableStateOf(false) }
     // 防護盾、混亂藥劑還剩幾回合
     var shieldTurns by remember { mutableIntStateOf(0) }
@@ -256,6 +260,19 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         }
     }
 
+    // 道具或彩蛋額外打怪物；怪物被打到沒血：等打中（約 1 秒）就直接倒下，這題不用答
+    fun hitMonster(amount: Int) {
+        bonus += amount
+        bonusHits++
+        if (total - correct - bonus <= 0) {
+            ending = true
+            scope.launch {
+                delay(1100)
+                win(questions.take(index))
+            }
+        }
+    }
+
     fun useItem(type: ItemType) {
         if (!answering) return
         showBag = false
@@ -272,19 +289,15 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
             }
             type == ItemType.Shield -> shieldTurns = ITEM_TURNS
             type == ItemType.Confusion -> confuseTurns = ITEM_TURNS
-            else -> {
-                bonus += type.monsterDamage(total)
-                bonusHits++
-                // 怪物被道具打到沒血：等道具打中（約 1 秒）就直接倒下，這題不用答
-                if (total - correct - bonus <= 0) {
-                    ending = true
-                    scope.launch {
-                        delay(1100)
-                        win(questions.take(index))
-                    }
-                }
-            }
+            else -> hitMonster(type.monsterDamage(total))
         }
+    }
+
+    // 監獄的鐵門點兩下：一群囚犯衝出來，怪物損血 1
+    fun openPrisonDoor() {
+        if (!answering || prisonBreak > 0) return
+        prisonBreak++
+        hitMonster(1)
     }
 
     // 每一題先念一次英文發音（魔王戰等出場動畫播完）
@@ -360,6 +373,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     intro = !introDone,
                     onIntroEnd = { introDone = true },
                     itemUse = itemUse,
+                    prisonBreak = prisonBreak,
+                    onPrisonDoor = { openPrisonDoor() },
                     falling = died,
                     onFallEnd = { fallen = true },
                 )
@@ -549,6 +564,8 @@ private fun BattleField(
     intro: Boolean,
     onIntroEnd: () -> Unit,
     itemUse: ItemUse?,
+    prisonBreak: Int = 0,
+    onPrisonDoor: () -> Unit = {},
     falling: Boolean = false,
     onFallEnd: () -> Unit = {},
 ) {
@@ -717,6 +734,16 @@ private fun BattleField(
             itemAnim.snapTo(0f)
         }
 
+        // 監獄彩蛋：囚犯衝過怪物
+        val prisonAnim = remember { Animatable(0f) }
+        LaunchedEffect(prisonBreak) {
+            if (prisonBreak == 0) return@LaunchedEffect
+            prisonAnim.snapTo(0f)
+            prisonAnim.animateTo(1f, tween(1600, easing = LinearEasing))
+            prisonAnim.snapTo(0f)
+        }
+        val doorTap by rememberUpdatedState(onPrisonDoor)
+
         // 倒下：搖晃一下 → 一格一格往後倒 → 躺在地上變灰
         val fall = remember { Animatable(0f) }
         val fallCallback by rememberUpdatedState(onFallEnd)
@@ -740,7 +767,23 @@ private fun BattleField(
         // 巨斧落下時怪物被壓扁
         val squash = if (finisher == Finisher.Smash && effect in 0.6f..1f && fly == 0f) 0.45f else 1f
 
-        Box(Modifier.fillMaxWidth().graphicsLayer { translationX = landShake.dp.toPx() }) {
+        val prisonScene = scene == ReviewScene.Prison && monster.rank == MonsterRank.Normal
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .graphicsLayer { translationX = landShake.dp.toPx() }
+                .then(
+                    if (!prisonScene) Modifier else Modifier.pointerInput(Unit) {
+                        // 點兩下場景左邊的鐵門才算
+                        detectTapGestures(onDoubleTap = { pos ->
+                            val cell = size.width.toFloat() / scene.art.first().length
+                            val x = (pos.x / cell).toInt()
+                            val y = (pos.y / cell).toInt()
+                            if (x in PRISON_DOOR_LEFT..PRISON_DOOR_RIGHT && y in PRISON_DOOR_TOP..PRISON_DOOR_BOTTOM) doorTap()
+                        })
+                    }
+                ),
+        ) {
             BattleBackdrop(scene, monster.rank)
             Row(Modifier.matchParentSize()) {
                 // 左半邊：自己的人物
@@ -844,6 +887,7 @@ private fun BattleField(
                         ItemType.Shield, ItemType.Confusion -> Unit
                     }
                 }
+                if (prisonAnim.value > 0f) drawRiot(prisonAnim.value, ground, prisoners = true)
                 // 防護盾的光罩、怪物混亂的星星
                 if (shielded || block.value > 0f) {
                     drawShieldBubble(heroCenter, HeroSize.toPx(), bob, block.value)
