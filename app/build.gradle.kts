@@ -65,7 +65,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
 
     // 雲端存檔：Google Play 遊戲的「已儲存的遊戲」
-    implementation("com.google.android.gms:play-games-services-v2:20.1.2")
+    implementation("com.google.android.gms:play-services-games-v2:20.1.2")
 
     // 每日複習提醒
     implementation("androidx.work:work-runtime-ktx:2.10.0")
