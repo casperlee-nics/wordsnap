@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Play 遊戲服務的專案 ID：在 Play 管理中心 → Play 遊戲服務 → 設定 裡可以看到一串數字，填在下面。
+     空白時，遊戲設定裡的「雲端存檔」按鈕不會開放。 -->
+<resources>
+    <string name="game_services_project_id" translatable="false"></string>
+</resources>

@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Word::class, Profile::class, Book::class, Item::class, MonsterLog::class], version = 13)
+@Database(entities = [Word::class, Profile::class, Book::class, Item::class, MonsterLog::class], version = AppDatabase.VERSION)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun wordDao(): WordDao
     abstract fun profileDao(): ProfileDao
@@ -21,6 +21,8 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
+                // 剛匯入的存檔，先換上再打開資料庫
+                SaveTransfer.applyPending(context.applicationContext)
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
@@ -142,6 +144,9 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE profiles ADD COLUMN coins INTEGER NOT NULL DEFAULT 0")
             }
         }
+
+        // 資料庫版本：每次加欄位就加 1（匯入存檔時，比這個新的存檔不能用）
+        const val VERSION = 13
 
         const val DEFAULT_BOOK = "我的冒險日誌"
     }

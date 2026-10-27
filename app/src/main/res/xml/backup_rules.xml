@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 以前的自動備份：只備份存檔（資料庫）和遊戲設定；字典檔放在不備份的資料夾，新手機會重新安裝 -->
+<full-backup-content>
+    <include domain="database" path="." />
+    <include domain="sharedpref" path="." />
+</full-backup-content>

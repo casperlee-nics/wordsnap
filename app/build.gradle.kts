@@ -13,8 +13,8 @@ android {
         applicationId = "com.wordsnap.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 50
-        versionName = "1.0"
+        versionCode = 51
+        versionName = "1.1"
     }
 
     buildTypes {
@@ -63,6 +63,9 @@ dependencies {
     // 英翻中：ML Kit 離線翻譯（第一次使用時下載約 30 MB 的翻譯檔）
     implementation("com.google.mlkit:translate:17.0.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
+
+    // 雲端存檔：Google Play 遊戲的「已儲存的遊戲」
+    implementation("com.google.android.gms:play-games-services-v2:20.1.2")
 
     // 每日複習提醒
     implementation("androidx.work:work-runtime-ktx:2.10.0")

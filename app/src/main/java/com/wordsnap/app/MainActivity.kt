@@ -27,7 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.wordsnap.app.data.CloudSave
 import com.wordsnap.app.data.Profile
+import com.wordsnap.app.data.SaveTransfer
 import com.wordsnap.app.i18n.Strings
 import com.wordsnap.app.i18n.withAppLanguage
 import com.wordsnap.app.reminder.ReviewReminder
@@ -53,6 +55,8 @@ private enum class Screen { Title, NewGame, Load, Delete, List, Scan, Review, Li
 class MainActivity : ComponentActivity() {
     // 依遊戲設定的語言（還沒設定就跟著手機系統）顯示所有文字
     override fun attachBaseContext(newBase: Context) {
+        // 剛匯入的存檔（含語言設定）要在讀設定之前換上
+        SaveTransfer.applyPending(newBase)
         Strings.init(newBase)
         super.attachBaseContext(newBase.withAppLanguage())
     }
@@ -65,6 +69,7 @@ class MainActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
         ReviewReminder.schedule(this)
+        CloudSave.init(this)
         loadTextSize(this)
 
         setContent {

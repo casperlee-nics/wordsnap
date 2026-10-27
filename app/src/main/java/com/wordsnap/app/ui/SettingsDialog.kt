@@ -35,7 +35,7 @@ import com.wordsnap.app.translate.DictionaryPacks
 import com.wordsnap.app.ui.theme.PixelInk
 import kotlinx.coroutines.launch
 
-// 主畫面的「遊戲設定」：語言、音量、文字大小、每場考試的題數
+// 主畫面的「遊戲設定」：語言、音量、文字大小、每場考試的題數，以及換手機用的存檔搬家
 // 換語言時先安裝那個語言的字典，再重新開啟畫面，所有文字都換成新的語言
 @Composable
 fun SettingsDialog(onDismiss: () -> Unit) {
@@ -117,6 +117,8 @@ fun SettingsDialog(onDismiss: () -> Unit) {
             },
         )
         Text(tr(R.string.settings_battle_size_hint), style = MaterialTheme.typography.bodySmall.readable())
+
+        SaveTransferSection(activity = context.findActivity())
     }
 
     missingPack?.let { target ->
