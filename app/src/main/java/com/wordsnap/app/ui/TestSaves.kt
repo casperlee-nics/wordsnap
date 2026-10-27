@@ -9,7 +9,7 @@ import com.wordsnap.app.data.Word
 // 冒險履歷裡 85 種怪物都遇過（舊的測試存檔沒有履歷時也會補上）
 // 只建立一次（KEY_TEST_SAVES 換版本時整個重新產生）；刪掉了不會再出現。正式上架前把 ENABLED 改成 false（或整個檔案刪掉）
 object TestSaves {
-    const val ENABLED = true
+    const val ENABLED = false
     const val LEVEL = 60
     private const val ITEM_COUNT = 9
     private const val TEST_COINS = 5000

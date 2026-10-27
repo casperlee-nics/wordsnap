@@ -7,15 +7,15 @@ plugins {
 
 android {
     namespace = "com.wordsnap.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         // Play 上架用的套件名稱（上架後不能改）；程式碼的 namespace 維持 com.wordsnap.app
         applicationId = "com.makeitfunstudio.wordsnap"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 53
-        versionName = "1.12"
+        targetSdk = 36
+        versionCode = 54
+        versionName = "1.0"
     }
 
     buildTypes {
