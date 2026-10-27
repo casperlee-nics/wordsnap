@@ -14,8 +14,8 @@ android {
         applicationId = "com.makeitfunstudio.wordsnap"
         minSdk = 26
         targetSdk = 35
-        versionCode = 52
-        versionName = "1.11"
+        versionCode = 53
+        versionName = "1.12"
     }
 
     buildTypes {

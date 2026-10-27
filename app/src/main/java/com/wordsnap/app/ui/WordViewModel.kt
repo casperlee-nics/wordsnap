@@ -44,7 +44,7 @@ private const val KEY_BOOK = "last_book_"
 private const val KEY_MEANING_CLEANUP = "meaning_cleanup_v1"
 private const val KEY_TESTCOUNT_RESET = "testcount_reset_v1"
 // 測試存檔的版本：改這裡會把測試冒險者整個重新產生
-private const val KEY_TEST_SAVES = "test_saves_v3"
+private const val KEY_TEST_SAVES = "test_saves_v4"
 private const val KEY_REVIEW_SET = "review_set_"
 
 // 複習一次最多 30 個字，記住 5 個才換新的 5 個進來
