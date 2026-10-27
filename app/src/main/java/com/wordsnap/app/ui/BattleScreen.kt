@@ -133,6 +133,11 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     val race = ownAvatar.race
     // 惡魔的附身：附身的職業（外觀和技能都換成那個職業，戰鬥結束先變回來）
     var possessed by remember { mutableStateOf<Race?>(null) }
+    // 附身後用了那個職業的一招就變回魔族，之後這場都不能再用技能
+    var possessionOver by remember { mutableStateOf(false) }
+    // 變回魔族的動畫：id 每次加一重新播放，host 是被附身的職業
+    var releaseId by remember { mutableIntStateOf(0) }
+    var releaseHost by remember { mutableStateOf<Race?>(null) }
     // 戰鬥開始時的稱號階級，決定頭像和招式
     val tier = remember { avatarTier(levelInfo(profile?.exp ?: 0).level) }
     // 戰鬥開始時的等級，決定學會哪些技能、能用幾次
@@ -557,7 +562,7 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
     // 這招現在能不能用：學會了、這場還沒用過、還有次數、這回合還沒用過，而且用了有效果
     fun canUseSkill(skill: Skill): Boolean {
         val e = skill.effect
-        if (!answering || skillThisRound || skill.level > level || skill in usedSkills) return false
+        if (!answering || possessionOver || skillThisRound || skill.level > level || skill in usedSkills) return false
         if (!e.possess && usesLeft() <= 0) return false
         // 只有單一效果的招式，效果還在身上時不能再用（不然浪費一次）
         return when {
@@ -608,6 +613,18 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
         skillThisRound = true
         skillUse = SkillUse(skill, (skillUse?.id ?: 0) + 1)
         applySkill(skill, e)
+        // 附身中用了那個職業的招式：招式動畫播完，魔族的魂魄退出來、變回魔族
+        possessed?.let { host ->
+            possessionOver = true
+            scope.launch {
+                delay(skillDuration(skill).toLong())
+                if (finished) return@launch
+                releaseHost = host
+                possessed = null
+                releaseId++
+                if (musicOverride == R.raw.scary_bgm) musicOverride = null
+            }
+        }
         // 貓推花盆：伸爪子撥花盆時「喵～」
         if (skill == Skill.PotPush) {
             scope.launch {
@@ -770,6 +787,8 @@ fun BattleScreen(vm: WordViewModel, bookId: Long, onBack: () -> Unit) {
                     phoenix = phoenixTurns > 0 && !finished,
                     onMonsterTap = if (knownMonster && !finished) ({ showMonsterInfo = true }) else null,
                     possessArt = skillUse?.target?.let { avatarOf(it).artFor(tier) },
+                    releaseId = releaseId,
+                    releaseArt = releaseHost?.let { avatarOf(it).artFor(tier) },
                     charmHeals = charmHeals,
                     hitDelay = hitDelay,
                     falling = died,
@@ -1015,6 +1034,8 @@ private fun BattleField(
     phoenix: Boolean = false,
     onMonsterTap: (() -> Unit)? = null,
     possessArt: List<String>? = null,
+    releaseId: Int = 0,
+    releaseArt: List<String>? = null,
     charmHeals: Int = 0,
     hitDelay: Int = 900,
     falling: Boolean = false,
@@ -1253,6 +1274,14 @@ private fun BattleField(
             skillAnim.animateTo(1f, tween(skillDuration(skillUse.skill), easing = LinearEasing))
             skillAnim.snapTo(0f)
         }
+        // 附身結束、變回魔族的動畫
+        val releaseAnim = remember { Animatable(0f) }
+        LaunchedEffect(releaseId) {
+            if (releaseId == 0) return@LaunchedEffect
+            releaseAnim.snapTo(0f)
+            releaseAnim.animateTo(1f, tween(RELEASE_DURATION, easing = LinearEasing))
+            releaseAnim.snapTo(0f)
+        }
         // 瘟疫醫生在瘟疫結束時鞠躬走掉
         // 幽冥樹精在怪物能動之後放開牠，慢慢往右走掉
         val treantHere = Skill.TreantGrip in lasting
@@ -1342,7 +1371,7 @@ private fun BattleField(
         // 附身、貓推花盆的途中人物先不見；變身不死鳥時改畫不死鳥
         val st = skillAnim.value
         val phoenixShown = phoenix && !(skillUse?.skill == Skill.PhoenixDescent && st > 0f && st < PHOENIX_AT)
-        val heroHidden = phoenixShown || when (skillUse?.skill) {
+        val heroHidden = phoenixShown || releaseAnim.value > 0f || when (skillUse?.skill) {
             Skill.Possession -> st in POSSESS_HIDE_FROM..POSSESS_SWAP_AT
             Skill.PotPush -> st in POT_HIDE_FROM..POT_HIDE_UNTIL
             else -> false
@@ -1532,6 +1561,9 @@ private fun BattleField(
                 if (sneak.value > 0f) drawSneakStab(sneak.value, monsterCenter, artH.toPx())
                 if (skillUse?.skill == Skill.Possession && possessArt != null && skillAnim.value > 0f) {
                     drawPossession(skillAnim.value, heroCenter, HeroSize.toPx(), possessArt, AvatarPalette, ground)
+                }
+                if (releaseArt != null && releaseAnim.value > 0f) {
+                    drawPossessionRelease(releaseAnim.value, heroCenter, HeroSize.toPx(), releaseArt, hero.artFor(tier), AvatarPalette, ground)
                 }
                 if (skillUse?.skill == Skill.PotPush && skillAnim.value > 0f) {
                     drawPotPush(skillAnim.value, heroCenter, HeroSize.toPx(), hero.artFor(tier), AvatarPalette, monsterCenter, artH.toPx(), ground)

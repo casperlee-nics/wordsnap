@@ -779,7 +779,7 @@
     <string name="skill_soul_steal">魂の強奪</string>
     <string name="skill_soul_steal_desc">敵の魂を抜き取る：敵に2ダメージ、HPを1マス回復</string>
     <string name="skill_possession">悪魔の憑依</string>
-    <string name="skill_possession_desc">ランダムでほかの職業に憑依し、バトル終了までその姿とスキルを使える。BGMがこわくなる</string>
+    <string name="skill_possession_desc">ランダムでほかの職業に憑依し、その職業のスキルを1回使える。使うと魂がぬけて魔族にもどり、このバトルではもうスキルを使えない。BGMがこわくなる</string>
     <string name="transfer_title">セーブデータの引っ越し</string>
     <string name="transfer_export">書き出す</string>
     <string name="transfer_import">読み込む</string>

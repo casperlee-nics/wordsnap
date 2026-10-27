@@ -785,7 +785,7 @@
     <string name="skill_soul_steal">靈魂奪取</string>
     <string name="skill_soul_steal_desc">抽出怪物的靈魂：怪物扣 2 格血，補 1 格血</string>
     <string name="skill_possession">惡魔的附身</string>
-    <string name="skill_possession_desc">隨機附身在別的職業身上，用那個職業的外觀和技能到戰鬥結束，音樂變得很可怕</string>
+    <string name="skill_possession_desc">隨機附身在別的職業身上，可以用那個職業的一招技能；用完魂魄退出、變回魔族，這場戰鬥就不能再用技能了。音樂變得很可怕</string>
     <string name="transfer_title">存檔搬家</string>
     <string name="transfer_export">匯出存檔</string>
     <string name="transfer_import">匯入存檔</string>

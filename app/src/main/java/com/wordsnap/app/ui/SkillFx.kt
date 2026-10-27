@@ -2186,6 +2186,57 @@ fun DrawScope.drawPossession(t: Float, hero: Offset, heroSize: Float, art: List<
     }
 }
 
+// 附身結束（用過附身職業的一招之後）：魔族的魂魄從被附身的人身上退出來，飄到她右手邊變回魔族；
+// 被附身的人回過神來，快速從左邊跑出畫面，魔族再走回原本的位置
+const val RELEASE_DURATION = 2600
+
+fun DrawScope.drawPossessionRelease(t: Float, hero: Offset, heroSize: Float, hostArt: List<String>, demonArt: List<String>, colors: Map<Char, Color>, ground: Float) {
+    val cell = 3.dp.toPx()
+    val stand = hero.x + heroSize * 0.9f
+    val top = ground - heroSize
+    // 被附身的人：魂魄退出時抖一下，接著轉身往左快速跑走
+    val run = seg(t, 0.45f, 0.62f)
+    if (run < 1f) {
+        val artCell = heroSize / hostArt.first().length
+        val x = hero.x - run * (hero.x + heroSize)
+        val shake = if (t < 0.4f && (t * 40).toInt() % 2 == 0) cell * 0.6f else 0f
+        val bob = if (run > 0f && (t * 40).toInt() % 2 == 0) -cell else 0f
+        val left = x - heroSize / 2 + shake
+        if (run > 0f) {
+            scale(-1f, 1f, Offset(x, hero.y)) { drawArt(hostArt, colors, left, top + bob, artCell) }
+        } else {
+            drawArt(hostArt, colors, left, top, artCell)
+        }
+    }
+    // 魂魄：黑影從她身上冒出來，飄到右手邊，再縮小變回魔族
+    val out = seg(t, 0.05f, 0.32f)
+    val form = seg(t, 0.32f, 0.44f)
+    if (out > 0f && form < 1f) {
+        val c = Offset(hero.x + (stand - hero.x) * out, hero.y)
+        val grow = seg(t, 0.05f, 0.12f) * (1f - form)
+        for (k in 0 until 18) {
+            val a = k * TAU / 18 + t * TAU * 4
+            val r = heroSize * 0.55f * grow
+            drawCircle((if (k % 2 == 0) Color(0xFF140C18) else Color(0xFF483868)).copy(alpha = 0.85f), cell * (2 + k % 3) * grow, Offset(c.x + cos(a) * r, c.y + sin(a) * r * 0.6f))
+        }
+        drawCircle(Color(0xFF140C18).copy(alpha = 0.85f), heroSize * 0.45f * grow, c)
+    }
+    // 魔族：在她右手邊現身，等她跑走之後走回原位
+    if (form > 0.4f) {
+        val artCell = heroSize / demonArt.first().length
+        val back = seg(t, 0.68f, 0.96f)
+        val x = stand + back * (hero.x - stand)
+        val bob = if (back in 0.001f..0.999f && (t * 20).toInt() % 2 == 0) -cell else 0f
+        val left = x - heroSize / 2
+        val alpha = seg(t, 0.36f, 0.44f)
+        if (back in 0.001f..0.999f) {
+            scale(-1f, 1f, Offset(x, hero.y)) { drawArt(demonArt, colors, left, top + bob, artCell, alpha) }
+        } else {
+            drawArt(demonArt, colors, left, top + bob, artCell, alpha)
+        }
+    }
+}
+
 // 偷來的懷錶：時間暫停的最後一回合，偷偷在怪物身上劃一刀
 private val DaggerArt = listOf(
     "....M",

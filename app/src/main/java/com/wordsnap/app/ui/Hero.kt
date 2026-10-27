@@ -68,7 +68,8 @@ val Avatar.race: Race
 const val MAX_LEVEL = 99
 
 // 從 Lv n 升到 n+1 需要的經驗值，越高級需要越多
-fun expToNext(level: Int): Int = 80 + 20 * level + 3 * level * level / 2
+// 每記住一個字（答對兩次）大約 30 經驗值：記住約 800 個字到 LV60（主打輕鬆背單字，職業多可以多練幾個）
+fun expToNext(level: Int): Int = 15 + 3 * level + level * level / 4
 
 // 升到這一級為止總共需要的經驗值
 fun totalExpForLevel(level: Int): Int = (1 until level).sumOf { expToNext(it) }
