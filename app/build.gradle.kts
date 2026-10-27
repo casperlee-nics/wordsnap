@@ -10,7 +10,8 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.wordsnap.app"
+        // Play 上架用的套件名稱（上架後不能改）；程式碼的 namespace 維持 com.wordsnap.app
+        applicationId = "com.makeitfunstudio.wordsnap"
         minSdk = 26
         targetSdk = 35
         versionCode = 51
