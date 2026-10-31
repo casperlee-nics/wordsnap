@@ -2,6 +2,13 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
+## 上架版 1.0.2（versionCode 59）
+
+- 拍照找字：單字書的組合字如果音標換到下一行（chicken nugget(s) 下一行才是 [ˋtʃɪkən]），也認得出是一個組合字
+- 拍歪的照片把「單字」和「音標」分成兩行時，也照樣合成組合字（doggie bag）
+- 複數寫法 (s)、(es) 會拿掉：nugget(s) → nugget、pancake(s) → pancake
+- 只出現在組合字裡的字（doggie bag 的 doggie、bag）不再另外列出來
+
 ## 上架版 1.0.1（versionCode 58）
 
 - 開啟 R8 最佳化（isMinifyEnabled、isShrinkResources），回應 Play Console「dex 程式碼最佳化／記憶體用量和整體效能」的建議。

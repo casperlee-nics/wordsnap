@@ -14,8 +14,8 @@ android {
         applicationId = "com.makeitfunstudio.wordsnap"
         minSdk = 26
         targetSdk = 36
-        versionCode = 58
-        versionName = "1.0.1"
+        versionCode = 59
+        versionName = "1.0.2"
         // 測試存檔（9 職業 LV60、道具各 9 個）：上架版關掉，debug 和 releaseTest 打開
         buildConfigField("boolean", "TEST_SAVES", "false")
     }
