@@ -159,65 +159,109 @@ object TextScanner {
     // 1. [ ] 或 / / 裡的音標整段略過，括號被認錯也盡量認出來
     // 2. 碰到照片邊緣的字略過
     // 3. 一行開頭的 2~4 個字後面緊接著音標，就是單字書裡的片語（TV stand、floor lamp）
+    // 一行整理完的結果，第二輪再看前後行決定片語
+    private class LineInfo(
+        val head: List<String>,
+        val words: List<String>,
+        // 開頭的字後面緊接著音標
+        val headBeforePhonetic: Boolean,
+        // 這一行只有開頭的字（音標換到下一行，例如 chicken nugget(s) 下一行才是 [ˋtʃɪkən]）
+        val headOnly: Boolean,
+        // 這一行一開始就是音標
+        val startsWithPhonetic: Boolean,
+    )
+
+    // 複數寫法 (s)、(es)：nugget(s) → nugget
+    private val pluralMark = Regex("\\((?:e?s)\\)?")
+
     fun analyze(pages: List<List<List<Chunk>>>): ScanResult {
         val tokens = mutableListOf<String>()
         val words = LinkedHashSet<String>()
         val headPhrases = LinkedHashSet<String>()
         for (lines in pages) {
-            for (line in lines) {
-                if (line.isEmpty()) {
-                    tokens += ""
-                    continue
-                }
-                var inPhonetic = false
-                // 這一行開頭的英文字（還沒遇到音標之前）
-                val head = mutableListOf<String>()
-                var headOpen = true
-                var headBeforePhonetic = false
-                val lineWords = mutableListOf<String>()
-                for ((index, chunk) in line.withIndex()) {
-                    val text = chunk.text
-                    if (!inPhonetic && opensPhonetic(text)) {
-                        if (headOpen && head.isNotEmpty()) headBeforePhonetic = true
-                        inPhonetic = true
-                    }
-                    if (inPhonetic || closesPhonetic(text)) {
-                        if (closesPhonetic(text)) inPhonetic = false
-                        headOpen = false
-                        tokens += ""
-                        continue
-                    }
-                    // 一行最前面的編號（1、❶，有時被認成 O 這種單一字母）略過
-                    if (index == 0 && !chunk.cut && text.length == 1) continue
-                    val found = wordPattern.findAll(text).map { it.value }.toList()
-                    if (chunk.cut || found.isEmpty()) {
-                        // 一行最前面的編號（10、⑩）不算斷開
-                        if (!(index == 0 && !chunk.cut)) headOpen = false
-                        tokens += ""
-                        continue
-                    }
-                    if (headOpen) {
-                        if (found.size == 1 && text.trimEnd(',', '.', ';', ':').length == found[0].length) head += found[0]
-                        else headOpen = false
-                    }
-                    for (w in found) {
-                        tokens += w.lowercase()
-                        lineWords += w.lowercase()
-                    }
-                }
-                tokens += ""
-                if (headBeforePhonetic && head.size in 2..4) {
+            // null 是段落之間的空行
+            val infos = lines.map { line -> if (line.isEmpty()) { tokens += ""; null } else readLine(line, tokens) }
+            for ((i, info) in infos.withIndex()) {
+                if (info == null) continue
+                val phrase = info.head.size in 2..4 && (
+                    info.headBeforePhonetic ||
+                        (info.headOnly && infos.drop(i + 1).firstOrNull { it != null }?.startsWithPhonetic == true)
+                    )
+                if (phrase) {
                     // 全大寫的縮寫（TV）保留大寫，其他轉小寫
-                    headPhrases += head.joinToString(" ") { if (it.length >= 2 && it.all(Char::isUpperCase)) it else it.lowercase() }
+                    headPhrases += info.head.joinToString(" ") { if (it.length >= 2 && it.all(Char::isUpperCase)) it else it.lowercase() }
                     // 片語裡的字不另外列出來（同一行其他地方出現的照樣列）
-                    val inHead = head.map { it.lowercase() }.toMutableList()
-                    for (w in lineWords) if (!inHead.remove(w) && isWord(w)) words += w
+                    val inHead = info.head.map { it.lowercase() }.toMutableList()
+                    for (w in info.words) if (!inHead.remove(w) && isWord(w)) words += w
                 } else {
-                    for (w in lineWords) if (isWord(w)) words += w
+                    for (w in info.words) if (isWord(w)) words += w
                 }
             }
         }
         return ScanResult(words.toList(), tokens, headPhrases.toList())
+    }
+
+    private fun readLine(line: List<Chunk>, tokens: MutableList<String>): LineInfo {
+        var inPhonetic = false
+        // 這一行開頭的英文字（還沒遇到音標之前）
+        val head = mutableListOf<String>()
+        var headOpen = true
+        var headBeforePhonetic = false
+        var startsWithPhonetic = false
+        var sawPhonetic = false
+        val lineWords = mutableListOf<String>()
+        for ((index, chunk) in line.withIndex()) {
+            val raw = chunk.text
+            if (!inPhonetic && opensPhonetic(raw)) {
+                if (headOpen && head.isNotEmpty()) headBeforePhonetic = true
+                if (head.isEmpty() && lineWords.isEmpty() && !sawPhonetic) startsWithPhonetic = true
+                inPhonetic = true
+                sawPhonetic = true
+            }
+            if (inPhonetic || closesPhonetic(raw)) {
+                if (closesPhonetic(raw)) inPhonetic = false
+                headOpen = false
+                tokens += ""
+                continue
+            }
+            // 一行最前面的編號（1、❶，有時被認成 O 這種單一字母）略過
+            if (index == 0 && !chunk.cut && raw.length == 1) continue
+            val text = raw.replace(pluralMark, "")
+            // 單獨的 (s) 直接略過，不算斷開
+            if (text.isBlank() && !chunk.cut) continue
+            val found = wordPattern.findAll(text).map { it.value }.toList()
+            if (chunk.cut || found.isEmpty()) {
+                // 一行最前面的編號（10、⑩）不算斷開
+                if (!(index == 0 && !chunk.cut)) headOpen = false
+                tokens += ""
+                continue
+            }
+            if (headOpen) {
+                if (found.size == 1 && text.trimEnd(',', '.', ';', ':').length == found[0].length) head += found[0]
+                else headOpen = false
+            }
+            for (w in found) {
+                tokens += w.lowercase()
+                lineWords += w.lowercase()
+            }
+        }
+        tokens += ""
+        val headOnly = headOpen && !sawPhonetic && head.isNotEmpty() && lineWords.size == head.size
+        return LineInfo(head, lineWords, headBeforePhonetic, headOnly, startsWithPhonetic)
+    }
+
+    // 只出現在片語裡的字（doggie bag 裡的 doggie、bag），不用再分開列出來
+    fun wordsOnlyInPhrases(tokens: List<String>, phrases: List<String>): Set<String> {
+        val covered = BooleanArray(tokens.size)
+        for (phrase in phrases) {
+            val parts = phrase.lowercase().split(' ')
+            if (parts.size < 2) continue
+            for (i in 0..tokens.size - parts.size) {
+                if ((parts.indices).all { tokens[i + it] == parts[it] }) for (k in parts.indices) covered[i + k] = true
+            }
+        }
+        val outside = tokens.filterIndexed { i, _ -> !covered[i] }.toSet()
+        return tokens.filterIndexed { i, _ -> covered[i] }.filterTo(HashSet()) { it !in outside }
     }
 
     // 純文字（TXT、CSV、Excel）：每一行用空白分開再整理
