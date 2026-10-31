@@ -236,6 +236,9 @@
 
     <!-- 怪物をつかまえる（カメラ、アルバム、古文書） -->
     <string name="scan_reading_page">古文書を読んでいます：%1$d / %2$d ページ</string>
+    <string name="scan_pdf_pages_title">どのページを読む？</string>
+    <string name="scan_pdf_pages_message">この古文書は全 %1$d ページです。一度に読めるのは %2$d ページまでです。読む範囲を選んでください。</string>
+    <string name="scan_pdf_range">%1$d–%2$d ページ</string>
     <string name="scan_read_failed">読み込みに失敗しました：%1$s</string>
     <string name="scan_ocr_failed">文字認識に失敗しました：%1$s</string>
     <string name="scan_title">モンスターをつかまえる</string>

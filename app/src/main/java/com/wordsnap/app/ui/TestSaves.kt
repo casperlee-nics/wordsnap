@@ -7,9 +7,9 @@ import com.wordsnap.app.data.Word
 
 // 測試用的存檔：9 個職業各一位 LV60 冒險者，道具每種 9 個，附一本已經記住 30 個字的單字簿（可以直接戰鬥），
 // 冒險履歷裡 85 種怪物都遇過（舊的測試存檔沒有履歷時也會補上）
-// 只建立一次（KEY_TEST_SAVES 換版本時整個重新產生）；刪掉了不會再出現。正式上架前把 ENABLED 改成 false（或整個檔案刪掉）
+// 只建立一次（KEY_TEST_SAVES 換版本時整個重新產生）；刪掉了不會再出現。debug 和 releaseTest 版會打開（app/build.gradle.kts 的 TEST_SAVES），上架版不會出現
 object TestSaves {
-    const val ENABLED = false
+    val ENABLED = com.wordsnap.app.BuildConfig.TEST_SAVES
     const val LEVEL = 60
     private const val ITEM_COUNT = 9
     private const val TEST_COINS = 5000

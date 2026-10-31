@@ -23,15 +23,18 @@ val DocumentMimeTypes = arrayOf(
 
 // 讀取古書：PDF 一頁一頁辨識；TXT、CSV 直接讀文字；Excel 讀出每一格的文字
 object DocumentText {
-    suspend fun scan(context: Context, uri: Uri, onPage: (Int, Int) -> Unit = { _, _ -> }): ScanResult {
+    // PDF 從第 firstPage 頁（0 開始）讀起
+    suspend fun scan(context: Context, uri: Uri, firstPage: Int = 0, onPage: (Int, Int) -> Unit = { _, _ -> }): ScanResult {
         val kind = kindOf(context, uri)
-        if (kind == Kind.Pdf) return TextScanner.scanPdf(context, uri, onPage)
+        if (kind == Kind.Pdf) return TextScanner.scanPdf(context, uri, firstPage, onPage)
         val text = withContext(Dispatchers.IO) {
             val input = context.contentResolver.openInputStream(uri) ?: throw IllegalArgumentException(tr(R.string.file_open_failed))
             input.use { if (kind == Kind.Excel) readExcel(it) else readText(it) }
         }
         return TextScanner.analyzeText(text)
     }
+
+    fun isPdf(context: Context, uri: Uri): Boolean = kindOf(context, uri) == Kind.Pdf
 
     private enum class Kind { Pdf, Excel, Text }
 

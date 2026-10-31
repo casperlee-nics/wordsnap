@@ -108,18 +108,32 @@ fun ScanScreen(
         progress = null
     }
 
-    fun startPdf(uri: Uri) {
+    // 頁數很多的 PDF：先問要讀哪一段（每段 50 頁）
+    var pdfChoice by remember { mutableStateOf<Pair<Uri, Int>?>(null) }
+
+    fun readDocument(uri: Uri, firstPage: Int) {
         scanning = true
         error = null
         selected.clear()
         scope.launch {
             try {
-                show(DocumentText.scan(context, uri) { page, pages -> progress = tr(R.string.scan_reading_page, page, pages) })
+                show(DocumentText.scan(context, uri, firstPage) { page, pages -> progress = tr(R.string.scan_reading_page, page, pages) })
             } catch (e: Exception) {
                 error = tr(R.string.scan_read_failed, e.message.orEmpty())
                 scanning = false
                 progress = null
             }
+        }
+    }
+
+    fun startPdf(uri: Uri) {
+        scope.launch {
+            val pages = try {
+                if (DocumentText.isPdf(context, uri)) TextScanner.pdfPageCount(context, uri) else 0
+            } catch (e: Exception) {
+                0
+            }
+            if (pages > TextScanner.MAX_PDF_PAGES) pdfChoice = uri to pages else readDocument(uri, 0)
         }
     }
 
@@ -290,6 +304,46 @@ fun ScanScreen(
                 }
             }
         }
+    }
+
+    pdfChoice?.let { (uri, pages) ->
+        val step = TextScanner.MAX_PDF_PAGES
+        PixelAlertDialog(
+            onDismissRequest = {
+                pdfChoice = null
+                if (found == null) onBack()
+            },
+            title = { Text(tr(R.string.scan_pdf_pages_title)) },
+            text = {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(tr(R.string.scan_pdf_pages_message, pages, step))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        for (start in 0 until pages step step) {
+                            RetroButton(
+                                tr(R.string.scan_pdf_range, start + 1, minOf(pages, start + step)),
+                                onClick = {
+                                    pdfChoice = null
+                                    readDocument(uri, start)
+                                },
+                                textStyle = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    pdfChoice = null
+                    if (found == null) onBack()
+                }) { Text(tr(R.string.cancel)) }
+            },
+        )
     }
 
     // 按下拍照先提示，按「準備好了」才打開相機

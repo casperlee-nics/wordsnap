@@ -242,6 +242,9 @@
 
     <!-- 捕捉怪物（拍照、相簿、古書） -->
     <string name="scan_reading_page">正在翻閱古書：第 %1$d / %2$d 頁</string>
+    <string name="scan_pdf_pages_title">要讀哪幾頁？</string>
+    <string name="scan_pdf_pages_message">這本古書共 %1$d 頁，一次最多讀 %2$d 頁，請選要讀的範圍。</string>
+    <string name="scan_pdf_range">%1$d–%2$d 頁</string>
     <string name="scan_read_failed">讀取失敗：%1$s</string>
     <string name="scan_ocr_failed">辨識失敗：%1$s</string>
     <string name="scan_title">捕捉怪物</string>

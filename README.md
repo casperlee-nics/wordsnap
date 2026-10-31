@@ -2,6 +2,16 @@
 
 Android 背單字 App。Kotlin + Jetpack Compose，單字存在手機裡（Room 資料庫）。
 
+## 上架版 1.0.1（versionCode 58）
+
+- 開啟 R8 最佳化（isMinifyEnabled、isShrinkResources），回應 Play Console「dex 程式碼最佳化／記憶體用量和整體效能」的建議。
+- 新增 releaseTest 建置類型：跟上架版一樣有最佳化，但用除錯金鑰簽名，可在 Build Variants 選它後按 ▶ 直接裝到手機試。
+- 新增 app/proguard-rules.pro。
+- 修正：螢幕較矮或系統字型調大的手機，視窗（旅行商人、角色資料等）下方的「關閉」鈕被擠出畫面；內容區改成會縮小並捲動。
+- 寬螢幕（摺疊機打開）主畫面選單蓋住城堡下的小人物：寬螢幕讓人物站到選單左右兩邊，窄螢幕站到選單下面的草地上。
+- PDF（古書）超過 50 頁時，先選要讀的範圍（1–50、51–100…），每次讀 50 頁。
+- debug 和 releaseTest 版會自動建立測試存檔（9 職業 LV60、道具各 9 個），方便測技能和大魔王；上架版（release）不會有。
+
 ## 目前版本 1.0 定版（單字勇者／たんご勇者）
 
 v1.0 的改變（從 1.06 定版）：

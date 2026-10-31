@@ -14,13 +14,32 @@ android {
         applicationId = "com.makeitfunstudio.wordsnap"
         minSdk = 26
         targetSdk = 36
-        versionCode = 54
-        versionName = "1.0"
+        versionCode = 58
+        versionName = "1.0.1"
+        // 測試存檔（9 職業 LV60、道具各 9 個）：上架版關掉，debug 和 releaseTest 打開
+        buildConfigField("boolean", "TEST_SAVES", "false")
     }
 
     buildTypes {
+        // 按 ▶ 的除錯版也有測試存檔
+        debug {
+            buildConfigField("boolean", "TEST_SAVES", "true")
+        }
         release {
-            isMinifyEnabled = false
+            // R8：把用不到的程式碼和資源拿掉、程式碼最佳化（dex 程式碼最佳化），省記憶體也跑得比較快
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+        // 上架前自己試 R8 版用：跟 release 一樣有最佳化，但用除錯金鑰簽名，可以直接按 ▶ 裝到手機
+        create("releaseTest") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
+            buildConfigField("boolean", "TEST_SAVES", "true")
         }
     }
     compileOptions {
@@ -32,6 +51,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     // 字典檔不壓縮：App 可以直接知道檔案大小，安裝字典時顯示進度
     androidResources {

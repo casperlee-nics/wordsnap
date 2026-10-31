@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -85,11 +88,14 @@ fun TitleScreen(
         princessOn = false
     }
 
+    // 天空圖和選單在畫面上的位置：寬螢幕（摺疊機打開）選單會蓋到城堡下的人物，要讓人物站到選單兩旁
+    var skyTop by remember { mutableStateOf(0f) }
+    var menuTop by remember { mutableStateOf<Float?>(null) }
+    var groundTop by remember { mutableStateOf<Float?>(null) }
     Box(Modifier.fillMaxSize().background(if (night) SceneGrassNight else SceneGrass)) {
         Column(Modifier.fillMaxSize()) {
-            Box {
+            Box(Modifier.onGloballyPositioned { skyTop = it.positionInRoot().y }) {
                 PixelArt(if (night) TitleSkyNight else TitleSky, ScenePalette, Modifier.fillMaxWidth())
-                TitleParty(Modifier.matchParentSize(), spread = partySpread(princess.value))
                 if (princessOn) Princess(princess.value, Modifier.matchParentSize())
                 if (night && fireworksOn) {
                     CastleFireworks(fireworksShow, onDone = { fireworksOn = false }, Modifier.matchParentSize())
@@ -118,7 +124,7 @@ fun TitleScreen(
                 }
             }
             Box(Modifier.weight(1f))
-            Box {
+            Box(Modifier.onGloballyPositioned { groundTop = it.positionInRoot().y }) {
                 PixelArt(if (night) TitleGroundNight else TitleGround, ScenePalette, Modifier.fillMaxWidth())
                 if (grassOn) GrassSurprise(night, grassShow, onDone = { grassOn = false }, Modifier.matchParentSize())
                 // 看不見的按鈕蓋在草地上：連點三次觸發彩蛋
@@ -139,6 +145,15 @@ fun TitleScreen(
             }
         }
 
+        // 城堡下的四個人物畫在天空和地面圖的上面（站到草地上時才不會被地面圖蓋住）；天空圖在畫面最上方
+        TitleParty(
+            Modifier.fillMaxWidth(),
+            spread = partySpread(princess.value),
+            menuTop = menuTop?.minus(skyTop),
+            groundTop = groundTop?.minus(skyTop),
+            grassEgg = grassOn,
+        )
+
         // 選單放在草地中間，不會擋到上方的城堡
         Column(
             Modifier.fillMaxSize(),
@@ -146,7 +161,15 @@ fun TitleScreen(
             verticalArrangement = Arrangement.Bottom,
         ) {
             // 羊皮紙紋路的選單（外圈深色木紋細框），上緣掛著纏藤蔓的木牌標題
-            Box(Modifier.padding(bottom = 110.dp).width(230.dp), contentAlignment = Alignment.TopCenter) {
+            Box(
+                Modifier
+                    .padding(bottom = 110.dp)
+                    .width(MenuWidth)
+                    .onGloballyPositioned {
+                        menuTop = it.positionInRoot().y
+                    },
+                contentAlignment = Alignment.TopCenter,
+            ) {
                 CompositionLocalProvider(LocalContentColor provides PixelInk) {
                     Column(
                         Modifier
@@ -280,6 +303,16 @@ private enum class Idle { Hop, Sway, LookAround, Squash, Spin }
 // 城堡下的四個人物在第幾格（主畫面的天空圖寬 64 格）
 private val PartyColumns = listOf(14, 23, 33, 42)
 
+// 人物站的高度（頭頂在第幾格）
+private const val PARTY_TOP = 26
+
+// 人物站到選單下面時：腳踩在地面圖第幾格（草地和泥土的交界），以及站在第幾格
+private const val GRASS_FEET_ROW = 3f
+private val GrassColumns = listOf(6, 15, 24, 33)
+
+// 主選單寬度
+private val MenuWidth = 230.dp
+
 // 公主出來時，四個人物各往左右讓開幾格
 private val PartySpread = listOf(-6f, -6f, 6f, 6f)
 
@@ -348,7 +381,7 @@ private fun Princess(p: Float, modifier: Modifier = Modifier) {
 
 // 隨機挑四個人物，各做一種小動作，一直循環
 @Composable
-private fun TitleParty(modifier: Modifier = Modifier, spread: Float = 0f) {
+private fun TitleParty(modifier: Modifier = Modifier, spread: Float = 0f, menuTop: Float? = null, groundTop: Float? = null, grassEgg: Boolean = false) {
     val cast = remember { Avatar.entries.shuffled().take(4).zip(Idle.entries.shuffled()) }
     // 每個人物隨機一種稱號階級的樣子
     val tiers = remember { List(cast.size) { (0 until Avatar.TIER_COUNT).random() } }
@@ -357,6 +390,18 @@ private fun TitleParty(modifier: Modifier = Modifier, spread: Float = 0f) {
     )
     BoxWithConstraints(modifier) {
         val cell = maxWidth / 64
+        // 人物腳下在第 34 格；選單頂端比這裡高就會蓋住人物
+        val covered = menuTop != null && with(LocalDensity.current) { cell.toPx() * (PARTY_TOP + 8) > menuTop }
+        // 被蓋住時：寬螢幕讓人物分站選單左右兩邊；兩邊站不下就站到選單下面的草地上（避開右下角的問號木牌）
+        val menuHalf = (MenuWidth / 2 + 4.dp) / cell
+        val sideColumns = listOf(32 - menuHalf - 17, 32 - menuHalf - 8, 32 + menuHalf, 32 + menuHalf + 9)
+        val besideMenu = covered && sideColumns.first() >= 0f && sideColumns.last() <= 56f
+        val onGrass = covered && !besideMenu && groundTop != null
+        val partyTop = if (onGrass) {
+            with(LocalDensity.current) { groundTop!! / cell.toPx() + GRASS_FEET_ROW - 8f }
+        } else PARTY_TOP.toFloat()
+        // 站在草地上時，草地彩蛋播放期間先躲起來，不擋到彩蛋
+        if (onGrass && grassEgg) return@BoxWithConstraints
         cast.forEachIndexed { i, (avatar, idle) ->
             // 每個人錯開一點，不會同時動
             val p = (time + i * 0.27f) % 1f
@@ -365,7 +410,10 @@ private fun TitleParty(modifier: Modifier = Modifier, spread: Float = 0f) {
                 size = cell * 8,
                 tier = tiers[i],
                 modifier = Modifier
-                    .offset(x = cell * (PartyColumns[i] + PartySpread[i] * spread), y = cell * 26)
+                    .offset(
+                        x = cell * ((if (besideMenu) sideColumns[i] else if (onGrass) GrassColumns[i].toFloat() else PartyColumns[i].toFloat()) + PartySpread[i] * spread),
+                        y = cell * partyTop,
+                    )
                     .graphicsLayer {
                         val px = cell.toPx()
                         transformOrigin = TransformOrigin(0.5f, 1f)

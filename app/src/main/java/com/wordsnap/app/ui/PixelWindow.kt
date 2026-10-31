@@ -129,8 +129,10 @@ fun PixelWindowDialog(
             WindowTitle(title)
             CompositionLocalProvider(LocalContentColor provides PixelInk) {
                 if (header != null) Box(Modifier.padding(top = 10.dp, start = 6.dp, end = 6.dp)) { header() }
+                // 內容區可以縮小：螢幕比較矮或系統字型調大時，內容改用捲動，下面的「關閉」鈕才不會被擠出視窗
                 Column(
                     Modifier
+                        .weight(1f, fill = false)
                         .heightIn(max = 420.dp)
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 6.dp, vertical = 10.dp),
@@ -259,7 +261,10 @@ fun PixelAlertDialog(
                     ProvideTextStyle(MaterialTheme.typography.titleLarge) { title() }
                 }
                 if (text != null) {
-                    ProvideTextStyle(MaterialTheme.typography.bodyMedium) { text() }
+                    // 內文可以縮小，按鈕列一定留在視窗裡
+                    Box(Modifier.weight(1f, fill = false)) {
+                        ProvideTextStyle(MaterialTheme.typography.bodyMedium) { text() }
+                    }
                 }
                 Row(
                     Modifier.fillMaxWidth(),

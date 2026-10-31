@@ -46,17 +46,25 @@ object TextScanner {
             .addOnFailureListener { e -> onError(e) }
     }
 
-    // 讀取 PDF（古書）：一頁一頁畫成圖片再辨識文字，最多讀前 MAX_PDF_PAGES 頁
-    suspend fun scanPdf(context: Context, uri: Uri, onPage: (Int, Int) -> Unit = { _, _ -> }): ScanResult {
+    // PDF 總共幾頁
+    suspend fun pdfPageCount(context: Context, uri: Uri): Int = withContext(Dispatchers.IO) {
+        val file = context.contentResolver.openFileDescriptor(uri, "r")
+            ?: throw IllegalArgumentException(tr(R.string.file_open_failed))
+        file.use { descriptor -> PdfRenderer(descriptor).use { it.pageCount } }
+    }
+
+    // 讀取 PDF（古書）：一頁一頁畫成圖片再辨識文字；從第 first 頁（0 開始）起，最多讀 MAX_PDF_PAGES 頁
+    suspend fun scanPdf(context: Context, uri: Uri, first: Int = 0, onPage: (Int, Int) -> Unit = { _, _ -> }): ScanResult {
         val pagesText = mutableListOf<List<List<Chunk>>>()
         withContext(Dispatchers.IO) {
             val file = context.contentResolver.openFileDescriptor(uri, "r")
                 ?: throw IllegalArgumentException(tr(R.string.file_open_failed))
             file.use { descriptor ->
                 PdfRenderer(descriptor).use { renderer ->
-                    val pages = minOf(renderer.pageCount, MAX_PDF_PAGES)
-                    for (i in 0 until pages) {
-                        withContext(Dispatchers.Main) { onPage(i + 1, pages) }
+                    val start = first.coerceIn(0, (renderer.pageCount - 1).coerceAtLeast(0))
+                    val end = minOf(renderer.pageCount, start + MAX_PDF_PAGES)
+                    for (i in start until end) {
+                        withContext(Dispatchers.Main) { onPage(i + 1, end) }
                         val bitmap = renderer.openPage(i).use { page ->
                             // 寬度放大到約 1600 像素，小字也認得出來；特別長的頁面限制高度，免得記憶體不夠
                             val scale = minOf(PDF_RENDER_WIDTH.toFloat() / page.width, PDF_MAX_HEIGHT.toFloat() / page.height)
@@ -110,7 +118,8 @@ object TextScanner {
 
     // 碰到照片邊緣 1.5% 以內的字，當作被切掉了
     private const val EDGE_MARGIN = 0.015f
-    private const val MAX_PDF_PAGES = 20
+    // 一次最多讀 50 頁；頁數更多的 PDF 讓玩家選要讀哪 50 頁
+    const val MAX_PDF_PAGES = 50
     private const val PDF_RENDER_WIDTH = 1600
     private const val PDF_MAX_HEIGHT = PDF_RENDER_WIDTH * 4
 
