@@ -97,8 +97,7 @@ fun ScanScreen(
     suspend fun show(result: ScanResult) {
         val phrases = (result.headPhrases + WordDictionary.findPhrases(context, result.tokens))
             .distinctBy { it.lowercase() }
-        val inPhrasesOnly = TextScanner.wordsOnlyInPhrases(result.tokens, phrases)
-        val words = result.words.filter { it !in phrases && it !in inPhrasesOnly }
+        val words = result.words.filter { it !in phrases }
         val unknown = WordDictionary.unknownWords(context, words)
         found = phrases + words.filter { it !in unknown }
         unclear = words.filter { it in unknown }
